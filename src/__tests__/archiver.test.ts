@@ -142,4 +142,16 @@ describe("Moving top-level tasks to the archive", () => {
             "# Another heading",
         ]);
     });
+
+    test("Appends tasks under the current week", () => {
+        const archiver = new Archiver(true);
+        const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
+        const result = archiver.archiveTasks(lines);
+        expect(result).toEqual([
+            "- [ ] bar",
+            "# Archived",
+            "- [[week]]",
+            "    - [x] foo",
+        ]);
+    });
 });

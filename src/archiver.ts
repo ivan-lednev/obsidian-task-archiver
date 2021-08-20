@@ -4,7 +4,11 @@ export class Archiver {
     private COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
     private INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
 
-    constructor() {}
+    private useDateTree: boolean;
+
+    constructor(useDateTree: boolean = false) {
+        this.useDateTree = useDateTree;
+    }
 
     archiveTasks(lines: string[]) {
         const hasArchive = lines.find((line) =>
@@ -61,12 +65,16 @@ export class Archiver {
         return { fileLinesWithoutCompletedTasks, completedTasksOutsideArchive };
     }
 
-    private addTasksToArchive(tasks: string[], fileLines: string[]) {
-        const fileLinesWithInsertedArchivedTasks = [...fileLines];
+    private addTasksToArchive(tasks: string[], lines: string[]) {
+        const linesWithInsertedArchivedTasks = [...lines];
+        if (this.useDateTree) {
+            tasks = tasks.map((line) => `    ${line}`);
+            tasks.splice(0, 0, "- [[week]]");
+        }
 
         let insideArchive = false;
         let lastNonBlankLineIndex = null;
-        for (const [i, line] of fileLinesWithInsertedArchivedTasks.entries()) {
+        for (const [i, line] of linesWithInsertedArchivedTasks.entries()) {
             const isArchiveStart = this.ARCHIVE_PATTERN.exec(line) !== null;
             if (isArchiveStart) {
                 insideArchive = true;
@@ -75,7 +83,7 @@ export class Archiver {
             if (insideArchive) {
                 const isEndOfArchive = this.ARCHIVE_END_PATTERN.exec(line);
                 const isLastLine =
-                    i === fileLinesWithInsertedArchivedTasks.length - 1;
+                    i === linesWithInsertedArchivedTasks.length - 1;
                 if (isEndOfArchive || isLastLine) {
                     let insertionIndex = i + 1;
                     if (isEndOfArchive) {
@@ -85,7 +93,7 @@ export class Archiver {
                             insertionIndex = i;
                         }
                     }
-                    fileLinesWithInsertedArchivedTasks.splice(
+                    linesWithInsertedArchivedTasks.splice(
                         insertionIndex,
                         0,
                         ...tasks
@@ -97,6 +105,6 @@ export class Archiver {
                 }
             }
         }
-        return fileLinesWithInsertedArchivedTasks;
+        return linesWithInsertedArchivedTasks;
     }
 }
