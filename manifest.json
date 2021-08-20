@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-task-archiver",
-	"name": "Obsidian Task Archiver",
-	"version": "0.1.0",
-	"minAppVersion": "0.12.12",
-	"description": "This plugin is inspired by org-mode that lets you get completed tasks out of the way efficiently",
-	"author": "Ivan Lednev",
-	"authorUrl": "https://github.com/ivan-lednev",
-	"isDesktopOnly": false
+    "id": "obsidian-task-archiver",
+    "name": "Obsidian Task Archiver",
+    "version": "0.1.0",
+    "minAppVersion": "0.12.12",
+    "description": "This plugin is inspired by org-mode that lets you get completed tasks out of the way efficiently",
+    "author": "Ivan Lednev",
+    "authorUrl": "https://github.com/ivan-lednev",
+    "isDesktopOnly": false
 }
