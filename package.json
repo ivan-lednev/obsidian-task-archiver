@@ -24,6 +24,8 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "jest": "^27.0.6"
+    "@types/moment": "^2.13.0",
+    "jest": "^27.0.6",
+    "moment": "^2.29.1"
   }
 }
