@@ -1,19 +1,19 @@
 import moment from "moment";
 
+const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
+
 export class Archiver {
-    private ARCHIVE_PATTERN = new RegExp("# Archived");
-    private ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
-    private COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
-    private INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
+    ARCHIVE_PATTERN = new RegExp("# Archived");
+    ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
+    COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
 
-    private useDateTree: boolean;
+    private withDateTree: boolean;
 
-    constructor(useDateTree: boolean = false) {
-        this.useDateTree = useDateTree;
+    constructor(withDateTree: boolean = false) {
+        this.withDateTree = withDateTree;
     }
 
     archiveTasks(lines: string[]) {
-        // todo
         const hasArchive =
             lines.findIndex((line) => this.ARCHIVE_PATTERN.exec(line)) >= 0;
 
@@ -47,10 +47,7 @@ export class Archiver {
             if (line.match(this.COMPLETED_TASK_PATTERN)) {
                 newlyCompletedTasks.push(line);
                 linesAfterTask = true;
-            } else if (
-                line.match(this.INDENTED_LINE_PATTERN) &&
-                linesAfterTask
-            ) {
+            } else if (line.match(INDENTED_LINE_PATTERN) && linesAfterTask) {
                 newlyCompletedTasks.push(line);
             } else {
                 linesWithoutCompletedTasks.push(line);
@@ -85,7 +82,10 @@ export class Archiver {
             }
         }
 
-        return { linesWithoutArchive, archive: new Archive(archiveLines) };
+        return {
+            linesWithoutArchive,
+            archive: new Archive(archiveLines, this.withDateTree),
+        };
     }
 
     private addTasksToArchive(
@@ -93,20 +93,6 @@ export class Archiver {
         lines: string[],
         archive: Archive
     ) {
-        if (this.useDateTree) {
-            const week = moment().format("YYYY-MM-[W]-w");
-            tasks = tasks.map((line) => `    ${line}`);
-            const weekLine = `- [[${week}]]`;
-            const weekPresentInDateTree = lines.find((line) =>
-                line.startsWith(weekLine)
-            );
-            if (weekPresentInDateTree) {
-                // todo
-            } else {
-                tasks.splice(0, 0, weekLine);
-            }
-        }
-
         const archiveWithNewTasks = archive.appendToContents(tasks);
         const archiveStart = lines.findIndex((l) =>
             this.ARCHIVE_PATTERN.exec(l)
@@ -118,18 +104,57 @@ export class Archiver {
 
 class Archive {
     contents: string[];
-    constructor(lines: string[]) {
+    withDateTree: boolean;
+    constructor(lines: string[], withDateTree: boolean) {
         this.contents = lines;
+        this.withDateTree = withDateTree;
     }
 
-    appendToContents(lines: string[]) {
-        const afterLastLineWithContent =
-            this.contents.length -
-            this.contents
-                .slice()
-                .reverse()
-                .findIndex((l) => l.match(/\S/));
-        this.contents.splice(afterLastLineWithContent, 0, ...lines);
+    appendToContents(newLines: string[]) {
+        let insertionIndex;
+
+        if (this.withDateTree) {
+            const week = moment().format("YYYY-MM-[W]-w");
+            newLines = newLines.map((line) => `    ${line}`);
+            const weekLine = `- [[${week}]]`;
+            const currentWeekIndexInTree = this.contents.findIndex((line) =>
+                line.startsWith(weekLine)
+            );
+            if (currentWeekIndexInTree < 0) {
+                newLines.unshift(weekLine);
+            } else {
+                insertionIndex = this.findBlockEnd(weekLine);
+            }
+        }
+
+        if (!insertionIndex) {
+            const afterLastLineWithContent =
+                this.contents.length -
+                this.contents
+                    .slice()
+                    .reverse()
+                    .findIndex((l) => l.trim().length > 0);
+
+            insertionIndex = afterLastLineWithContent;
+        }
+
+        this.contents.splice(insertionIndex, 0, ...newLines);
         return this.contents;
+    }
+
+    private findBlockEnd(parentLine: string) {
+        let insideBlock = false;
+        for (const [i, line] of this.contents.entries()) {
+            if (line === parentLine) {
+                insideBlock = true;
+                continue;
+            }
+
+            const isLineIndented = INDENTED_LINE_PATTERN.exec(line);
+            if (insideBlock && !isLineIndented) {
+                return i;
+            }
+        }
+        return this.contents.length
     }
 }

@@ -166,6 +166,7 @@ describe("Moving top-level tasks to the archive", () => {
             "# Archived",
             `- [[${week}]]`,
             "    - [x] baz",
+            "- Other stuff"
         ];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual([
@@ -174,6 +175,7 @@ describe("Moving top-level tasks to the archive", () => {
             `- [[${week}]]`,
             "    - [x] baz",
             "    - [x] foo",
+            "- Other stuff"
         ]);
     });
 });
