@@ -21,7 +21,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         const activeFile = this.app.workspace.getActiveFile();
         const fileContents = await this.app.vault.read(activeFile);
         const lines = fileContents.split("\n");
-        const linesWithInsertedArchivedTasks = new Archiver().archiveTasks(
+        const linesWithInsertedArchivedTasks = new Archiver(true).archiveTasks(
             lines
         );
 

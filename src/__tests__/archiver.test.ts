@@ -1,3 +1,4 @@
+import moment from "moment";
 import { Archiver } from "../archiver";
 
 describe("Moving top-level tasks to the archive", () => {
@@ -143,14 +144,35 @@ describe("Moving top-level tasks to the archive", () => {
         ]);
     });
 
-    test("Appends tasks under the current week", () => {
+    test("Archives tasks under a bullet with the current week", () => {
         const archiver = new Archiver(true);
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
+        const result = archiver.archiveTasks(lines);
+        const week = moment().format("YYYY-MM-[W]-w");
+        expect(result).toEqual([
+            "- [ ] bar",
+            "# Archived",
+            `- [[${week}]]`,
+            "    - [x] foo",
+        ]);
+    });
+
+    test("Appends tasks under the current week bullet if it exists", () => {
+        const archiver = new Archiver(true);
+        const week = moment().format("YYYY-MM-[W]-w");
+        const lines = [
+            "- [x] foo",
+            "- [ ] bar",
+            "# Archived",
+            `- [[${week}]]`,
+            "    - [x] baz",
+        ];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
-            "- [[week]]",
+            `- [[${week}]]`,
+            "    - [x] baz",
             "    - [x] foo",
         ]);
     });

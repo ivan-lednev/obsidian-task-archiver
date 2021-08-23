@@ -1,3 +1,5 @@
+import moment from "moment";
+
 export class Archiver {
     private ARCHIVE_PATTERN = new RegExp("# Archived");
     private ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
@@ -11,100 +13,123 @@ export class Archiver {
     }
 
     archiveTasks(lines: string[]) {
-        const hasArchive = lines.find((line) =>
-            this.ARCHIVE_PATTERN.exec(line)
-        );
+        // todo
+        const hasArchive =
+            lines.findIndex((line) => this.ARCHIVE_PATTERN.exec(line)) >= 0;
+
         if (!hasArchive) {
             return lines;
         }
 
-        const { fileLinesWithoutCompletedTasks, completedTasksOutsideArchive } =
-            this.extractCompletedTasks(lines);
+        const { linesWithoutArchive, archive } = this.extractArchive(lines);
 
-        if (completedTasksOutsideArchive.length === 0) {
+        const { linesWithoutCompletedTasks, newlyCompletedTasks } =
+            this.extractCompletedTasks(linesWithoutArchive);
+
+        if (newlyCompletedTasks.length === 0) {
             return lines;
         }
 
         const linesWithInsertedArchivedTasks = this.addTasksToArchive(
-            completedTasksOutsideArchive,
-            fileLinesWithoutCompletedTasks
+            newlyCompletedTasks,
+            linesWithoutCompletedTasks,
+            archive
         );
         return linesWithInsertedArchivedTasks;
     }
 
-    private extractCompletedTasks(lines: string[]) {
-        const fileLinesWithoutCompletedTasks = [];
-        const completedTasksOutsideArchive = [];
+    private extractCompletedTasks(linesWithoutArchive: string[]) {
+        const linesWithoutCompletedTasks = [];
+        const newlyCompletedTasks = [];
 
-        let insideArchive = false;
         let linesAfterTask = false;
-        for (const line of lines) {
-            if (this.ARCHIVE_PATTERN.exec(line)) {
-                insideArchive = true;
-            }
-
-            if (insideArchive) {
-                if (this.ARCHIVE_END_PATTERN.exec(line)) {
-                    insideArchive = false;
-                }
-            }
-
-            if (line.match(this.COMPLETED_TASK_PATTERN) && !insideArchive) {
-                completedTasksOutsideArchive.push(line);
+        for (const line of linesWithoutArchive) {
+            if (line.match(this.COMPLETED_TASK_PATTERN)) {
+                newlyCompletedTasks.push(line);
                 linesAfterTask = true;
             } else if (
                 line.match(this.INDENTED_LINE_PATTERN) &&
                 linesAfterTask
             ) {
-                completedTasksOutsideArchive.push(line);
+                newlyCompletedTasks.push(line);
             } else {
-                fileLinesWithoutCompletedTasks.push(line);
+                linesWithoutCompletedTasks.push(line);
                 linesAfterTask = false;
             }
         }
-        return { fileLinesWithoutCompletedTasks, completedTasksOutsideArchive };
+        return {
+            linesWithoutCompletedTasks,
+            newlyCompletedTasks,
+        };
     }
 
-    private addTasksToArchive(tasks: string[], lines: string[]) {
-        const linesWithInsertedArchivedTasks = [...lines];
-        if (this.useDateTree) {
-            tasks = tasks.map((line) => `    ${line}`);
-            tasks.splice(0, 0, "- [[week]]");
-        }
+    private extractArchive(lines: string[]) {
+        let archiveLines = [];
+        let linesWithoutArchive = [];
 
         let insideArchive = false;
-        let lastNonBlankLineIndex = null;
-        for (const [i, line] of linesWithInsertedArchivedTasks.entries()) {
-            const isArchiveStart = this.ARCHIVE_PATTERN.exec(line) !== null;
-            if (isArchiveStart) {
-                insideArchive = true;
-            }
 
+        for (const line of lines) {
             if (insideArchive) {
-                const isEndOfArchive = this.ARCHIVE_END_PATTERN.exec(line);
-                const isLastLine =
-                    i === linesWithInsertedArchivedTasks.length - 1;
-                if (isEndOfArchive || isLastLine) {
-                    let insertionIndex = i + 1;
-                    if (isEndOfArchive) {
-                        if (lastNonBlankLineIndex !== null) {
-                            insertionIndex = lastNonBlankLineIndex + 1;
-                        } else {
-                            insertionIndex = i;
-                        }
-                    }
-                    linesWithInsertedArchivedTasks.splice(
-                        insertionIndex,
-                        0,
-                        ...tasks
-                    );
-                    break;
+                if (this.ARCHIVE_END_PATTERN.exec(line)) {
+                    insideArchive = false;
+                    linesWithoutArchive.push(line);
+                } else {
+                    archiveLines.push(line);
                 }
-                if (line.match(/\S/)) {
-                    lastNonBlankLineIndex = i;
+            } else {
+                if (this.ARCHIVE_PATTERN.exec(line)) {
+                    insideArchive = true;
                 }
+                linesWithoutArchive.push(line);
             }
         }
-        return linesWithInsertedArchivedTasks;
+
+        return { linesWithoutArchive, archive: new Archive(archiveLines) };
+    }
+
+    private addTasksToArchive(
+        tasks: string[],
+        lines: string[],
+        archive: Archive
+    ) {
+        if (this.useDateTree) {
+            const week = moment().format("YYYY-MM-[W]-w");
+            tasks = tasks.map((line) => `    ${line}`);
+            const weekLine = `- [[${week}]]`;
+            const weekPresentInDateTree = lines.find((line) =>
+                line.startsWith(weekLine)
+            );
+            if (weekPresentInDateTree) {
+                // todo
+            } else {
+                tasks.splice(0, 0, weekLine);
+            }
+        }
+
+        const archiveWithNewTasks = archive.appendToContents(tasks);
+        const archiveStart = lines.findIndex((l) =>
+            this.ARCHIVE_PATTERN.exec(l)
+        );
+        lines.splice(archiveStart + 1, 0, ...archiveWithNewTasks);
+        return lines;
+    }
+}
+
+class Archive {
+    contents: string[];
+    constructor(lines: string[]) {
+        this.contents = lines;
+    }
+
+    appendToContents(lines: string[]) {
+        const afterLastLineWithContent =
+            this.contents.length -
+            this.contents
+                .slice()
+                .reverse()
+                .findIndex((l) => l.match(/\S/));
+        this.contents.splice(afterLastLineWithContent, 0, ...lines);
+        return this.contents;
     }
 }
