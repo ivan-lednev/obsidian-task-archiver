@@ -1,12 +1,11 @@
 import moment from "moment";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
+const ARCHIVE_PATTERN = new RegExp("# Archived");
+const ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
+const COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
 
 export class Archiver {
-    ARCHIVE_PATTERN = new RegExp("# Archived");
-    ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
-    COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
-
     private withDateTree: boolean;
 
     constructor(withDateTree: boolean = false) {
@@ -15,7 +14,7 @@ export class Archiver {
 
     archiveTasks(lines: string[]) {
         const hasArchive =
-            lines.findIndex((line) => this.ARCHIVE_PATTERN.exec(line)) >= 0;
+            lines.findIndex((line) => ARCHIVE_PATTERN.exec(line)) >= 0;
 
         if (!hasArchive) {
             return lines;
@@ -44,7 +43,7 @@ export class Archiver {
 
         let linesAfterTask = false;
         for (const line of linesWithoutArchive) {
-            if (line.match(this.COMPLETED_TASK_PATTERN)) {
+            if (line.match(COMPLETED_TASK_PATTERN)) {
                 newlyCompletedTasks.push(line);
                 linesAfterTask = true;
             } else if (line.match(INDENTED_LINE_PATTERN) && linesAfterTask) {
@@ -68,14 +67,14 @@ export class Archiver {
 
         for (const line of lines) {
             if (insideArchive) {
-                if (this.ARCHIVE_END_PATTERN.exec(line)) {
+                if (ARCHIVE_END_PATTERN.exec(line)) {
                     insideArchive = false;
                     linesWithoutArchive.push(line);
                 } else {
                     archiveLines.push(line);
                 }
             } else {
-                if (this.ARCHIVE_PATTERN.exec(line)) {
+                if (ARCHIVE_PATTERN.exec(line)) {
                     insideArchive = true;
                 }
                 linesWithoutArchive.push(line);
@@ -94,9 +93,7 @@ export class Archiver {
         archive: Archive
     ) {
         const archiveWithNewTasks = archive.appendToContents(tasks);
-        const archiveStart = lines.findIndex((l) =>
-            this.ARCHIVE_PATTERN.exec(l)
-        );
+        const archiveStart = lines.findIndex((l) => ARCHIVE_PATTERN.exec(l));
         lines.splice(archiveStart + 1, 0, ...archiveWithNewTasks);
         return lines;
     }
@@ -155,6 +152,6 @@ class Archive {
                 return i;
             }
         }
-        return this.contents.length
+        return this.contents.length;
     }
 }
