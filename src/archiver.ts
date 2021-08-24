@@ -1,3 +1,4 @@
+import { ArchiverSettings } from "main";
 import moment from "moment";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
@@ -7,9 +8,10 @@ const COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
 
 export class Archiver {
     private withDateTree: boolean;
+    private settings: ArchiverSettings;
 
-    constructor(withDateTree: boolean = false) {
-        this.withDateTree = withDateTree;
+    constructor(settings: ArchiverSettings) {
+        this.settings = settings;
     }
 
     archiveTasks(lines: string[]) {
@@ -83,7 +85,7 @@ export class Archiver {
 
         return {
             linesWithoutArchive,
-            archive: new Archive(archiveLines, this.withDateTree),
+            archive: new Archive(archiveLines, this.settings),
         };
     }
 
@@ -101,17 +103,18 @@ export class Archiver {
 
 class Archive {
     contents: string[];
-    withDateTree: boolean;
-    constructor(lines: string[], withDateTree: boolean) {
+    settings: ArchiverSettings;
+
+    constructor(lines: string[], settings: ArchiverSettings) {
         this.contents = lines;
-        this.withDateTree = withDateTree;
+        this.settings = settings;
     }
 
     appendToContents(newLines: string[]) {
         let insertionIndex;
 
-        if (this.withDateTree) {
-            const week = moment().format("YYYY-MM-[W]-w");
+        if (this.settings.useDateTree) {
+            const week = moment().format(this.settings.weeklyNoteFormat);
             newLines = newLines.map((line) => `    ${line}`);
             const weekLine = `- [[${week}]]`;
             const currentWeekIndexInTree = this.contents.findIndex((line) =>

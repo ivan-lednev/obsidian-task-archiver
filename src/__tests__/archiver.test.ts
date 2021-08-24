@@ -1,30 +1,35 @@
 import moment from "moment";
 import { Archiver } from "../archiver";
 
+const DEFAULT_SETTINGS = {
+    weeklyNoteFormat: "YYYY-MM-[W]-w",
+    useDateTree: false,
+};
+
 describe("Moving top-level tasks to the archive", () => {
     test("No-op for files without completed tasks", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["foo", "bar", "# Archived"];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual(lines);
     });
 
     test("No-op for files without an archive", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["- [x] foo", "bar"];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual(lines);
     });
 
     test("Moves a single task to an empty archive", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual(["- [ ] bar", "# Archived", "- [x] foo"]);
     });
 
     test("Moves a single task to the end of a populated archive", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
             "- [x] foo",
             "- [ ] bar",
@@ -43,7 +48,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Moves multiple tasks to the end of a populated archive", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
             "- [x] foo",
             "- [x] foo #2",
@@ -66,7 +71,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Moves sub-items with top-level items", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
             "- [ ] bar",
             "- [x] foo",
@@ -89,7 +94,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Moves sub-items with top-level items after the archive heading, indented with tabs", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
             "- [ ] bar",
             "# Archived",
@@ -116,7 +121,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Respects newlines around headings", () => {
-        const archiver = new Archiver();
+        const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
             "- [x] foo",
             "",
@@ -145,7 +150,10 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Archives tasks under a bullet with the current week", () => {
-        const archiver = new Archiver(true);
+        const archiver = new Archiver({
+            ...DEFAULT_SETTINGS,
+            useDateTree: true,
+        });
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
         const result = archiver.archiveTasks(lines);
         const week = moment().format("YYYY-MM-[W]-w");
@@ -158,7 +166,10 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Appends tasks under the current week bullet if it exists", () => {
-        const archiver = new Archiver(true);
+        const archiver = new Archiver({
+            ...DEFAULT_SETTINGS,
+            useDateTree: true,
+        });
         const week = moment().format("YYYY-MM-[W]-w");
         const lines = [
             "- [x] foo",
@@ -166,7 +177,7 @@ describe("Moving top-level tasks to the archive", () => {
             "# Archived",
             `- [[${week}]]`,
             "    - [x] baz",
-            "- Other stuff"
+            "- Other stuff",
         ];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual([
@@ -175,7 +186,7 @@ describe("Moving top-level tasks to the archive", () => {
             `- [[${week}]]`,
             "    - [x] baz",
             "    - [x] foo",
-            "- Other stuff"
+            "- Other stuff",
         ]);
     });
 });
