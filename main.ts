@@ -1,12 +1,13 @@
-import {
-    App,
-    Modal,
-    Notice,
-    Plugin,
-    PluginSettingTab,
-    Setting,
-} from "obsidian";
+import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { Archiver } from "src/archiver";
+
+interface ArchiverSettings {
+    weeklyNoteFormat: string;
+}
+
+const DEFAULT_SETTINGS: ArchiverSettings = {
+    weeklyNoteFormat: "YYYY-MM-[W]-w",
+};
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;
@@ -70,7 +71,6 @@ class ArchiverSettingTab extends PluginSettingTab {
                 momentFormatComponent
                     .setDefaultFormat("YYYY-MM-[W]-w")
                     .setValue(this.plugin.settings.weeklyNoteFormat)
-                    // .setSampleEl(createEl("h2", { text: "Sample el!" }))
                     .onChange(async (value) => {
                         this.plugin.settings.weeklyNoteFormat = value;
                         await this.plugin.saveSettings();
@@ -78,11 +78,3 @@ class ArchiverSettingTab extends PluginSettingTab {
             });
     }
 }
-
-interface ArchiverSettings {
-    weeklyNoteFormat: string;
-}
-
-const DEFAULT_SETTINGS: ArchiverSettings = {
-    weeklyNoteFormat: "YYYY-MM-[W]-w",
-};
