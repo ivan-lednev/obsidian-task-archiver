@@ -1,18 +1,16 @@
+import { settings } from "cluster";
 import {
     App,
+    MomentFormatComponent,
     Plugin,
     PluginSettingTab,
     Setting,
     ToggleComponent,
 } from "obsidian";
 import { Archiver } from "src/archiver";
+import { ArchiverSettings } from "./src/ArchiverSettings";
 
-export interface ArchiverSettings {
-    weeklyNoteFormat: string;
-    useDateTree: boolean;
-}
-
-export const DEFAULT_SETTINGS: ArchiverSettings = {
+const DEFAULT_SETTINGS: ArchiverSettings = {
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useDateTree: true,
 };
@@ -85,15 +83,39 @@ class ArchiverSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setDisabled(!this.plugin.settings.useDateTree)
             .setName("Weekly note pattern")
-            .setDesc("Weekly note pattern")
-            .addMomentFormat((momentFormatComponent) => {
-                momentFormatComponent
-                    .setDefaultFormat("YYYY-MM-[W]-w")
-                    .setValue(this.plugin.settings.weeklyNoteFormat)
-                    .onChange(async (value) => {
-                        this.plugin.settings.weeklyNoteFormat = value;
-                        await this.plugin.saveSettings();
-                    });
+            .then((setting) => {
+                setting.addMomentFormat((momentFormat) => {
+                    setting.descEl.appendChild(
+                        createFragment((fragment) => {
+                            fragment.appendText("For more syntax, refer to ");
+                            fragment.createEl(
+                                "a",
+                                {
+                                    text: "format reference",
+                                    href: "https://momentjs.com/docs/#/displaying/format/",
+                                },
+                                (a) => {
+                                    a.setAttr("target", "_blank");
+                                }
+                            );
+                            fragment.createEl("br");
+                            fragment.appendText(
+                                "Your current syntax looks like this: "
+                            );
+                            momentFormat.setSampleEl(fragment.createEl("b"));
+                            fragment.createEl("br");
+                        })
+                    );
+
+                    momentFormat
+                        .setDefaultFormat(this.plugin.settings.weeklyNoteFormat)
+                        .setPlaceholder(this.plugin.settings.weeklyNoteFormat)
+                        .setValue(this.plugin.settings.weeklyNoteFormat)
+                        .onChange(async (value) => {
+                            this.plugin.settings.weeklyNoteFormat = value;
+                            await this.plugin.saveSettings();
+                        });
+                });
             });
     }
 }

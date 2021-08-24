@@ -1,4 +1,4 @@
-import { ArchiverSettings } from "main";
+import { ArchiverSettings } from "./ArchiverSettings";
 import moment from "moment";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
@@ -7,7 +7,6 @@ const ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
 const COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
 
 export class Archiver {
-    private withDateTree: boolean;
     private settings: ArchiverSettings;
 
     constructor(settings: ArchiverSettings) {
