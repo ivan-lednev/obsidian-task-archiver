@@ -15,8 +15,7 @@ export default {
   input: 'main.ts',
   output: {
     dir: '.',
-    sourcemap: 'inline',
-    sourcemapExcludeSources: isProd,
+    sourcemap: isProd ? false : 'inline',
     format: 'cjs',
     exports: 'default',
     banner,

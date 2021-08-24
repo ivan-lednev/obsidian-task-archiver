@@ -2,8 +2,8 @@
     "id": "obsidian-task-archiver",
     "name": "Obsidian Task Archiver",
     "version": "0.1.0",
-    "minAppVersion": "0.12.12",
-    "description": "This plugin is inspired by org-mode that lets you get completed tasks out of the way efficiently",
+    "minAppVersion": "0.12.0",
+    "description": "Move completed tasks to an archive with a date tree",
     "author": "Ivan Lednev",
     "authorUrl": "https://github.com/ivan-lednev",
     "isDesktopOnly": false
