@@ -2,20 +2,24 @@ import { ArchiverSettings } from "./ArchiverSettings";
 import moment from "moment";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
-const ARCHIVE_PATTERN = new RegExp("# Archived");
-const ARCHIVE_END_PATTERN = new RegExp("^#+\\s+(?!Archived)");
 const COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
 
 export class Archiver {
     private settings: ArchiverSettings;
+    private archivePattern: RegExp;
+    private archiveEndPattern: RegExp;
 
     constructor(settings: ArchiverSettings) {
         this.settings = settings;
+        this.archivePattern = new RegExp(`^#+\\s+${settings.archiveHeading}`);
+        this.archiveEndPattern = new RegExp(
+            `^#+\\s+(?!${settings.archiveHeading})`
+        );
     }
 
     archiveTasks(lines: string[]) {
         const hasArchive =
-            lines.findIndex((line) => ARCHIVE_PATTERN.exec(line)) >= 0;
+            lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
 
         if (!hasArchive) {
             return lines;
@@ -68,14 +72,14 @@ export class Archiver {
 
         for (const line of lines) {
             if (insideArchive) {
-                if (ARCHIVE_END_PATTERN.exec(line)) {
+                if (this.archiveEndPattern.exec(line)) {
                     insideArchive = false;
                     linesWithoutArchive.push(line);
                 } else {
                     archiveLines.push(line);
                 }
             } else {
-                if (ARCHIVE_PATTERN.exec(line)) {
+                if (this.archivePattern.exec(line)) {
                     insideArchive = true;
                 }
                 linesWithoutArchive.push(line);
@@ -94,7 +98,9 @@ export class Archiver {
         archive: Archive
     ) {
         const archiveWithNewTasks = archive.appendToContents(tasks);
-        const archiveStart = lines.findIndex((l) => ARCHIVE_PATTERN.exec(l));
+        const archiveStart = lines.findIndex((l) =>
+            this.archivePattern.exec(l)
+        );
         lines.splice(archiveStart + 1, 0, ...archiveWithNewTasks);
         return lines;
     }

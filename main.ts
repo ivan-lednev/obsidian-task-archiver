@@ -1,16 +1,9 @@
-import { settings } from "cluster";
-import {
-    App,
-    MomentFormatComponent,
-    Plugin,
-    PluginSettingTab,
-    Setting,
-    ToggleComponent,
-} from "obsidian";
-import { Archiver } from "src/archiver";
+import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { Archiver } from "src/Archiver";
 import { ArchiverSettings } from "./src/ArchiverSettings";
 
 const DEFAULT_SETTINGS: ArchiverSettings = {
+    archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useDateTree: true,
 };
@@ -71,13 +64,28 @@ class ArchiverSettingTab extends PluginSettingTab {
         containerEl.createEl("h2", { text: "Obsidian Task Archiver Settings" });
 
         new Setting(containerEl)
+            .setName("Archive heading")
+            .setDesc("A heading with this text will be used as an archive")
+            .addText((textComponent) => {
+                textComponent
+                    .setPlaceholder(this.plugin.settings.archiveHeading)
+                    .setValue(this.plugin.settings.archiveHeading)
+                    .onChange(async (value) => {
+                        this.plugin.settings.archiveHeading = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(containerEl)
             .setName("Use date trees")
             .setDesc("Add completed tasks under a link to the current week")
             .addToggle((toggleComponent) =>
-                toggleComponent.onChange(async (value) => {
-                    this.plugin.settings.useDateTree = value;
-                    await this.plugin.saveSettings();
-                })
+                toggleComponent
+                    .setValue(this.plugin.settings.useDateTree)
+                    .onChange(async (value) => {
+                        this.plugin.settings.useDateTree = value;
+                        await this.plugin.saveSettings();
+                    })
             );
 
         new Setting(containerEl)

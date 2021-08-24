@@ -1,7 +1,8 @@
 import moment from "moment";
-import { Archiver } from "../archiver";
+import { Archiver } from "../Archiver";
 
 const DEFAULT_SETTINGS = {
+    archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useDateTree: false,
 };
@@ -144,6 +145,20 @@ describe("Moving top-level tasks to the archive", () => {
             "- [x] Completed",
             "- [x] foo",
             "",
+            "",
+            "# Another heading",
+        ]);
+    });
+
+    test.skip("Adds newlines around headings when the archive heading is empty", () => {
+        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const lines = ["- [x] foo", "", "# Archived", "", "# Another heading"];
+        const result = archiver.archiveTasks(lines);
+        expect(result).toEqual([
+            "",
+            "# Archived",
+            "",
+            "- [x] foo",
             "",
             "# Another heading",
         ]);
