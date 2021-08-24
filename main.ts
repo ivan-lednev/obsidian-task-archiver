@@ -1,12 +1,20 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+    App,
+    Plugin,
+    PluginSettingTab,
+    Setting,
+    ToggleComponent,
+} from "obsidian";
 import { Archiver } from "src/archiver";
 
 interface ArchiverSettings {
     weeklyNoteFormat: string;
+    useDateTree: boolean;
 }
 
 const DEFAULT_SETTINGS: ArchiverSettings = {
     weeklyNoteFormat: "YYYY-MM-[W]-w",
+    useDateTree: true,
 };
 
 export default class ObsidianTaskArchiver extends Plugin {
@@ -65,6 +73,17 @@ class ArchiverSettingTab extends PluginSettingTab {
         containerEl.createEl("h2", { text: "Obsidian Task Archiver Settings" });
 
         new Setting(containerEl)
+            .setName("Use date trees")
+            .setDesc("Add completed tasks under a link to the current week")
+            .addToggle((toggleComponent) =>
+                toggleComponent.onChange(async (value) => {
+                    this.plugin.settings.useDateTree = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setDisabled(!this.plugin.settings.useDateTree)
             .setName("Weekly note pattern")
             .setDesc("Weekly note pattern")
             .addMomentFormat((momentFormatComponent) => {
