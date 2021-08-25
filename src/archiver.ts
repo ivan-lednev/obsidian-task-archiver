@@ -38,6 +38,7 @@ export class Archiver {
             this.extractCompletedTasks(linesWithoutArchive);
 
         if (newlyCompletedTasks.length === 0) {
+            new Notice("No tasks to archive");
             return lines;
         }
 
@@ -46,6 +47,8 @@ export class Archiver {
             linesWithoutCompletedTasks,
             archive
         );
+
+        new Notice(`Archived ${newlyCompletedTasks.length} lines`);
         return linesWithInsertedArchivedTasks;
     }
 
