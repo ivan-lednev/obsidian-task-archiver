@@ -1,5 +1,6 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import moment from "moment";
+import { Notice } from "obsidian";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
 const INDENTED_LIST_ITEM_PATTERN = new RegExp(
@@ -25,6 +26,9 @@ export class Archiver {
             lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
 
         if (!hasArchive) {
+            new Notice(
+                `To achive tasks, please create a heading with the text: '${this.settings.archiveHeading}'`
+            );
             return lines;
         }
 
