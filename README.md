@@ -16,6 +16,10 @@ The plugin lets you configure the following:
 - whether completed tasks should be added under a link to the current week;
 - the pattern of the weekly note link.
 
+### Usage
+
+Add an "Archived" Heading to a file and run the following command: "Archive tasks in this file".
+
 ## Acknowledgements
 
 This plugin is a simple & incomplete (for now) implementation of the archiving features of [org-mode](https://orgmode.org/).
