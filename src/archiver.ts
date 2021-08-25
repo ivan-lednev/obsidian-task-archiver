@@ -2,7 +2,10 @@ import { ArchiverSettings } from "./ArchiverSettings";
 import moment from "moment";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
-const COMPLETED_TASK_PATTERN = new RegExp("- \\[x\\] ");
+const INDENTED_LIST_ITEM_PATTERN = new RegExp(
+    "^(?<indentationChars>(?: {2,}|\\t)\\s*)[-*+]"
+);
+const COMPLETED_TASK_PATTERN = new RegExp("^- \\[x\\] ");
 
 export class Archiver {
     private settings: ArchiverSettings;

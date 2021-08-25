@@ -204,4 +204,37 @@ describe("Moving top-level tasks to the archive", () => {
             "- Other stuff",
         ]);
     });
+
+    test("Works only with top-level tasks", () => {
+        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const lines = [
+            "- [ ] bar",
+            "    - [x] completed sub-task",
+            "- [x] foo",
+            "# Archived",
+        ];
+        const result = archiver.archiveTasks(lines);
+        expect(result).toEqual([
+            "- [ ] bar",
+            "    - [x] completed sub-task",
+            "# Archived",
+            "- [x] foo",
+        ]);
+    });
+
+    test.skip("Detects sub-item indentation from newly completed tasks", () => {
+        const archiver = new Archiver({
+            ...DEFAULT_SETTINGS,
+            useDateTree: true,
+        });
+        const week = moment().format("YYYY-MM-[W]-w");
+        const lines = ["- [x] foo", "    - bar", "# Archived"];
+        const result = archiver.archiveTasks(lines);
+        expect(result).toEqual([
+            "# Archived",
+            `- [[${week}]]`,
+            "\t- [x] foo",
+            "\t\t- bar",
+        ]);
+    });
 });
