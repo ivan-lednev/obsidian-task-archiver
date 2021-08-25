@@ -103,9 +103,9 @@ describe("Moving top-level tasks to the archive", () => {
             "# After archive",
             "Other stuff",
             "- [x] foo",
-            "   stuff in the same block".replace("   ", "\t"),
-            "   - Some info".replace("   ", "\t"),
-            "   - [ ] A subtask".replace("   ", "\t"),
+            "\tstuff in the same block",
+            "\t- Some info",
+            "\t- [ ] A subtask",
         ];
         const result = archiver.archiveTasks(lines);
         expect(result).toEqual([
@@ -113,9 +113,9 @@ describe("Moving top-level tasks to the archive", () => {
             "# Archived",
             "- [x] Completed",
             "- [x] foo",
-            "   stuff in the same block".replace("   ", "\t"),
-            "   - Some info".replace("   ", "\t"),
-            "   - [ ] A subtask".replace("   ", "\t"),
+            "\tstuff in the same block",
+            "\t- Some info",
+            "\t- [ ] A subtask",
             "# After archive",
             "Other stuff",
         ]);
