@@ -125,6 +125,21 @@ describe("Moving top-level tasks to the archive", () => {
         ]);
     });
 
+    test("Uses indentation values from settings", () => {
+        const archiver = new Archiver({
+            ...DEFAULT_SETTINGS,
+            useDateTree: true,
+            indentationSettings: {
+                useTab: false,
+                tabSize: 3,
+            },
+        });
+        const lines = ["- [x] foo", "# Archived"];
+        const week = moment().format("YYYY-MM-[W]-w");
+        const result = archiver.archiveTasks(lines).lines;
+        expect(result).toEqual(["# Archived", `- [[${week}]]`, "   - [x] foo"]);
+    });
+
     test("Respects newlines around headings", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
