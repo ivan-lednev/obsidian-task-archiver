@@ -3,9 +3,6 @@ import moment from "moment";
 import { Notice } from "obsidian";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
-const INDENTED_LIST_ITEM_PATTERN = new RegExp(
-    "^(?<indentationChars>(?: {2,}|\\t)\\s*)[-*+]"
-);
 const COMPLETED_TASK_PATTERN = new RegExp("^- \\[x\\] ");
 
 export class Archiver {
@@ -26,10 +23,10 @@ export class Archiver {
             lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
 
         if (!hasArchive) {
-            new Notice(
-                `To achive tasks, please create a heading with the text: '${this.settings.archiveHeading}'`
-            );
-            return lines;
+            return {
+                summary: `To achive tasks, please create a heading with the text: '${this.settings.archiveHeading}'`,
+                lines: lines,
+            };
         }
 
         const { linesWithoutArchive, archive } = this.extractArchive(lines);
@@ -38,8 +35,10 @@ export class Archiver {
             this.extractCompletedTasks(linesWithoutArchive);
 
         if (newlyCompletedTasks.length === 0) {
-            new Notice("No tasks to archive");
-            return lines;
+            return {
+                summary: "No tasks to archive",
+                lines: lines,
+            };
         }
 
         const linesWithInsertedArchivedTasks = this.addTasksToArchive(
@@ -48,8 +47,10 @@ export class Archiver {
             archive
         );
 
-        new Notice(`Archived ${newlyCompletedTasks.length} lines`);
-        return linesWithInsertedArchivedTasks;
+        return {
+            summary: `Archived ${newlyCompletedTasks.length} lines`,
+            lines: linesWithInsertedArchivedTasks,
+        };
     }
 
     private extractCompletedTasks(linesWithoutArchive: string[]) {
@@ -130,7 +131,11 @@ class Archive {
 
         if (this.settings.useDateTree) {
             const week = moment().format(this.settings.weeklyNoteFormat);
-            newLines = newLines.map((line) => `    ${line}`);
+            const indentationSettings = this.settings.indentationSettings;
+            const indentation = indentationSettings.useTab
+                ? "\t"
+                : " ".repeat(indentationSettings.tabSize);
+            newLines = newLines.map((line) => `${indentation}${line}`);
             const weekLine = `- [[${week}]]`;
             const currentWeekIndexInTree = this.contents.findIndex((line) =>
                 line.startsWith(weekLine)

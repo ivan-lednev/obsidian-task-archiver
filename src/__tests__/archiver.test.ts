@@ -5,27 +5,31 @@ const DEFAULT_SETTINGS = {
     archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useDateTree: false,
+    indentationSettings: {
+        useTab: true,
+        tabSize: 4,
+    },
 };
 
 describe("Moving top-level tasks to the archive", () => {
     test("No-op for files without completed tasks", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["foo", "bar", "# Archived"];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual(lines);
     });
 
     test("No-op for files without an archive", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["- [x] foo", "bar"];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual(lines);
     });
 
     test("Moves a single task to an empty archive", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual(["- [ ] bar", "# Archived", "- [x] foo"]);
     });
 
@@ -38,7 +42,7 @@ describe("Moving top-level tasks to the archive", () => {
             "- [x] Completed",
             "- [x] Completed #2",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
@@ -59,7 +63,7 @@ describe("Moving top-level tasks to the archive", () => {
             "- [x] Completed",
             "- [x] Completed #2",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
@@ -77,20 +81,20 @@ describe("Moving top-level tasks to the archive", () => {
             "- [ ] bar",
             "- [x] foo",
             "  stuff in the same block",
-            "    - Some info",
-            "    - [ ] A subtask",
+            "\t- Some info",
+            "\t- [ ] A subtask",
             "# Archived",
             "- [x] Completed",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
             "- [x] Completed",
             "- [x] foo",
             "  stuff in the same block",
-            "    - Some info",
-            "    - [ ] A subtask",
+            "\t- Some info",
+            "\t- [ ] A subtask",
         ]);
     });
 
@@ -107,7 +111,7 @@ describe("Moving top-level tasks to the archive", () => {
             "\t- Some info",
             "\t- [ ] A subtask",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
@@ -135,7 +139,7 @@ describe("Moving top-level tasks to the archive", () => {
             "",
             "# Another heading",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "",
             "",
@@ -153,7 +157,7 @@ describe("Moving top-level tasks to the archive", () => {
     test.skip("Adds newlines around headings when the archive heading is empty", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["- [x] foo", "", "# Archived", "", "# Another heading"];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "",
             "# Archived",
@@ -170,13 +174,13 @@ describe("Moving top-level tasks to the archive", () => {
             useDateTree: true,
         });
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         const week = moment().format("YYYY-MM-[W]-w");
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
             `- [[${week}]]`,
-            "    - [x] foo",
+            "\t- [x] foo",
         ]);
     });
 
@@ -191,16 +195,16 @@ describe("Moving top-level tasks to the archive", () => {
             "- [ ] bar",
             "# Archived",
             `- [[${week}]]`,
-            "    - [x] baz",
+            "\t- [x] baz",
             "- Other stuff",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "- [ ] bar",
             "# Archived",
             `- [[${week}]]`,
-            "    - [x] baz",
-            "    - [x] foo",
+            "\t- [x] baz",
+            "\t- [x] foo",
             "- Other stuff",
         ]);
     });
@@ -209,32 +213,16 @@ describe("Moving top-level tasks to the archive", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = [
             "- [ ] bar",
-            "    - [x] completed sub-task",
+            "\t- [x] completed sub-task",
             "- [x] foo",
             "# Archived",
         ];
-        const result = archiver.archiveTasks(lines);
+        const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
             "- [ ] bar",
-            "    - [x] completed sub-task",
+            "\t- [x] completed sub-task",
             "# Archived",
             "- [x] foo",
-        ]);
-    });
-
-    test.skip("Detects sub-item indentation from newly completed tasks", () => {
-        const archiver = new Archiver({
-            ...DEFAULT_SETTINGS,
-            useDateTree: true,
-        });
-        const week = moment().format("YYYY-MM-[W]-w");
-        const lines = ["- [x] foo", "    - bar", "# Archived"];
-        const result = archiver.archiveTasks(lines);
-        expect(result).toEqual([
-            "# Archived",
-            `- [[${week}]]`,
-            "\t- [x] foo",
-            "\t\t- bar",
         ]);
     });
 });

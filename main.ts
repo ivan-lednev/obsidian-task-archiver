@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { Archiver } from "src/Archiver";
 import { ArchiverSettings } from "./src/ArchiverSettings";
 
@@ -6,6 +6,10 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useDateTree: true,
+    indentationSettings: {
+        useTab: true,
+        tabSize: 4,
+    },
 };
 
 export default class ObsidianTaskArchiver extends Plugin {
@@ -26,21 +30,24 @@ export default class ObsidianTaskArchiver extends Plugin {
         const activeFile = this.app.workspace.getActiveFile();
         const fileContents = await this.app.vault.read(activeFile);
         const lines = fileContents.split("\n");
-        const linesWithInsertedArchivedTasks = new Archiver(
-            this.settings
-        ).archiveTasks(lines);
+        const archiver = new Archiver(this.settings);
+        const archiveResult = archiver.archiveTasks(lines);
 
-        this.app.vault.modify(
-            activeFile,
-            linesWithInsertedArchivedTasks.join("\n")
-        );
+        new Notice(archiveResult.summary);
+
+        this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
     }
 
     async loadSettings() {
         this.settings = Object.assign(
             {},
             DEFAULT_SETTINGS,
-            await this.loadData()
+            await this.loadData(),
+            {
+                indentationSettings: {
+                    ...(this.app.vault as any).config,
+                },
+            }
         );
     }
 
