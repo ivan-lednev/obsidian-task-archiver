@@ -86,7 +86,7 @@ export class Archiver {
                 if (this.archiveEndPattern.exec(line)) {
                     insideArchive = false;
                     linesWithoutArchive.push(line);
-                } else {
+                } else if (line.trim().length > 0) {
                     archiveLines.push(line);
                 }
             } else {
@@ -148,18 +148,12 @@ class Archive {
         }
 
         if (!insertionIndex) {
-            const afterLastLineWithContent =
-                this.contents.length -
-                this.contents
-                    .slice()
-                    .reverse()
-                    .findIndex((l) => l.trim().length > 0);
-
-            insertionIndex = afterLastLineWithContent;
+            insertionIndex = this.contents.length;
         }
 
         this.contents.splice(insertionIndex, 0, ...newLines);
-        return this.contents;
+
+        return ["", ...this.contents, ""];
     }
 
     private findBlockEnd(parentLine: string) {
