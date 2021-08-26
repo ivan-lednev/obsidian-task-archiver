@@ -229,4 +229,16 @@ describe("Moving top-level tasks to the archive", () => {
             "",
         ]);
     });
+
+    test("Supports numbered tasks", () => {
+        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const lines = ["1. [x] foo", "# Archived"];
+        const result = archiver.archiveTasks(lines).lines;
+        expect(result).toEqual([
+            "# Archived",
+            "",
+            "1. [x] foo",
+            "",
+        ]);
+    })
 });

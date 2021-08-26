@@ -3,7 +3,7 @@ import moment from "moment";
 import { Notice } from "obsidian";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
-const COMPLETED_TASK_PATTERN = new RegExp("^- \\[x\\] ");
+const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\.) \\[x\\] ");
 
 export class Archiver {
     private settings: ArchiverSettings;
