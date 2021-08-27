@@ -5,7 +5,9 @@ import { ArchiverSettings } from "./src/ArchiverSettings";
 const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
-    useDateTree: true,
+    useWeeks: true,
+    dailyNoteFormat: "YYYY-MM-DD",
+    useDays: false,
     indentationSettings: {
         useTab: true,
         tabSize: 4,
@@ -92,20 +94,22 @@ class ArchiverSettingTab extends PluginSettingTab {
                     });
             });
 
+        containerEl.createEl("h3", { text: "Date tree" });
+
         new Setting(containerEl)
-            .setName("Use date trees")
+            .setName("Use weeks")
             .setDesc("Add completed tasks under a link to the current week")
             .addToggle((toggleComponent) =>
                 toggleComponent
-                    .setValue(this.plugin.settings.useDateTree)
+                    .setValue(this.plugin.settings.useWeeks)
                     .onChange(async (value) => {
-                        this.plugin.settings.useDateTree = value;
+                        this.plugin.settings.useWeeks = value;
                         await this.plugin.saveSettings();
                     })
             );
 
         new Setting(containerEl)
-            .setDisabled(!this.plugin.settings.useDateTree)
+            .setDisabled(!this.plugin.settings.useWeeks)
             .setName("Weekly note pattern")
             .then((setting) => {
                 setting.addMomentFormat((momentFormat) => {
@@ -137,6 +141,56 @@ class ArchiverSettingTab extends PluginSettingTab {
                         .setValue(this.plugin.settings.weeklyNoteFormat)
                         .onChange(async (value) => {
                             this.plugin.settings.weeklyNoteFormat = value;
+                            await this.plugin.saveSettings();
+                        });
+                });
+            });
+
+        new Setting(containerEl)
+            .setName("Use days")
+            .setDesc("Add completed tasks under a link to the current day")
+            .addToggle((toggleComponent) =>
+                toggleComponent
+                    .setValue(this.plugin.settings.useDays)
+                    .onChange(async (value) => {
+                        this.plugin.settings.useDays = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setDisabled(!this.plugin.settings.useDays)
+            .setName("Daily note pattern")
+            .then((setting) => {
+                setting.addMomentFormat((momentFormat) => {
+                    setting.descEl.appendChild(
+                        createFragment((fragment) => {
+                            fragment.appendText("For more syntax, refer to ");
+                            fragment.createEl(
+                                "a",
+                                {
+                                    text: "format reference",
+                                    href: "https://momentjs.com/docs/#/displaying/format/",
+                                },
+                                (a) => {
+                                    a.setAttr("target", "_blank");
+                                }
+                            );
+                            fragment.createEl("br");
+                            fragment.appendText(
+                                "Your current syntax looks like this: "
+                            );
+                            momentFormat.setSampleEl(fragment.createEl("b"));
+                            fragment.createEl("br");
+                        })
+                    );
+
+                    momentFormat
+                        .setDefaultFormat(this.plugin.settings.dailyNoteFormat)
+                        .setPlaceholder(this.plugin.settings.dailyNoteFormat)
+                        .setValue(this.plugin.settings.dailyNoteFormat)
+                        .onChange(async (value) => {
+                            this.plugin.settings.dailyNoteFormat = value;
                             await this.plugin.saveSettings();
                         });
                 });

@@ -7,7 +7,9 @@ window.moment = moment;
 const DEFAULT_SETTINGS = {
     archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
-    useDateTree: false,
+    useWeeks: false,
+    dailyNoteFormat: "YYYY-MM-DD",
+    useDays: false,
     indentationSettings: {
         useTab: true,
         tabSize: 4,
@@ -144,7 +146,7 @@ describe("Moving top-level tasks to the archive", () => {
     test("Uses indentation values from settings", () => {
         const archiver = new Archiver({
             ...DEFAULT_SETTINGS,
-            useDateTree: true,
+            useWeeks: true,
             indentationSettings: {
                 useTab: false,
                 tabSize: 3,
@@ -165,7 +167,7 @@ describe("Moving top-level tasks to the archive", () => {
     test("Archives tasks under a bullet with the current week", () => {
         const archiver = new Archiver({
             ...DEFAULT_SETTINGS,
-            useDateTree: true,
+            useWeeks: true,
         });
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
         const result = archiver.archiveTasks(lines).lines;
@@ -183,7 +185,7 @@ describe("Moving top-level tasks to the archive", () => {
     test("Appends tasks under the current week bullet if it exists", () => {
         const archiver = new Archiver({
             ...DEFAULT_SETTINGS,
-            useDateTree: true,
+            useWeeks: true,
         });
         const week = moment().format("YYYY-MM-[W]-w");
         const lines = [
@@ -261,5 +263,25 @@ describe("Moving top-level tasks to the archive", () => {
             "- [x] foo",
             "",
         ]);
+    });
+
+    describe("Using days in the date tree", () => {
+        test("Archives tasks under a bullet with the current day", () => {
+            const archiver = new Archiver({
+                ...DEFAULT_SETTINGS,
+                useDays: true,
+            });
+            const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
+            const result = archiver.archiveTasks(lines).lines;
+            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
+            expect(result).toEqual([
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${day}]]`,
+                "\t- [x] foo",
+                "",
+            ]);
+        });
     });
 });

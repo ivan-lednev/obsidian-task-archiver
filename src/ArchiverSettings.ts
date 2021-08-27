@@ -1,7 +1,9 @@
 export interface ArchiverSettings {
     archiveHeading: string;
     weeklyNoteFormat: string;
-    useDateTree: boolean;
+    useWeeks: boolean;
+    dailyNoteFormat: string;
+    useDays: boolean;
     indentationSettings: IndentationSettings;
 }
 

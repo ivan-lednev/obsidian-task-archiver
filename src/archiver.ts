@@ -127,7 +127,7 @@ class Archive {
     appendToContents(newLines: string[]) {
         let insertionIndex;
 
-        if (this.settings.useDateTree) {
+        if (this.settings.useWeeks) {
             const week = window.moment().format(this.settings.weeklyNoteFormat);
             const indentationSettings = this.settings.indentationSettings;
             const indentation = indentationSettings.useTab
@@ -142,6 +142,24 @@ class Archive {
                 newLines.unshift(weekLine);
             } else {
                 insertionIndex = this.findBlockEnd(weekLine);
+            }
+        }
+
+        if (this.settings.useDays) {
+            const day = window.moment().format(this.settings.dailyNoteFormat);
+            const indentationSettings = this.settings.indentationSettings;
+            const indentation = indentationSettings.useTab
+                ? "\t"
+                : " ".repeat(indentationSettings.tabSize);
+            newLines = newLines.map((line) => `${indentation}${line}`);
+            const dayLine = `- [[${day}]]`;
+            const currentWeekIndexInTree = this.contents.findIndex((line) =>
+                line.startsWith(dayLine)
+            );
+            if (currentWeekIndexInTree < 0) {
+                newLines.unshift(dayLine);
+            } else {
+                insertionIndex = this.findBlockEnd(day);
             }
         }
 
