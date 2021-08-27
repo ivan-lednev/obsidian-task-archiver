@@ -1,6 +1,5 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import moment from "moment";
-import { Notice } from "obsidian";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
 const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\.) \\[x\\] ");
@@ -23,7 +22,10 @@ export class Archiver {
             lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
 
         if (!hasArchive) {
-            lines.push("# Archived")
+            if (lines[lines.length - 1].trim() !== "") {
+                lines.push("");
+            }
+            lines.push(`# ${this.settings.archiveHeading}`);
         }
 
         const { linesWithoutArchive, archive } = this.extractArchive(lines);

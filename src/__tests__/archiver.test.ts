@@ -230,10 +230,17 @@ describe("Moving top-level tasks to the archive", () => {
         expect(result).toEqual(["# Archived", "", "1. [x] foo", ""]);
     });
 
-    test("Adds an archive if there isn't one", () => {
+    test("Appends an archive heading to the end of file with a newline if there isn't any", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
-        const lines = ["1. [x] foo"];
+        const lines = ["- Text", "1. [x] foo"];
         const result = archiver.archiveTasks(lines).lines;
-        expect(result).toEqual(["# Archived", "", "1. [x] foo", ""]);
+        expect(result).toEqual([
+            "- Text",
+            "",
+            "# Archived",
+            "",
+            "1. [x] foo",
+            "",
+        ]);
     });
 });
