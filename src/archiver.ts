@@ -23,10 +23,7 @@ export class Archiver {
             lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
 
         if (!hasArchive) {
-            return {
-                summary: `To achive tasks, please create a heading with the text: '${this.settings.archiveHeading}'`,
-                lines: lines,
-            };
+            lines.push("# Archived")
         }
 
         const { linesWithoutArchive, archive } = this.extractArchive(lines);

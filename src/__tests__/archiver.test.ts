@@ -19,13 +19,6 @@ describe("Moving top-level tasks to the archive", () => {
         expect(result).toEqual(lines);
     });
 
-    test("No-op for files without an archive", () => {
-        const archiver = new Archiver(DEFAULT_SETTINGS);
-        const lines = ["- [x] foo", "bar"];
-        const result = archiver.archiveTasks(lines).lines;
-        expect(result).toEqual(lines);
-    });
-
     test("Moves a single task to an empty archive", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
@@ -234,11 +227,13 @@ describe("Moving top-level tasks to the archive", () => {
         const archiver = new Archiver(DEFAULT_SETTINGS);
         const lines = ["1. [x] foo", "# Archived"];
         const result = archiver.archiveTasks(lines).lines;
-        expect(result).toEqual([
-            "# Archived",
-            "",
-            "1. [x] foo",
-            "",
-        ]);
-    })
+        expect(result).toEqual(["# Archived", "", "1. [x] foo", ""]);
+    });
+
+    test("Adds an archive if there isn't one", () => {
+        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const lines = ["1. [x] foo"];
+        const result = archiver.archiveTasks(lines).lines;
+        expect(result).toEqual(["# Archived", "", "1. [x] foo", ""]);
+    });
 });
