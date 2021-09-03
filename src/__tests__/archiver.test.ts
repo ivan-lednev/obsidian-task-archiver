@@ -243,4 +243,20 @@ describe("Moving top-level tasks to the archive", () => {
             "",
         ]);
     });
+
+    test("Escapes regex characters in the archive heading value", () => {
+        const archiver = new Archiver({
+            ...DEFAULT_SETTINGS,
+            archiveHeading: "[[Archived]]",
+        });
+        const lines = ["- [x] foo", "- [ ] bar", "# [[Archived]]"];
+        const result = archiver.archiveTasks(lines).lines;
+        expect(result).toEqual([
+            "- [ ] bar",
+            "# [[Archived]]",
+            "",
+            "- [x] foo",
+            "",
+        ]);
+    });
 });

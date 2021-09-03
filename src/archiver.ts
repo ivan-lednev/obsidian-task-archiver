@@ -1,8 +1,9 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import moment from "moment";
+import escapeStringRegexp from "escape-string-regexp";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
-const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\.) \\[x\\] ");
+const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\\.) \\[x\\] ");
 
 export class Archiver {
     private settings: ArchiverSettings;
@@ -11,10 +12,9 @@ export class Archiver {
 
     constructor(settings: ArchiverSettings) {
         this.settings = settings;
-        this.archivePattern = new RegExp(`^#+\\s+${settings.archiveHeading}`);
-        this.archiveEndPattern = new RegExp(
-            `^#+\\s+(?!${settings.archiveHeading})`
-        );
+        const escapedHeading = escapeStringRegexp(settings.archiveHeading);
+        this.archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
+        this.archiveEndPattern = new RegExp(`^#+\\s+(?!${escapedHeading})`);
     }
 
     archiveTasks(lines: string[]) {
