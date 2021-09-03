@@ -39,7 +39,10 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     async loadSettings() {
-        const getConfig = (this.app.vault as any).getConfig;
+        const getConfig = (key: string) => {
+            return (this.app.vault as any).getConfig(key);
+        };
+
         this.settings = Object.assign(
             {},
             DEFAULT_SETTINGS,
