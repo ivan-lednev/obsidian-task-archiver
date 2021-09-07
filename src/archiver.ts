@@ -1,5 +1,4 @@
 import { ArchiverSettings } from "./ArchiverSettings";
-import moment from "moment";
 import escapeStringRegexp from "escape-string-regexp";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
@@ -129,7 +128,7 @@ class Archive {
         let insertionIndex;
 
         if (this.settings.useDateTree) {
-            const week = moment().format(this.settings.weeklyNoteFormat);
+            const week = window.moment().format(this.settings.weeklyNoteFormat);
             const indentationSettings = this.settings.indentationSettings;
             const indentation = indentationSettings.useTab
                 ? "\t"

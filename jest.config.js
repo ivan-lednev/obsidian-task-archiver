@@ -4,4 +4,5 @@ module.exports = {
     transformIgnorePatterns: [
         "<rootDir>/node_modules/(?!escape-string-regexp).+\\.js$",
     ],
+    testEnvironment: "jsdom",
 };

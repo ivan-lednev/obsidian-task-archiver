@@ -1,6 +1,9 @@
 import moment from "moment";
 import { Archiver } from "../Archiver";
 
+jest.mock("obsidian");
+window.moment = moment;
+
 const DEFAULT_SETTINGS = {
     archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
