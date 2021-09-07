@@ -28,6 +28,10 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     private async archiveTasksInCurrentFile() {
         const activeFile = this.app.workspace.getActiveFile();
+        if (activeFile === null || activeFile.extension !== "md") {
+            new Notice("The archiver works only in markdown (.md) files!")
+            return
+        }
         const fileContents = await this.app.vault.read(activeFile);
         const lines = fileContents.split("\n");
         const archiver = new Archiver(this.settings);
