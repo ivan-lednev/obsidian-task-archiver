@@ -2,6 +2,8 @@
 
 This is a simple plugin that moves completed tasks in a file to the "Archived" heading.
 
+This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still see your accomplishments and feel proud about them.
+
 <details>
 <summary>Click to see a demo gif!</summary>
 
@@ -19,6 +21,16 @@ The plugin lets you configure the following:
 ### Usage
 
 Add an "Archived" Heading to a file and run the following command: "Archive tasks in this file".
+
+## Roadmap
+
+- [ ] Move completed tasks to a separate archive file
+- [ ] Per-file configuration through front-matter
+- [ ] More options for the date tree
+  - [ ] Days
+  - [ ] Months
+  - [ ] Years
+- [ ] Multiple archive subheadings per file
 
 ## Acknowledgements
 
