@@ -124,42 +124,43 @@ class Archive {
         this.settings = settings;
     }
 
-    appendToContents(newLines: string[]) {
+    appendToContents(indentedLines: string[]) {
         let insertionIndex;
 
-        if (this.settings.useWeeks) {
-            const week = window.moment().format(this.settings.weeklyNoteFormat);
-            const indentationSettings = this.settings.indentationSettings;
-            const indentation = indentationSettings.useTab
-                ? "\t"
-                : " ".repeat(indentationSettings.tabSize);
-            newLines = newLines.map((line) => `${indentation}${line}`);
-            const weekLine = `- [[${week}]]`;
-            const currentWeekIndexInTree = this.contents.findIndex((line) =>
-                line.startsWith(weekLine)
-            );
-            if (currentWeekIndexInTree < 0) {
-                newLines.unshift(weekLine);
-            } else {
-                insertionIndex = this.findBlockEnd(weekLine);
-            }
-        }
+        const indentationSettings = this.settings.indentationSettings;
+        const indentation = indentationSettings.useTab
+            ? "\t"
+            : " ".repeat(indentationSettings.tabSize);
+        let indentationForNewContent = ""
 
         if (this.settings.useDays) {
             const day = window.moment().format(this.settings.dailyNoteFormat);
-            const indentationSettings = this.settings.indentationSettings;
-            const indentation = indentationSettings.useTab
-                ? "\t"
-                : " ".repeat(indentationSettings.tabSize);
-            newLines = newLines.map((line) => `${indentation}${line}`);
+
+            indentedLines = indentedLines.map((line) => `${indentation}${line}`);
             const dayLine = `- [[${day}]]`;
-            const currentWeekIndexInTree = this.contents.findIndex((line) =>
-                line.startsWith(dayLine)
+            const thisDayIsInTree = this.contents.find((line) =>
+                line.includes(dayLine)
             );
-            if (currentWeekIndexInTree < 0) {
-                newLines.unshift(dayLine);
-            } else {
+            if (thisDayIsInTree) {
+                // todo the problem is here: weekly finder doesn't see the daily block, it only works with newly completed tasks
                 insertionIndex = this.findBlockEnd(day);
+            } else {
+                indentedLines.unshift(dayLine);
+            }
+        }
+
+        if (this.settings.useWeeks) {
+            const week = window.moment().format(this.settings.weeklyNoteFormat);
+
+            indentedLines = indentedLines.map((line) => `${indentation}${line}`);
+            const weekLine = `- [[${week}]]`;
+            const thisWeekIsInTree = this.contents.find((line) =>
+                line.includes(weekLine)
+            );
+            if (thisWeekIsInTree) {
+                insertionIndex = this.findBlockEnd(weekLine);
+            } else {
+                indentedLines.unshift(weekLine);
             }
         }
 
@@ -167,7 +168,7 @@ class Archive {
             insertionIndex = this.contents.length;
         }
 
-        this.contents.splice(insertionIndex, 0, ...newLines);
+        this.contents.splice(insertionIndex, 0, ...indentedLines);
 
         return ["", ...this.contents, ""];
     }

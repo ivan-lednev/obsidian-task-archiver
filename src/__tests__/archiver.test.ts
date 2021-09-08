@@ -283,5 +283,108 @@ describe("Moving top-level tasks to the archive", () => {
                 "",
             ]);
         });
+
+        test("Creates & indents weekly & daily blocks", () => {
+            const archiver = new Archiver({
+                ...DEFAULT_SETTINGS,
+                useDays: true,
+                useWeeks: true,
+            });
+            const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
+            const result = archiver.archiveTasks(lines).lines;
+            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
+            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
+            expect(result).toEqual([
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${week}]]`,
+                `\t- [[${day}]]`,
+                "\t\t- [x] foo",
+                "",
+            ]);
+        });
+
+        test("The week is already in the tree", () => {
+            const archiver = new Archiver({
+                ...DEFAULT_SETTINGS,
+                useDays: true,
+                useWeeks: true,
+            });
+            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
+            const lines = [
+                "- [x] foo",
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${week}]]`,
+            ];
+            const result = archiver.archiveTasks(lines).lines;
+            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
+            expect(result).toEqual([
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${week}]]`,
+                `\t- [[${day}]]`,
+                "\t\t- [x] foo",
+                "",
+            ]);
+        });
+
+        test("The week and the day are already in the tree", () => {
+            const archiver = new Archiver({
+                ...DEFAULT_SETTINGS,
+                useDays: true,
+                useWeeks: true,
+            });
+            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
+            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
+            const lines = [
+                "- [x] foo",
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${week}]]`,
+                `\t- [[${day}]]`,
+            ];
+            const result = archiver.archiveTasks(lines).lines;
+            expect(result).toEqual([
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${week}]]`,
+                `\t- [[${day}]]`,
+                "\t\t- [x] foo",
+                "",
+            ]);
+        });
+        
+        test("The day is there, but the week is not (the user has changed the configuration)", () => {
+            const archiver = new Archiver({
+                ...DEFAULT_SETTINGS,
+                useDays: true,
+                useWeeks: true,
+            });
+            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
+            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
+            const lines = [
+                "- [x] foo",
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${day}]]`,
+            ];
+            const result = archiver.archiveTasks(lines).lines;
+            expect(result).toEqual([
+                "- [ ] bar",
+                "# Archived",
+                "",
+                `- [[${week}]]`,
+                `\t- [[${day}]]`,
+                "\t\t- [x] foo",
+                "",
+            ]);
+        });
     });
 });
