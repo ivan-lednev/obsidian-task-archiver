@@ -380,6 +380,7 @@ describe("Moving top-level tasks to the archive", () => {
                 "- [ ] bar",
                 "# Archived",
                 "",
+                `- [[${day}]]`,
                 `- [[${week}]]`,
                 `\t- [[${day}]]`,
                 "\t\t- [x] foo",

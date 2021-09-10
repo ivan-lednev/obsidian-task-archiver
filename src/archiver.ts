@@ -1,5 +1,6 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
+import { start } from "repl";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
 const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\\.) \\[x\\] ");
@@ -117,75 +118,94 @@ export class Archiver {
 
 class Archive {
     contents: string[];
+    dateLevels: string[];
+    dateFormats: Map<string, string>;
     settings: ArchiverSettings;
 
     constructor(lines: string[], settings: ArchiverSettings) {
         this.contents = lines;
         this.settings = settings;
+        this.dateLevels = [];
+        if (settings.useWeeks) {
+            this.dateLevels.push("weeks");
+        }
+        if (settings.useDays) {
+            this.dateLevels.push("days");
+        }
+        this.dateFormats = new Map([
+            ["days", this.settings.dailyNoteFormat],
+            ["weeks", this.settings.weeklyNoteFormat],
+        ]);
     }
 
-    appendToContents(indentedLines: string[]) {
-        let insertionIndex;
-
+    appendToContents(lines: string[]) {
         const indentationSettings = this.settings.indentationSettings;
         const indentation = indentationSettings.useTab
             ? "\t"
             : " ".repeat(indentationSettings.tabSize);
-        let indentationForNewContent = ""
 
-        if (this.settings.useDays) {
-            const day = window.moment().format(this.settings.dailyNoteFormat);
+        const thisMoment = window.moment();
+        const newContents = [...this.contents];
 
-            indentedLines = indentedLines.map((line) => `${indentation}${line}`);
-            const dayLine = `- [[${day}]]`;
-            const thisDayIsInTree = this.contents.find((line) =>
-                line.includes(dayLine)
+        let contentInsertionIndex = newContents.length;
+        let searchStartIndexForNextDateLevel = 0;
+        for (const [i, level] of this.dateLevels.entries()) {
+            const dateFormat = this.dateFormats.get(level);
+            const date = thisMoment.format(dateFormat);
+            const indentedDateLine = indentation.repeat(i) + `- [[${date}]]`;
+
+            const positionOfthisDateInArchive = this.contents.findIndex(
+                (line, i) =>
+                    i >= searchStartIndexForNextDateLevel &&
+                    line.includes(indentedDateLine)
             );
-            if (thisDayIsInTree) {
-                // todo the problem is here: weekly finder doesn't see the daily block, it only works with newly completed tasks
-                insertionIndex = this.findBlockEnd(day);
+            const thisDateIsInArchive = positionOfthisDateInArchive >= 0;
+
+            if (thisDateIsInArchive) {
+                const lineAfterThisDate = positionOfthisDateInArchive + 1;
+                searchStartIndexForNextDateLevel = lineAfterThisDate;
+                contentInsertionIndex = this.findBlockEndByIndentation(
+                    newContents,
+                    positionOfthisDateInArchive
+                );
             } else {
-                indentedLines.unshift(dayLine);
+                newContents.push(indentedDateLine);
+                contentInsertionIndex = newContents.length;
             }
         }
 
-        if (this.settings.useWeeks) {
-            const week = window.moment().format(this.settings.weeklyNoteFormat);
+        const indentationForContent = this.dateLevels.length;
+        const linesWithAddedIndentation = lines.map(
+            (line) => indentation.repeat(indentationForContent) + line
+        );
 
-            indentedLines = indentedLines.map((line) => `${indentation}${line}`);
-            const weekLine = `- [[${week}]]`;
-            const thisWeekIsInTree = this.contents.find((line) =>
-                line.includes(weekLine)
-            );
-            if (thisWeekIsInTree) {
-                insertionIndex = this.findBlockEnd(weekLine);
-            } else {
-                indentedLines.unshift(weekLine);
-            }
-        }
+        newContents.splice(
+            contentInsertionIndex,
+            0,
+            ...linesWithAddedIndentation
+        );
 
-        if (!insertionIndex) {
-            insertionIndex = this.contents.length;
-        }
-
-        this.contents.splice(insertionIndex, 0, ...indentedLines);
-
-        return ["", ...this.contents, ""];
+        return ["", ...newContents, ""];
     }
 
-    private findBlockEnd(parentLine: string) {
-        let insideBlock = false;
-        for (const [i, line] of this.contents.entries()) {
-            if (line === parentLine) {
-                insideBlock = true;
-                continue;
-            }
-
-            const isLineIndented = INDENTED_LINE_PATTERN.exec(line);
-            if (insideBlock && !isLineIndented) {
+    private findBlockEndByIndentation(list: string[], startIndex: number) {
+        const initialIndentationLength = this.findIndentationLength(
+            list[startIndex]
+        );
+        const nextLineIndex = startIndex + 1;
+        if (nextLineIndex === list.length) {
+            return nextLineIndex;
+        }
+        for (let i = nextLineIndex; i < list.length; i++) {
+            const indentationLength = this.findIndentationLength(list[i]);
+            if (indentationLength <= initialIndentationLength) {
                 return i;
             }
         }
-        return this.contents.length;
+    }
+
+    private findIndentationLength(line: string) {
+        const leadingSpacePattern = /^\s*/;
+        return leadingSpacePattern.exec(line)[0].length;
     }
 }
