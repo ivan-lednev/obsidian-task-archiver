@@ -1,6 +1,5 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
-import { start } from "repl";
 
 const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
 const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\\.) \\[x\\] ");
@@ -107,7 +106,7 @@ export class Archiver {
         lines: string[],
         archive: Archive
     ) {
-        const archiveWithNewTasks = archive.appendToContents(tasks);
+        const archiveWithNewTasks = archive.appendCompletedTasks(tasks);
         const archiveStart = lines.findIndex((l) =>
             this.archivePattern.exec(l)
         );
@@ -138,7 +137,7 @@ class Archive {
         ]);
     }
 
-    appendToContents(lines: string[]) {
+    appendCompletedTasks(lines: string[]) {
         const indentationSettings = this.settings.indentationSettings;
         const indentation = indentationSettings.useTab
             ? "\t"

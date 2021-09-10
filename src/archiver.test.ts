@@ -1,7 +1,6 @@
 import moment from "moment";
-import { Archiver } from "../Archiver";
+import { Archiver } from "./Archiver";
 
-jest.mock("obsidian");
 window.moment = moment;
 
 const DEFAULT_SETTINGS = {
