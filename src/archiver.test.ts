@@ -189,21 +189,21 @@ describe("Moving top-level tasks to the archive", () => {
         const week = moment().format("YYYY-MM-[W]-w");
         const lines = [
             "- [x] foo",
-            "- [ ] bar",
             "# Archived",
+            "- [[old week]]",
+            "\t- [x] old task",
             `- [[${week}]]`,
             "\t- [x] baz",
-            "- Other stuff",
         ];
         const result = archiver.archiveTasks(lines).lines;
         expect(result).toEqual([
-            "- [ ] bar",
             "# Archived",
             "",
+            "- [[old week]]",
+            "\t- [x] old task",
             `- [[${week}]]`,
             "\t- [x] baz",
             "\t- [x] foo",
-            "- Other stuff",
             "",
         ]);
     });

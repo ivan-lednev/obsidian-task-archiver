@@ -191,16 +191,14 @@ class Archive {
         const initialIndentationLength = this.findIndentationLength(
             list[startIndex]
         );
-        const nextLineIndex = startIndex + 1;
-        if (nextLineIndex === list.length) {
-            return nextLineIndex;
-        }
-        for (let i = nextLineIndex; i < list.length; i++) {
+        const lineAfterBlockStart = startIndex + 1;
+        for (let i = lineAfterBlockStart; i < list.length; i++) {
             const indentationLength = this.findIndentationLength(list[i]);
             if (indentationLength <= initialIndentationLength) {
                 return i;
             }
         }
+        return list.length
     }
 
     private findIndentationLength(line: string) {
