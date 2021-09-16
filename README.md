@@ -4,9 +4,25 @@ This is handy if you like organizing your tasks in an outline: completed tasks d
 
 ## Here is what it looks like
 
-![image](https://user-images.githubusercontent.com/41428836/133567671-a2fc74c8-af99-4200-ae65-55ca70053227.png)
+```md
+- [ ] This one I haven't done yet
+- [x] Water the dog
+    - Some task details
+- [x] Feed the plants
+```
 Turns into
-![image](https://user-images.githubusercontent.com/41428836/133567753-7008b906-bb9d-4708-866b-1d9feec12a6f.png)
+```md
+- [ ] This one I haven't done yet
+
+# Archived
+
+- [[2021-09-W-38]]
+    - [[2021-09-16]]
+        - [x] Water the dog
+            - Some task details
+        - [x] Feed the plants
+
+```
 
 ## Configuration
 
