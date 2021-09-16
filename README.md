@@ -4,7 +4,9 @@ This is handy if you like organizing your tasks in an outline: completed tasks d
 
 ## Here is what it looks like
 
-![demo](./archiver-basic-demo.gif)
+![image](https://user-images.githubusercontent.com/41428836/133567671-a2fc74c8-af99-4200-ae65-55ca70053227.png)
+Turns into
+![image](https://user-images.githubusercontent.com/41428836/133567753-7008b906-bb9d-4708-866b-1d9feec12a6f.png)
 
 ## Configuration
 
