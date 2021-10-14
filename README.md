@@ -1,24 +1,37 @@
-## Obsidian Task Archiver
-
 This is a simple plugin that moves completed tasks in a file to the "Archived" heading.
 
 This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still see your accomplishments and feel proud about them.
 
-<details>
-<summary>Click to see a demo gif!</summary>
+## Here is what it looks like
 
-![demo](./archiver-basic-demo.gif)
+```md
+- [ ] This one I haven't done yet
+- [x] Water the dog
+    - Some task details
+- [x] Feed the plants
+```
+Turns into
+```md
+- [ ] This one I haven't done yet
 
-</details>
+# Archived
 
-### Configuration
+- [[2021-09-W-38]]
+    - [[2021-09-16]]
+        - [x] Water the dog
+            - Some task details
+        - [x] Feed the plants
+
+```
+
+## Configuration
 
 The plugin lets you configure the following:
 - what text makes a heading an archive;
 - whether completed tasks should be added under a link to the current week;
 - the pattern of the weekly note link.
 
-### Usage
+## Usage
 
 Add an "Archived" Heading to a file and run the following command: "Archive tasks in this file".
 
