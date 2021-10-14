@@ -1,7 +1,13 @@
 import moment from "moment";
 import { Archiver } from "./Archiver";
+import { ArchiverSettings } from "./ArchiverSettings";
 
 window.moment = moment;
+
+const WEEK = "2021-01-W-1";
+const DAY = "2021-01-01";
+const mockDate = jest.fn(() => new Date(DAY).valueOf());
+Date.now = mockDate as jest.MockedFunction<typeof Date.now>;
 
 const DEFAULT_SETTINGS = {
     archiveHeading: "Archived",
@@ -15,24 +21,35 @@ const DEFAULT_SETTINGS = {
     },
 };
 
+function checkArchiverOutput(
+    settings: ArchiverSettings,
+    input: string[],
+    output: string[]
+) {
+    const archiver = new Archiver(settings);
+    const result = archiver.archiveTasks(input).lines;
+    expect(result).toEqual(output);
+}
+
 describe("Moving top-level tasks to the archive", () => {
-    test.each([
-        [
-            "No-op for files without completed tasks",
+    test("No-op for files without completed tasks", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             ["foo", "bar", "# Archived"],
-            ["foo", "bar", "# Archived"],
-        ],
+            ["foo", "bar", "# Archived"]
+        );
+    });
 
-        [
-            "Moves a single task to an empty archive",
+    test("Moves a single task to an empty archive", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             ["- [x] foo", "- [ ] bar", "# Archived"],
-            ["- [ ] bar", "# Archived", "", "- [x] foo", ""],
-        ],
+            ["- [ ] bar", "# Archived", "", "- [x] foo", ""]
+        );
+    });
 
-        [
-            "Moves multiple tasks to the end of a populated archive",
+    test("Moves multiple tasks to the end of a populated archive", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             [
                 "- [x] foo",
@@ -55,11 +72,12 @@ describe("Moving top-level tasks to the archive", () => {
                 "- [x] foo #2",
                 "- [x] foo #3",
                 "",
-            ],
-        ],
+            ]
+        );
+    });
 
-        [
-            "Moves sub-items with top-level items after the archive heading, indented with tabs",
+    test("Moves sub-items with top-level items after the archive heading, indented with tabs", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             [
                 "- [ ] bar",
@@ -84,11 +102,11 @@ describe("Moving top-level tasks to the archive", () => {
                 "",
                 "# After archive",
                 "Other stuff",
-            ],
-        ],
-
-        [
-            "Works only with top-level tasks",
+            ]
+        );
+    });
+    test("Works only with top-level tasks", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             [
                 "- [ ] bar",
@@ -103,229 +121,199 @@ describe("Moving top-level tasks to the archive", () => {
                 "",
                 "- [x] foo",
                 "",
-            ],
-        ],
+            ]
+        );
+    });
 
-        [
-            "Supports numbered tasks",
+    test("Supports numbered tasks", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             ["1. [x] foo", "# Archived"],
-            ["# Archived", "", "1. [x] foo", ""],
-        ],
+            ["# Archived", "", "1. [x] foo", ""]
+        );
+    });
 
-        [
-            "Appends an archive heading to the end of file with a newline if there isn't any",
+    test("Appends an archive heading to the end of file with a newline if there isn't any", () => {
+        checkArchiverOutput(
             DEFAULT_SETTINGS,
             ["- Text", "1. [x] foo"],
-            ["- Text", "", "# Archived", "", "1. [x] foo", ""],
-        ],
+            ["- Text", "", "# Archived", "", "1. [x] foo", ""]
+        );
+    });
 
-        [
-            "Escapes regex characters in the archive heading value",
+    test("Escapes regex characters in the archive heading value", () => {
+        checkArchiverOutput(
             {
                 ...DEFAULT_SETTINGS,
                 archiveHeading: "[[Archived]]",
             },
             ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
-            ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""],
-        ],
-    ])("%s", (_, settings, input, output) => {
-        const archiver = new Archiver(settings);
-        const result = archiver.archiveTasks(input).lines;
-        expect(result).toEqual(output);
+            ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""]
+        );
     });
 });
 
 describe("Date tree", () => {
     test("Archives tasks under a bullet with the current week", () => {
-        const archiver = new Archiver({
-            ...DEFAULT_SETTINGS,
-            useWeeks: true,
-        });
-        const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
-        const result = archiver.archiveTasks(lines).lines;
-        const week = moment().format("YYYY-MM-[W]-w");
-        expect(result).toEqual([
-            "- [ ] bar",
-            "# Archived",
-            "",
-            `- [[${week}]]`,
-            "\t- [x] foo",
-            "",
-        ]);
+        checkArchiverOutput(
+            {
+                ...DEFAULT_SETTINGS,
+                useWeeks: true,
+            },
+            ["- [x] foo", "- [ ] bar", "# Archived"],
+            ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""]
+        );
     });
 
     test("Uses indentation values from settings", () => {
-        const archiver = new Archiver({
-            ...DEFAULT_SETTINGS,
-            useWeeks: true,
-            indentationSettings: {
-                useTab: false,
-                tabSize: 3,
+        checkArchiverOutput(
+            {
+                ...DEFAULT_SETTINGS,
+                useWeeks: true,
+                indentationSettings: {
+                    useTab: false,
+                    tabSize: 3,
+                },
             },
-        });
-        const lines = ["- [x] foo", "# Archived"];
-        const week = moment().format("YYYY-MM-[W]-w");
-        const result = archiver.archiveTasks(lines).lines;
-        expect(result).toEqual([
-            "# Archived",
-            "",
-            `- [[${week}]]`,
-            "   - [x] foo",
-            "",
-        ]);
+            ["- [x] foo", "# Archived"],
+            ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""]
+        );
     });
 
     test("Appends tasks under the current week bullet if it exists", () => {
-        const archiver = new Archiver({
-            ...DEFAULT_SETTINGS,
-            useWeeks: true,
-        });
-        const week = moment().format("YYYY-MM-[W]-w");
-        const lines = [
-            "- [x] foo",
-            "# Archived",
-            "- [[old week]]",
-            "\t- [x] old task",
-            `- [[${week}]]`,
-            "\t- [x] baz",
-        ];
-        const result = archiver.archiveTasks(lines).lines;
-        expect(result).toEqual([
-            "# Archived",
-            "",
-            "- [[old week]]",
-            "\t- [x] old task",
-            `- [[${week}]]`,
-            "\t- [x] baz",
-            "\t- [x] foo",
-            "",
-        ]);
+        checkArchiverOutput(
+            {
+                ...DEFAULT_SETTINGS,
+                useWeeks: true,
+            },
+            [
+                "- [x] foo",
+                "# Archived",
+                "- [[old week]]",
+                "\t- [x] old task",
+                `- [[${WEEK}]]`,
+                "\t- [x] baz",
+            ],
+            [
+                "# Archived",
+                "",
+                "- [[old week]]",
+                "\t- [x] old task",
+                `- [[${WEEK}]]`,
+                "\t- [x] baz",
+                "\t- [x] foo",
+                "",
+            ]
+        );
     });
 
     describe("Days", () => {
         test("Archives tasks under a bullet with the current day", () => {
-            const archiver = new Archiver({
-                ...DEFAULT_SETTINGS,
-                useDays: true,
-            });
-            const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
-            const result = archiver.archiveTasks(lines).lines;
-            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
-            expect(result).toEqual([
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${day}]]`,
-                "\t- [x] foo",
-                "",
-            ]);
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                },
+                ["- [x] foo", "- [ ] bar", "# Archived"],
+                [
+                    "- [ ] bar",
+                    "# Archived",
+                    "",
+                    `- [[${DAY}]]`,
+                    "\t- [x] foo",
+                    "",
+                ]
+            );
         });
     });
 
     describe("Combining dates", () => {
         test("Creates & indents weekly & daily blocks", () => {
-            const archiver = new Archiver({
-                ...DEFAULT_SETTINGS,
-                useDays: true,
-                useWeeks: true,
-            });
-            const lines = ["- [x] foo", "- [ ] bar", "# Archived"];
-            const result = archiver.archiveTasks(lines).lines;
-            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
-            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
-            expect(result).toEqual([
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${week}]]`,
-                `\t- [[${day}]]`,
-                "\t\t- [x] foo",
-                "",
-            ]);
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                    useWeeks: true,
+                },
+                ["- [x] foo", "- [ ] bar", "# Archived"],
+                [
+                    "- [ ] bar",
+                    "# Archived",
+                    "",
+                    `- [[${WEEK}]]`,
+                    `\t- [[${DAY}]]`,
+                    "\t\t- [x] foo",
+                    "",
+                ]
+            );
         });
 
         test("The week is already in the tree", () => {
-            const archiver = new Archiver({
-                ...DEFAULT_SETTINGS,
-                useDays: true,
-                useWeeks: true,
-            });
-            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
-            const lines = [
-                "- [x] foo",
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${week}]]`,
-            ];
-            const result = archiver.archiveTasks(lines).lines;
-            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
-            expect(result).toEqual([
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${week}]]`,
-                `\t- [[${day}]]`,
-                "\t\t- [x] foo",
-                "",
-            ]);
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                    useWeeks: true,
+                },
+                ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${WEEK}]]`],
+                [
+                    "- [ ] bar",
+                    "# Archived",
+                    "",
+                    `- [[${WEEK}]]`,
+                    `\t- [[${DAY}]]`,
+                    "\t\t- [x] foo",
+                    "",
+                ]
+            );
         });
 
         test("The week and the day are already in the tree", () => {
-            const archiver = new Archiver({
-                ...DEFAULT_SETTINGS,
-                useDays: true,
-                useWeeks: true,
-            });
-            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
-            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
-            const lines = [
-                "- [x] foo",
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${week}]]`,
-                `\t- [[${day}]]`,
-            ];
-            const result = archiver.archiveTasks(lines).lines;
-            expect(result).toEqual([
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${week}]]`,
-                `\t- [[${day}]]`,
-                "\t\t- [x] foo",
-                "",
-            ]);
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                    useWeeks: true,
+                },
+                [
+                    "- [x] foo",
+                    "- [ ] bar",
+                    "# Archived",
+                    "",
+                    `- [[${WEEK}]]`,
+                    `\t- [[${DAY}]]`,
+                ],
+                [
+                    "- [ ] bar",
+                    "# Archived",
+                    "",
+                    `- [[${WEEK}]]`,
+                    `\t- [[${DAY}]]`,
+                    "\t\t- [x] foo",
+                    "",
+                ]
+            );
         });
 
         test("The day is there, but the week is not (the user has changed the configuration)", () => {
-            const archiver = new Archiver({
-                ...DEFAULT_SETTINGS,
-                useDays: true,
-                useWeeks: true,
-            });
-            const week = moment().format(DEFAULT_SETTINGS.weeklyNoteFormat);
-            const day = moment().format(DEFAULT_SETTINGS.dailyNoteFormat);
-            const lines = [
-                "- [x] foo",
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${day}]]`,
-            ];
-            const result = archiver.archiveTasks(lines).lines;
-            expect(result).toEqual([
-                "- [ ] bar",
-                "# Archived",
-                "",
-                `- [[${day}]]`,
-                `- [[${week}]]`,
-                `\t- [[${day}]]`,
-                "\t\t- [x] foo",
-                "",
-            ]);
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                    useWeeks: true,
+                },
+                ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${DAY}]]`],
+                [
+                    "- [ ] bar",
+                    "# Archived",
+                    "",
+                    `- [[${DAY}]]`,
+                    `- [[${WEEK}]]`,
+                    `\t- [[${DAY}]]`,
+                    "\t\t- [x] foo",
+                    "",
+                ]
+            );
         });
     });
 });
