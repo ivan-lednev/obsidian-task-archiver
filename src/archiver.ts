@@ -55,7 +55,8 @@ export class Archiver {
         if (noNewline && this.settings.addNewlinesAroundHeadings) {
             linesWithArchive.push("");
         }
-        linesWithArchive.push(`# ${this.settings.archiveHeading}`);
+        const headingToken = "#".repeat(this.settings.archiveHeadingDepth)
+        linesWithArchive.push(`${headingToken} ${this.settings.archiveHeading}`);
         return linesWithArchive;
     }
 

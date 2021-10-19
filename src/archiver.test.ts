@@ -11,6 +11,7 @@ Date.now = mockDate as jest.MockedFunction<typeof Date.now>;
 
 const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",
+    archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useWeeks: false,
     dailyNoteFormat: "YYYY-MM-DD",
@@ -134,14 +135,6 @@ describe("Moving top-level tasks to the archive", () => {
         );
     });
 
-    test("Appends an archive heading to the end of file with a newline if there isn't any", () => {
-        checkArchiverOutput(
-            DEFAULT_SETTINGS,
-            ["- Text", "1. [x] foo"],
-            ["- Text", "", "# Archived", "", "1. [x] foo", ""]
-        );
-    });
-
     test("Escapes regex characters in the archive heading value", () => {
         checkArchiverOutput(
             {
@@ -153,15 +146,36 @@ describe("Moving top-level tasks to the archive", () => {
         );
     });
 
-    test("Doesn't add newlines around the archive heading if configured so", () => {
-        checkArchiverOutput(
-            {
-                ...DEFAULT_SETTINGS,
-                addNewlinesAroundHeadings: false,
-            },
-            ["- [x] foo"],
-            ["# Archived", "- [x] foo"]
-        );
+    describe("Creating a new archive", () => {
+        test("Appends an archive heading to the end of file with a newline if there isn't any", () => {
+            checkArchiverOutput(
+                DEFAULT_SETTINGS,
+                ["- Text", "1. [x] foo"],
+                ["- Text", "", "# Archived", "", "1. [x] foo", ""]
+            );
+        });
+
+        test("Pulls heading depth from the config", () => {
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    archiveHeadingDepth: 3
+                },
+                ["- [x] foo"],
+                ["", "### Archived", "", "- [x] foo", ""]
+            );
+        });
+
+        test("Doesn't add newlines around the archive heading if configured so", () => {
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    addNewlinesAroundHeadings: false,
+                },
+                ["- [x] foo"],
+                ["# Archived", "- [x] foo"]
+            );
+        });
     });
 });
 

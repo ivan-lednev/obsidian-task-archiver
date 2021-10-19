@@ -4,6 +4,7 @@ import { ArchiverSettings } from "./ArchiverSettings";
 
 const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",
+    archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useWeeks: true,
     dailyNoteFormat: "YYYY-MM-DD",
@@ -103,6 +104,29 @@ class ArchiverSettingTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.addNewlinesAroundHeadings)
                     .onChange(async (value) => {
                         this.plugin.settings.addNewlinesAroundHeadings = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(containerEl)
+            .setName("Depth of new archive headings")
+            .setDesc(
+                "New archives will be created by repeating '#' this many times"
+            )
+            .addDropdown((dropdownComponent) => {
+                dropdownComponent
+                    .addOptions({
+                        "1": "1",
+                        "2": "2",
+                        "3": "3",
+                        "4": "4",
+                        "5": "5",
+                        "6": "6",
+                    })
+                    .setValue(String(this.plugin.settings.archiveHeadingDepth))
+                    .onChange(async (value) => {
+                        this.plugin.settings.archiveHeadingDepth =
+                            Number(value);
                         await this.plugin.saveSettings();
                     });
             });
