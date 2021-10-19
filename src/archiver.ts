@@ -17,20 +17,14 @@ export class Archiver {
     }
 
     archiveTasks(lines: string[]) {
-        const hasArchive =
-            lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
-
-        if (!hasArchive) {
-            if (lines[lines.length - 1].trim() !== "") {
-                lines.push("");
-            }
-            lines.push(`# ${this.settings.archiveHeading}`);
+        if (!this.doLinesContainArchive(lines)) {
+            lines = this.addEmptyArchive(lines);
         }
 
-        const { linesWithoutArchive, archive } = this.extractArchive(lines);
+        const { linesWithoutArchive, archive } = this.extractArchiveContents(lines);
 
         const { linesWithoutCompletedTasks, newlyCompletedTasks } =
-            this.extractCompletedTasks(linesWithoutArchive);
+            this.extractNewlyCompletedTasks(linesWithoutArchive);
 
         if (newlyCompletedTasks.length === 0) {
             return {
@@ -51,7 +45,21 @@ export class Archiver {
         };
     }
 
-    private extractCompletedTasks(linesWithoutArchive: string[]) {
+    private doLinesContainArchive(lines: string[]) {
+        return lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
+    }
+
+    private addEmptyArchive(lines: string[]) {
+        const linesWithArchive = [...lines];
+        const noNewline = linesWithArchive[lines.length - 1].trim() !== ""
+        if (noNewline && this.settings.addNewlinesAroundHeadings) {
+            linesWithArchive.push("");
+        }
+        linesWithArchive.push(`# ${this.settings.archiveHeading}`);
+        return linesWithArchive;
+    }
+
+    private extractNewlyCompletedTasks(linesWithoutArchive: string[]) {
         const linesWithoutCompletedTasks = [];
         const newlyCompletedTasks = [];
 
@@ -73,7 +81,7 @@ export class Archiver {
         };
     }
 
-    private extractArchive(lines: string[]) {
+    private extractArchiveContents(lines: string[]) {
         let archiveLines = [];
         let linesWithoutArchive = [];
 
@@ -106,11 +114,14 @@ export class Archiver {
         lines: string[],
         archive: Archive
     ) {
-        const archiveWithNewTasks = archive.appendCompletedTasks(tasks);
+        let archiveContentsWithNewTasks = archive.appendCompletedTasks(tasks);
+        if (this.settings.addNewlinesAroundHeadings) {
+            archiveContentsWithNewTasks = ["", ...archiveContentsWithNewTasks, ""]
+        }
         const archiveStart = lines.findIndex((l) =>
             this.archivePattern.exec(l)
         );
-        lines.splice(archiveStart + 1, 0, ...archiveWithNewTasks);
+        lines.splice(archiveStart + 1, 0, ...archiveContentsWithNewTasks);
         return lines;
     }
 }
@@ -184,7 +195,7 @@ class Archive {
             ...linesWithAddedIndentation
         );
 
-        return ["", ...newContents, ""];
+        return newContents;
     }
 
     private findBlockEndByIndentation(list: string[], startIndex: number) {
@@ -198,7 +209,7 @@ class Archive {
                 return i;
             }
         }
-        return list.length
+        return list.length;
     }
 
     private findIndentationLength(line: string) {

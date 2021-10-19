@@ -5,6 +5,7 @@ export interface ArchiverSettings {
     dailyNoteFormat: string;
     useDays: boolean;
     indentationSettings: IndentationSettings;
+    addNewlinesAroundHeadings: boolean;
 }
 
 interface IndentationSettings {

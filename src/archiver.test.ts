@@ -9,12 +9,13 @@ const DAY = "2021-01-01";
 const mockDate = jest.fn(() => new Date(DAY).valueOf());
 Date.now = mockDate as jest.MockedFunction<typeof Date.now>;
 
-const DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useWeeks: false,
     dailyNoteFormat: "YYYY-MM-DD",
     useDays: false,
+    addNewlinesAroundHeadings: true,
     indentationSettings: {
         useTab: true,
         tabSize: 4,
@@ -149,6 +150,17 @@ describe("Moving top-level tasks to the archive", () => {
             },
             ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
             ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""]
+        );
+    });
+
+    test("Doesn't add newlines around the archive heading if configured so", () => {
+        checkArchiverOutput(
+            {
+                ...DEFAULT_SETTINGS,
+                addNewlinesAroundHeadings: false,
+            },
+            ["- [x] foo"],
+            ["# Archived", "- [x] foo"]
         );
     });
 });
