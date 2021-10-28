@@ -2,9 +2,8 @@ export class Parser {
     private readonly HEADING = /^(?<headingToken>#+)\s/;
     private readonly LIST_ITEM = /^(?<indentation> *)-\s/;
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2})+)[^-]/;
-    private document: Node = new Node(null);
-    private contextBlock: Node = this.document;
-    private inListContext: boolean = false;
+    private root: Node = new Node(null);
+    private context: Node = this.root;
 
     parse(lines: string[]) {
         for (const line of lines) {
@@ -23,29 +22,23 @@ export class Parser {
                 );
                 const node = new ListNode(line, level);
                 this.appendContextWithLevelShift(node);
-
-                this.inListContext = true;
                 continue;
             }
 
             const indentedLineMatch = line.match(this.INDENTED_LINE);
             if (indentedLineMatch) {
-                this.contextBlock.append(new Node(line));
+                this.context.append(new Node(line));
                 continue;
             }
 
-            // At this point, a top-level line is the only option
-            while (this.contextBlock instanceof ListNode) {
-                this.moveContextUp(1);
-            }
-            this.inListContext = false;
-            this.contextBlock.append(new Node(line));
+            this.breakOutOfListContext();
+            this.context.append(new Node(line));
         }
-        return this.document;
+        return this.root;
     }
 
     private appendContextWithLevelShift(node: Node) {
-        const levelsAboveCurrentContext = this.contextBlock.level - node.level;
+        const levelsAboveCurrentContext = this.context.level - node.level;
         if (levelsAboveCurrentContext >= 0) {
             const newParentContextLevel = levelsAboveCurrentContext + 1;
             this.moveContextUp(newParentContextLevel);
@@ -54,13 +47,19 @@ export class Parser {
     }
 
     private appendContext(node: Node) {
-        this.contextBlock.append(node);
-        this.contextBlock = node;
+        this.context.append(node);
+        this.context = node;
+    }
+
+    private breakOutOfListContext() {
+        while (this.context instanceof ListNode) {
+            this.moveContextUp(1);
+        }
     }
 
     private moveContextUp(levels: number) {
         for (let i = 0; i < levels; i++) {
-            this.contextBlock = this.contextBlock.parent;
+            this.context = this.context.parent;
         }
     }
 }
@@ -80,6 +79,19 @@ class Node {
     append(node: Node) {
         node.parent = this;
         this.children.push(node);
+    }
+
+    stringify(): string[] {
+        const lines = [];
+        if (this.textContent) {
+            lines.push(this.textContent);
+        }
+        if (this.children) {
+            for (const child of this.children) {
+                lines.push(...child.stringify());
+            }
+        }
+        return lines;
     }
 }
 

@@ -1,3 +1,4 @@
+import { parse } from "path";
 import { Parser } from "./Parser";
 
 test("Builds a flat structure with non-hierarchical text", () => {
@@ -53,13 +54,6 @@ describe("Headings", () => {
 });
 
 describe("List items", () => {
-    test("Top level text after a list item doesn't get nested", () => {
-        const lines = ["- l", "text"];
-
-        const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2);
-    })
-
     test("Indented text after a list item gets nested", () => {
         const lines = ["- l", "  text"];
 
@@ -74,26 +68,37 @@ describe("List items", () => {
 
         const doc = new Parser().parse(lines);
         const listItem = doc.children[0];
-        const indentedListItem = listItem.children[0]
+        const indentedListItem = listItem.children[0];
         expect(indentedListItem.children.length).toBe(1);
-    })
+    });
 
     test("A same level list item doesn't get nested", () => {
         const lines = ["- l", "  - l2", "  - l2-2"];
         const doc = new Parser().parse(lines);
         const listItem = doc.children[0];
-        expect(listItem.children.length).toBe(2)
+        expect(listItem.children.length).toBe(2);
     });
 
     test("A higher-level list item pops nesting", () => {
         const lines = ["- l", "  - l2", "- l2-2"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2)
-    })
+        expect(doc.children.length).toBe(2);
+    });
 
     test("A top-level line breaks out of a list context", () => {
         const lines = ["- l", "  - l2", "line"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2)
-    })
+        expect(doc.children.length).toBe(2);
+    });
+});
+
+describe("Stringification", () => {
+    test.each([[["Line", "Another line"]]])(
+        "Roundtripping: %s",
+        (lines: string[]) => {
+            const parsed = new Parser().parse(lines);
+            const stringified = parsed.stringify();
+            expect(stringified).toEqual(lines);
+        }
+    );
 });
