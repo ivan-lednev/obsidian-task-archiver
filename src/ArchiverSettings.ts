@@ -7,6 +7,8 @@ export interface ArchiverSettings {
     useDays: boolean;
     indentationSettings: IndentationSettings;
     addNewlinesAroundHeadings: boolean;
+    archiveToSeparateFile: boolean;
+    defaultArchiveFileName: string;
 }
 
 interface IndentationSettings {

@@ -1,8 +1,57 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
 
-const INDENTED_LINE_PATTERN = new RegExp("^( {2,}|\\t)\\s*\\S+");
-const COMPLETED_TASK_PATTERN = new RegExp("^(-|\\d+\\.) \\[x\\] ");
+const INDENTED_LINE_PATTERN = /^( {2,}|\t)\s*\S+/;
+const COMPLETED_TASK_PATTERN = /^(-|\d+\.) \[x\] /;
+
+
+class TaskExtractor {
+    settings: ArchiverSettings;
+
+    constructor(settings: ArchiverSettings) {
+        // todo: give him only the heading
+        this.settings = settings;
+    }
+
+    extractCompletedTasks(lines: string[]) {
+        const withoutCompleted = [];
+        const completed = [];
+
+        let currentHeading = "";
+        let insideTask = false;
+
+        const escapedHeading = escapeStringRegexp(this.settings.archiveHeading);
+        const archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
+        const archiveEndPattern = new RegExp(`^#+\\s+(?!${escapedHeading})`);
+
+        const headingStack = [];
+        const currentHeadingLevel = 0;
+        const heading = /^(#+)\s.*$/;
+
+        for (const line of lines) {
+            const headingMatch = heading.exec(line)
+            if (headingMatch) {
+                currentHeadingLevel
+            }
+            const isCompletedTask = COMPLETED_TASK_PATTERN.test(line);
+            const isLineAfterCompletedTask =
+                INDENTED_LINE_PATTERN.test(line) && insideTask;
+            if (isCompletedTask) {
+                completed.push(line);
+                insideTask = true;
+            } else if (isLineAfterCompletedTask) {
+                completed.push(line);
+            } else {
+                withoutCompleted.push(line);
+                insideTask = false;
+            }
+        }
+        return {
+            linesWithoutCompletedTasks: withoutCompleted,
+            newlyCompletedTasks: completed,
+        };
+    }
+}
 
 export class Archiver {
     private settings: ArchiverSettings;
@@ -17,11 +66,13 @@ export class Archiver {
     }
 
     archiveTasks(lines: string[]) {
+        // todo: this should be true only for one of the flows
         if (!this.doLinesContainArchive(lines)) {
             lines = this.addEmptyArchive(lines);
         }
 
-        const { linesWithoutArchive, archive } = this.extractArchiveContents(lines);
+        const { linesWithoutArchive, archive } =
+            this.extractArchiveContents(lines);
 
         const { linesWithoutCompletedTasks, newlyCompletedTasks } =
             this.extractNewlyCompletedTasks(linesWithoutArchive);
@@ -51,25 +102,27 @@ export class Archiver {
 
     private addEmptyArchive(lines: string[]) {
         const linesWithArchive = [...lines];
-        const noNewline = linesWithArchive[lines.length - 1].trim() !== ""
+        const noNewline = linesWithArchive[lines.length - 1].trim() !== "";
         if (noNewline && this.settings.addNewlinesAroundHeadings) {
             linesWithArchive.push("");
         }
-        const headingToken = "#".repeat(this.settings.archiveHeadingDepth)
-        linesWithArchive.push(`${headingToken} ${this.settings.archiveHeading}`);
+        const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
+        linesWithArchive.push(
+            `${headingToken} ${this.settings.archiveHeading}`
+        );
         return linesWithArchive;
     }
 
-    private extractNewlyCompletedTasks(linesWithoutArchive: string[]) {
+    private extractNewlyCompletedTasks(lines: string[]) {
         const linesWithoutCompletedTasks = [];
         const newlyCompletedTasks = [];
 
         let linesAfterTask = false;
-        for (const line of linesWithoutArchive) {
-            if (line.match(COMPLETED_TASK_PATTERN)) {
+        for (const line of lines) {
+            if (COMPLETED_TASK_PATTERN.test(line)) {
                 newlyCompletedTasks.push(line);
                 linesAfterTask = true;
-            } else if (line.match(INDENTED_LINE_PATTERN) && linesAfterTask) {
+            } else if (INDENTED_LINE_PATTERN.test(line) && linesAfterTask) {
                 newlyCompletedTasks.push(line);
             } else {
                 linesWithoutCompletedTasks.push(line);
@@ -90,7 +143,7 @@ export class Archiver {
 
         for (const line of lines) {
             if (insideArchive) {
-                if (this.archiveEndPattern.exec(line)) {
+                if (this.archiveEndPattern.test(line)) {
                     insideArchive = false;
                     linesWithoutArchive.push(line);
                 } else if (line.trim().length > 0) {
@@ -117,7 +170,11 @@ export class Archiver {
     ) {
         let archiveContentsWithNewTasks = archive.appendCompletedTasks(tasks);
         if (this.settings.addNewlinesAroundHeadings) {
-            archiveContentsWithNewTasks = ["", ...archiveContentsWithNewTasks, ""]
+            archiveContentsWithNewTasks = [
+                "",
+                ...archiveContentsWithNewTasks,
+                "",
+            ];
         }
         const archiveStart = lines.findIndex((l) =>
             this.archivePattern.exec(l)
@@ -128,10 +185,10 @@ export class Archiver {
 }
 
 class Archive {
-    contents: string[];
-    dateLevels: string[];
-    dateFormats: Map<string, string>;
-    settings: ArchiverSettings;
+    private contents: string[];
+    private dateLevels: string[];
+    private dateFormats: Map<string, string>;
+    private settings: ArchiverSettings;
 
     constructor(lines: string[], settings: ArchiverSettings) {
         this.contents = lines;

@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "rollup --config rollup.config.js -w",
         "build": "rollup --config rollup.config.js --environment BUILD:production",
-        "test": "npx jest"
+        "test": "jest parser"
     },
     "keywords": [],
     "author": "",

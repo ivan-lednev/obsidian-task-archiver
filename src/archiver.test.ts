@@ -21,6 +21,8 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
         useTab: true,
         tabSize: 4,
     },
+    archiveToSeparateFile: false,
+    defaultArchiveFileName: "<filename> (archive)"
 };
 
 function checkArchiverOutput(
@@ -343,3 +345,7 @@ describe("Date tree", () => {
         });
     });
 });
+
+// describe("Archiving to a separate file", () => {
+//     test("")
+// })

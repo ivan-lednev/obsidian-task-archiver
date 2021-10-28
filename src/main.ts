@@ -14,6 +14,8 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
         useTab: true,
         tabSize: 4,
     },
+    archiveToSeparateFile: false,
+    defaultArchiveFileName: "<filename> (archive)"
 };
 
 export default class ObsidianTaskArchiver extends Plugin {
