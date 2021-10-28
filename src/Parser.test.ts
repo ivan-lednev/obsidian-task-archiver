@@ -1,4 +1,3 @@
-import { parse } from "path";
 import { Parser } from "./Parser";
 
 test("Builds a flat structure with non-hierarchical text", () => {
@@ -92,13 +91,54 @@ describe("List items", () => {
     });
 });
 
+describe("Mixing headings and lists", () => {
+    test("One heading, one list", () => {
+        const lines = ["# h", "- l", "line"];
+        const doc = new Parser().parse(lines);
+        expect(doc.children.length).toBe(1);
+        const h1 = doc.children[0];
+        expect(h1.children.length).toBe(2);
+    });
+
+    test("Multiple heading levels", () => {
+        const lines = ["# h", "- l", "text", "## h2", "# h1"];
+        const doc = new Parser().parse(lines);
+        expect(doc.children.length).toBe(2);
+        const h1 = doc.children[0];
+        expect(h1.children.length).toBe(3);
+    });
+
+    test("Multiple list levels", () => {
+        const lines = ["# h", "- l", "    - l2", "# h1"];
+        const doc = new Parser().parse(lines);
+        expect(doc.children.length).toBe(2);
+        const h1 = doc.children[0];
+        expect(h1.children.length).toBe(1);
+        const list = h1.children[0];
+        expect(list.children.length).toBe(1);
+    });
+});
+
 describe("Stringification", () => {
-    test.each([[["Line", "Another line"]]])(
-        "Roundtripping: %s",
-        (lines: string[]) => {
-            const parsed = new Parser().parse(lines);
-            const stringified = parsed.stringify();
-            expect(stringified).toEqual(lines);
-        }
-    );
+    test.each([
+        [["Line", "Another line"]],
+        [["# H1", "text", "## H2", "text", "# H1-2", "text"]],
+        [["- l", "  text", "    - l", "text"]],
+        [
+            [
+                "# H1",
+                "- l1",
+                "  indented",
+                "    - l2",
+                "text",
+                "## h2",
+                "- l1",
+                "    - l2",
+            ],
+        ],
+    ])("Roundtripping: %s", (lines) => {
+        const parsed = new Parser().parse(lines);
+        const stringified = parsed.stringify();
+        expect(stringified).toEqual(lines);
+    });
 });

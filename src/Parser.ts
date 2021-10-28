@@ -3,7 +3,7 @@ export class Parser {
     private readonly LIST_ITEM = /^(?<indentation> *)-\s/;
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2})+)[^-]/;
     private root: Node = new Node(null);
-    private context: Node = this.root;
+    private blockContext: Node = this.root;
 
     parse(lines: string[]) {
         for (const line of lines) {
@@ -11,7 +11,17 @@ export class Parser {
             if (headingMatch) {
                 const newHeadingLevel = headingMatch.groups.headingToken.length;
                 const node = new Node(line, newHeadingLevel);
-                this.appendContextWithLevelShift(node);
+
+                const levelsUpTheNodeChain =
+                    this.blockContext.level - node.level;
+                if (levelsUpTheNodeChain >= 0) {
+                    const insertionPointLevel = levelsUpTheNodeChain + 1;
+                    // todo: this will also break if the user skips headings (h1 => h3)
+                    this.moveContextUpTheNodeChain(insertionPointLevel);
+                }
+                this.blockContext.append(node);
+                this.blockContext = node;
+
                 continue;
             }
 
@@ -21,45 +31,42 @@ export class Parser {
                     listItemMatch.groups.indentation.length / 2
                 );
                 const node = new ListNode(line, level);
-                this.appendContextWithLevelShift(node);
+
+                if (this.blockContext instanceof ListNode) {
+                    const levelsUpTheNodeChain =
+                        this.blockContext.level - node.level;
+                    if (levelsUpTheNodeChain >= 0) {
+                        const insertionPointLevel = levelsUpTheNodeChain + 1;
+                        this.moveContextUpTheNodeChain(insertionPointLevel);
+                    }
+                }
+                this.blockContext.append(node);
+                this.blockContext = node;
+
                 continue;
             }
 
             const indentedLineMatch = line.match(this.INDENTED_LINE);
             if (indentedLineMatch) {
-                this.context.append(new Node(line));
+                this.blockContext.append(new Node(line));
                 continue;
             }
 
             this.breakOutOfListContext();
-            this.context.append(new Node(line));
+            this.blockContext.append(new Node(line));
         }
         return this.root;
     }
 
-    private appendContextWithLevelShift(node: Node) {
-        const levelsAboveCurrentContext = this.context.level - node.level;
-        if (levelsAboveCurrentContext >= 0) {
-            const newParentContextLevel = levelsAboveCurrentContext + 1;
-            this.moveContextUp(newParentContextLevel);
-        }
-        this.appendContext(node);
-    }
-
-    private appendContext(node: Node) {
-        this.context.append(node);
-        this.context = node;
-    }
-
     private breakOutOfListContext() {
-        while (this.context instanceof ListNode) {
-            this.moveContextUp(1);
+        while (this.blockContext instanceof ListNode) {
+            this.moveContextUpTheNodeChain(1);
         }
     }
 
-    private moveContextUp(levels: number) {
+    private moveContextUpTheNodeChain(levels: number) {
         for (let i = 0; i < levels; i++) {
-            this.context = this.context.parent;
+            this.blockContext = this.blockContext.parent;
         }
     }
 }
@@ -70,7 +77,7 @@ class Node {
     textContent: string;
     level: number = 0;
 
-    constructor(textContent?: string, level?: number) {
+    constructor(textContent: string, level?: number) {
         this.textContent = textContent;
         this.level = level;
         this.children = [];
