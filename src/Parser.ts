@@ -49,9 +49,7 @@ export class Parser {
     }
 
     private parseRawSections(lines: string[]) {
-        const sections: RawSection[] = [
-            { heading: "root sentinel", level: 0, lines: [] },
-        ];
+        const sections: RawSection[] = [{ heading: null, level: 0, lines: [] }];
 
         for (const line of lines) {
             const match = line.match(this.HEADING);
@@ -78,7 +76,7 @@ class BlockParser {
     parse(lines: string[]): Block[] {
         const flatBlocks = this.parseFlatBlocks(lines);
 
-        const root: Block = new Block("root sentinel", 0, "root");
+        const root: Block = new Block(null, 0, "root");
         root.blocks = [];
         let context = root;
 
@@ -150,6 +148,15 @@ class Block {
         this.level = level;
         this.type = type;
     }
+
+    stringify(): string[] {
+        const lines = [];
+        lines.push(this.line);
+        for (const block of this.blocks) {
+            lines.push(...block.stringify());
+        }
+        return lines;
+    }
 }
 
 interface RawSection {
@@ -180,6 +187,11 @@ class Section {
         const lines = [];
         if (this.textContent) {
             lines.push(this.textContent);
+        }
+        if (this.blocks) {
+            for (const block of this.blocks) {
+                lines.push(...block.stringify());
+            }
         }
         if (this.children) {
             for (const child of this.children) {

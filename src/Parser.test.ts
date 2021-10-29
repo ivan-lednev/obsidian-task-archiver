@@ -1,13 +1,23 @@
 import { Parser } from "./Parser";
 
 test("Builds a flat structure with non-hierarchical text", () => {
-    const lines = ["text", "|table|", "|----|", "|row|", "|another row|", ""];
+    const lines = [
+        "text",
+        "|table|",
+        "|----|",
+        "|row|",
+        "|another row|",
+        "**Bold**",
+        "```",
+        "code",
+        "```",
+        "    # Not a real heading #",
+        "    - Not a real list",
+        "---",
+    ];
 
     const doc = new Parser().parse(lines);
-
-    for (let i = 0; i < lines.length; i++) {
-        expect(doc.blocks[i].line).toEqual(lines[i]);
-    }
+    expect(doc.blocks.length).toBe(lines.length);
 });
 
 describe("Headings", () => {
@@ -120,7 +130,7 @@ describe("Mixing headings and lists", () => {
     });
 });
 
-describe.skip("Stringification", () => {
+describe("Stringification", () => {
     test.each([
         [["Line", "Another line"]],
         [["# H1", "text", "## H2", "text", "# H1-2", "text"]],
