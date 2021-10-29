@@ -1,42 +1,40 @@
 export class Parser {
     private readonly HEADING = /^(?<headingToken>#+)\s/;
-    private root: Node = new Node(null);
-    private blockContext: Node = this.root;
+    private root: Section = new Section(null);
+    private context: Section = this.root;
 
     parse(lines: string[]) {
         let linesInSection: string[] = [];
         for (const line of lines) {
             const headingMatch = line.match(this.HEADING);
             if (headingMatch) {
-                this.blockContext.blocks = new BlockParser().parse(
-                    linesInSection
-                );
+                this.context.blocks = new BlockParser().parse(linesInSection);
                 linesInSection = [];
 
                 const newHeadingLevel = headingMatch.groups.headingToken.length;
-                const node = new Node(line, newHeadingLevel);
+                const section = new Section(line, newHeadingLevel);
 
-                const levelsUpTheNodeChain =
-                    this.blockContext.level - node.level;
-                if (levelsUpTheNodeChain >= 0) {
-                    const insertionPointLevel = levelsUpTheNodeChain + 1;
+                const levelsUpTheSectionChain =
+                    this.context.level - section.level;
+                if (levelsUpTheSectionChain >= 0) {
+                    const insertionPointLevel = levelsUpTheSectionChain + 1;
                     // todo: this will also break if the user skips headings (h1 => h3)
-                    this.moveContextUpTheNodeChain(insertionPointLevel);
+                    this.moveContextUpTheSectionChain(insertionPointLevel);
                 }
-                this.blockContext.append(node);
-                this.blockContext = node;
+                this.context.append(section);
+                this.context = section;
             } else {
                 linesInSection.push(line);
             }
         }
         // todo: duplication
-        this.blockContext.blocks = new BlockParser().parse(linesInSection);
+        this.context.blocks = new BlockParser().parse(linesInSection);
         return this.root;
     }
 
-    private moveContextUpTheNodeChain(levels: number) {
+    private moveContextUpTheSectionChain(levels: number) {
         for (let i = 0; i < levels; i++) {
-            this.blockContext = this.blockContext.parent;
+            this.context = this.context.parent;
         }
     }
 }
@@ -63,12 +61,12 @@ class BlockParser {
 
             blocks.push(new Block(line, 1));
 
-            // if (this.blockContext instanceof ListNode) {
-            //     const levelsUpTheNodeChain =
+            // if (this.blockContext instanceof ListSection) {
+            //     const levelsUpTheSectionChain =
             //         this.blockContext.level - block.level;
-            //     if (levelsUpTheNodeChain >= 0) {
-            //         const insertionPointLevel = levelsUpTheNodeChain + 1;
-            //         this.moveContextUpTheNodeChain(insertionPointLevel);
+            //     if (levelsUpTheSectionChain >= 0) {
+            //         const insertionPointLevel = levelsUpTheSectionChain + 1;
+            //         this.moveContextUpTheSectionChain(insertionPointLevel);
             //     }
             // }
             //     this.blockContext.append(block);
@@ -79,11 +77,11 @@ class BlockParser {
 
             // const indentedLineMatch = line.match(this.INDENTED_LINE);
             // if (indentedLineMatch) {
-            //     this.blockContext.append(new Node(line));
+            //     this.blockContext.append(new Section(line));
             //     continue;
             // }
 
-            // this.blockContext.append(new Node(line));
+            // this.blockContext.append(new Section(line));
         }
         return blocks;
     }
@@ -99,10 +97,10 @@ class Block {
     }
 }
 
-class Node {
-    children: Node[] = [];
+class Section {
+    children: Section[] = [];
     blocks: Block[] = [];
-    parent: Node;
+    parent: Section;
     textContent: string;
     level: number = 0;
 
@@ -111,9 +109,9 @@ class Node {
         this.level = level;
     }
 
-    append(node: Node) {
-        node.parent = this;
-        this.children.push(node);
+    append(section: Section) {
+        section.parent = this;
+        this.children.push(section);
     }
 
     stringify(): string[] {
@@ -130,4 +128,4 @@ class Node {
     }
 }
 
-class ListNode extends Node {}
+class ListSection extends Section {}
