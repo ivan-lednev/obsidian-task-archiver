@@ -76,6 +76,7 @@ class BlockParser {
     parse(lines: string[]): Block[] {
         const flatBlocks = this.parseFlatBlocks(lines);
 
+        // dummy block as a root
         const root: Block = new Block(null, 0, "root");
         root.blocks = [];
         let context = root;
@@ -134,24 +135,40 @@ class BlockParser {
     }
 }
 
+interface TextNode {
+    children: TextNode[];
+    text: string;
+    level: number;
+    parent: TextNode | null;
+    stringify(): string[];
+}
+
 type BlockType = "text" | "list" | "root";
 
 class Block {
     blocks: Block[] = [];
-    line: string;
+    text: string;
     level: number;
     parent: Block | null;
     type: BlockType;
 
     constructor(line: string, level: number, type: BlockType) {
-        this.line = line;
+        this.text = line;
         this.level = level;
         this.type = type;
     }
 
+    remove(child: Block) {
+        this.blocks.splice(this.blocks.indexOf(child), 1);
+    }
+
+    removeSelf() {
+        this.parent.remove(this);
+    }
+
     stringify(): string[] {
         const lines = [];
-        lines.push(this.line);
+        lines.push(this.text);
         for (const block of this.blocks) {
             lines.push(...block.stringify());
         }
@@ -165,36 +182,61 @@ interface RawSection {
     lines: string[];
 }
 
-class Section {
-    children: Section[] = [];
+export class Section {
+    sections: Section[] = [];
     blocks: Block[] = [];
     parent: Section;
-    textContent: string;
+    text: string;
     level: number = 0;
 
     constructor(textContent: string, level: number, blocks: Block[]) {
-        this.textContent = textContent;
+        this.text = textContent;
         this.level = level;
         this.blocks = blocks;
     }
 
     append(section: Section) {
         section.parent = this;
-        this.children.push(section);
+        this.sections.push(section);
+    }
+
+    extractBlocks(
+        lineFilter: (line: string) => boolean = this.alwaysTrue,
+        headingFilter: (heading: string) => boolean = this.alwaysTrue
+    ): string[] {
+        const tasks = [];
+        // I'm mutating the array while traversing it!
+        // todo: this is lame!
+        for (const block of this.blocks.slice()) {
+            if (lineFilter(block.text)) {
+                tasks.push(...block.stringify());
+                block.removeSelf();
+            }
+        }
+        for (const section of this.sections) {
+            if (headingFilter(section.text)) {
+                tasks.push(...section.extractBlocks(headingFilter));
+            }
+        }
+        return tasks;
+    }
+
+    private alwaysTrue() {
+        return true;
     }
 
     stringify(): string[] {
         const lines = [];
-        if (this.textContent) {
-            lines.push(this.textContent);
+        if (this.text) {
+            lines.push(this.text);
         }
         if (this.blocks) {
             for (const block of this.blocks) {
                 lines.push(...block.stringify());
             }
         }
-        if (this.children) {
-            for (const child of this.children) {
+        if (this.sections) {
+            for (const child of this.sections) {
                 lines.push(...child.stringify());
             }
         }

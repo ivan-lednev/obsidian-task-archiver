@@ -1,4 +1,5 @@
-import { Parser } from "./Parser";
+import { parse } from "path";
+import { Parser, Section } from "./Parser";
 
 test("Builds a flat structure with non-hierarchical text", () => {
     const lines = [
@@ -26,8 +27,8 @@ describe("Headings", () => {
 
         const root = new Parser().parse(lines);
 
-        expect(root.children.length).toBe(1);
-        const h1 = root.children[0];
+        expect(root.sections.length).toBe(1);
+        const h1 = root.sections[0];
         expect(h1.blocks.length).toBe(1);
     });
 
@@ -36,9 +37,9 @@ describe("Headings", () => {
 
         const doc = new Parser().parse(lines);
 
-        const h1 = doc.children[0];
-        expect(h1.children.length).toBe(1);
-        const h2 = h1.children[0];
+        const h1 = doc.sections[0];
+        expect(h1.sections.length).toBe(1);
+        const h2 = h1.sections[0];
         expect(h2.blocks.length).toBe(1);
     });
 
@@ -47,8 +48,8 @@ describe("Headings", () => {
 
         const doc = new Parser().parse(lines);
 
-        const h1 = doc.children[0];
-        expect(h1.children.length).toBe(2);
+        const h1 = doc.sections[0];
+        expect(h1.sections.length).toBe(2);
     });
 
     test("A higher-level heading pops nesting", () => {
@@ -56,8 +57,8 @@ describe("Headings", () => {
 
         const doc = new Parser().parse(lines);
 
-        expect(doc.children.length).toBe(2);
-        const secondH1 = doc.children[1];
+        expect(doc.sections.length).toBe(2);
+        const secondH1 = doc.sections[1];
         expect(secondH1.blocks.length).toBe(1);
     });
 });
@@ -105,25 +106,25 @@ describe("Mixing headings and lists", () => {
     test("One heading, one list", () => {
         const lines = ["# h", "- l", "line"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(1);
-        const h1 = doc.children[0];
+        expect(doc.sections.length).toBe(1);
+        const h1 = doc.sections[0];
         expect(h1.blocks.length).toBe(2);
     });
 
     test("Multiple heading levels", () => {
         const lines = ["# h", "- l", "text", "## h2", "# h1"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2);
-        const h1 = doc.children[0];
-        expect(h1.children.length).toBe(1);
+        expect(doc.sections.length).toBe(2);
+        const h1 = doc.sections[0];
+        expect(h1.sections.length).toBe(1);
         expect(h1.blocks.length).toBe(2);
     });
 
     test("Multiple list levels", () => {
         const lines = ["# h", "- l", "    - l2", "# h1"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2);
-        const h1 = doc.children[0];
+        expect(doc.sections.length).toBe(2);
+        const h1 = doc.sections[0];
         expect(h1.blocks.length).toBe(1);
         const list = h1.blocks[0];
         expect(list.blocks.length).toBe(1);
@@ -147,9 +148,65 @@ describe("Stringification", () => {
                 "    - l2",
             ],
         ],
-    ])("Roundtripping: %s", (lines) => {
+    ])("Roundtripping doesn't mutate lines: %s", (lines) => {
         const parsed = new Parser().parse(lines);
         const stringified = parsed.stringify();
         expect(stringified).toEqual(lines);
+    });
+});
+
+describe("Extraction", () => {
+    test("Extract completed tasks", () => {
+        const lines = [
+            "- [x] Task",
+            "Text",
+            "- [x] Task",
+            "  Text",
+            "- [x] Task",
+            "    - [x] Task",
+        ];
+        const tasks = [
+            "- [x] Task",
+            "- [x] Task",
+            "  Text",
+            "- [x] Task",
+            "    - [x] Task",
+        ];
+        const theRest = ["Text"];
+        const parsed = new Parser().parse(lines);
+        const actualTasks = parsed.extractBlocks((line) =>
+            /^- \[x\]/.test(line)
+        );
+        expect(actualTasks).toEqual(tasks);
+        expect(parsed.stringify()).toEqual(theRest);
+    });
+
+    test("Extract tasks and skip the archive", () => {
+        const lines = [
+            "- [x] Top level task",
+            "# Archived",
+            "- [x] Top level task in archive",
+            "    - [x] Subtask in archive",
+            "## Archive subheading",
+            "- [x] Task in subheading",
+            "# Another heading",
+            "- [x] Task after archive",
+        ];
+        const tasks = ["- [x] Top level task", "- [x] Task after archive"];
+        const theRest = [
+            "# Archived",
+            "- [x] Top level task in archive",
+            "    - [x] Subtask in archive",
+            "## Archive subheading",
+            "- [x] Task in subheading",
+            "# Another heading",
+        ];
+        const parsed = new Parser().parse(lines);
+        const actualTasks = parsed.extractBlocks(
+            (line) => /^- \[x\]/.test(line),
+            (heading) => !heading.match(/^#+ Archived/)
+        );
+        expect(actualTasks).toEqual(tasks);
+        expect(parsed.stringify()).toEqual(theRest);
     });
 });
