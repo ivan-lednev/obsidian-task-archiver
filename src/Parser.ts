@@ -1,41 +1,76 @@
+interface RawSection {
+    heading: string;
+    level: number;
+    lines: string[];
+}
+
 export class Parser {
-    private readonly HEADING = /^(?<headingToken>#+)\s/;
-    private root: Section = new Section(null);
-    private context: Section = this.root;
+    private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
 
     parse(lines: string[]) {
-        let linesInSection: string[] = [];
-        for (const line of lines) {
-            const headingMatch = line.match(this.HEADING);
-            if (headingMatch) {
-                this.context.blocks = new BlockParser().parse(linesInSection);
-                linesInSection = [];
+        const rawSections = this.parseRawSections(lines);
 
-                const newHeadingLevel = headingMatch.groups.headingToken.length;
-                const section = new Section(line, newHeadingLevel);
-
-                const levelsUpTheSectionChain =
-                    this.context.level - section.level;
-                if (levelsUpTheSectionChain >= 0) {
-                    const insertionPointLevel = levelsUpTheSectionChain + 1;
-                    // todo: this will also break if the user skips headings (h1 => h3)
-                    this.moveContextUpTheSectionChain(insertionPointLevel);
-                }
-                this.context.append(section);
-                this.context = section;
-            } else {
-                linesInSection.push(line);
-            }
-        }
         // todo: duplication
-        this.context.blocks = new BlockParser().parse(linesInSection);
-        return this.root;
+        const rootLines = rawSections[0].lines;
+        const rootBlocks = new BlockParser().parse(rootLines);
+        const root = new Section(null, 0, rootBlocks);
+
+        const rawWithoutRoot = rawSections.slice(1);
+        const flatSections = this.parseBlocksInSections(rawWithoutRoot);
+        this.buildSectionHierarchy(root, flatSections);
+
+        return root;
     }
 
-    private moveContextUpTheSectionChain(levels: number) {
-        for (let i = 0; i < levels; i++) {
-            this.context = this.context.parent;
+    private parseBlocksInSections(raw: RawSection[]) {
+        return raw.map((s) => {
+            return new Section(
+                s.heading,
+                s.level,
+                new BlockParser().parse(s.lines)
+            );
+        });
+    }
+
+    private buildSectionHierarchy(root: Section, flatSections: Section[]) {
+        let context = root;
+        for (const section of flatSections) {
+            const stepsToSection = context.level - section.level;
+            if (stepsToSection >= 0) {
+                // todo: this will also break if the user skips headings (h1 => h3)
+                for (
+                    let stepsToParentLevelIndex = stepsToSection + 1;
+                    stepsToParentLevelIndex > 0;
+                    stepsToParentLevelIndex--
+                ) {
+                    context = context.parent;
+                }
+            }
+
+            context.append(section);
+            context = section;
         }
+    }
+
+    private parseRawSections(lines: string[]) {
+        const sections: RawSection[] = [
+            { heading: "root sentinel", level: 0, lines: [] },
+        ];
+        for (const line of lines) {
+            const match = line.match(this.HEADING);
+            if (match) {
+                sections.push({
+                    heading: match[0],
+                    level: match.groups.headingToken.length,
+                    lines: [],
+                });
+            } else {
+                const lastSection = sections[sections.length - 1];
+                lastSection.lines.push(line);
+            }
+        }
+
+        return sections;
     }
 }
 
@@ -46,6 +81,7 @@ class BlockParser {
     parse(lines: string[]): Block[] {
         const blocks = [];
         let context: Block;
+
         for (const line of lines) {
             const listItemMatch = line.match(this.LIST_ITEM);
             if (listItemMatch) {
@@ -60,28 +96,6 @@ class BlockParser {
             }
 
             blocks.push(new Block(line, 1));
-
-            // if (this.blockContext instanceof ListSection) {
-            //     const levelsUpTheSectionChain =
-            //         this.blockContext.level - block.level;
-            //     if (levelsUpTheSectionChain >= 0) {
-            //         const insertionPointLevel = levelsUpTheSectionChain + 1;
-            //         this.moveContextUpTheSectionChain(insertionPointLevel);
-            //     }
-            // }
-            //     this.blockContext.append(block);
-            //     this.blockContext = block;
-
-            //     continue;
-            // }
-
-            // const indentedLineMatch = line.match(this.INDENTED_LINE);
-            // if (indentedLineMatch) {
-            //     this.blockContext.append(new Section(line));
-            //     continue;
-            // }
-
-            // this.blockContext.append(new Section(line));
         }
         return blocks;
     }
@@ -104,9 +118,10 @@ class Section {
     textContent: string;
     level: number = 0;
 
-    constructor(textContent: string, level?: number) {
+    constructor(textContent: string, level: number, blocks: Block[]) {
         this.textContent = textContent;
         this.level = level;
+        this.blocks = blocks;
     }
 
     append(section: Section) {
@@ -127,5 +142,3 @@ class Section {
         return lines;
     }
 }
-
-class ListSection extends Section {}
