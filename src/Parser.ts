@@ -25,35 +25,37 @@ export class Parser {
                 continue;
             }
 
-            const listItemMatch = line.match(this.LIST_ITEM);
-            if (listItemMatch) {
-                const level = Math.floor(
-                    listItemMatch.groups.indentation.length / 2
-                );
-                const node = new ListNode(line, level);
+            this.blockContext.blocks.push(line)
 
-                if (this.blockContext instanceof ListNode) {
-                    const levelsUpTheNodeChain =
-                        this.blockContext.level - node.level;
-                    if (levelsUpTheNodeChain >= 0) {
-                        const insertionPointLevel = levelsUpTheNodeChain + 1;
-                        this.moveContextUpTheNodeChain(insertionPointLevel);
-                    }
-                }
-                this.blockContext.append(node);
-                this.blockContext = node;
+            // const listItemMatch = line.match(this.LIST_ITEM);
+            // if (listItemMatch) {
+            //     const level = Math.floor(
+            //         listItemMatch.groups.indentation.length / 2
+            //     );
+            //     const node = new ListNode(line, level);
 
-                continue;
-            }
+            //     if (this.blockContext instanceof ListNode) {
+            //         const levelsUpTheNodeChain =
+            //             this.blockContext.level - node.level;
+            //         if (levelsUpTheNodeChain >= 0) {
+            //             const insertionPointLevel = levelsUpTheNodeChain + 1;
+            //             this.moveContextUpTheNodeChain(insertionPointLevel);
+            //         }
+            //     }
+            //     this.blockContext.append(node);
+            //     this.blockContext = node;
 
-            const indentedLineMatch = line.match(this.INDENTED_LINE);
-            if (indentedLineMatch) {
-                this.blockContext.append(new Node(line));
-                continue;
-            }
+            //     continue;
+            // }
 
-            this.breakOutOfListContext();
-            this.blockContext.append(new Node(line));
+            // const indentedLineMatch = line.match(this.INDENTED_LINE);
+            // if (indentedLineMatch) {
+            //     this.blockContext.append(new Node(line));
+            //     continue;
+            // }
+
+            // this.breakOutOfListContext();
+            // this.blockContext.append(new Node(line));
         }
         return this.root;
     }
@@ -72,7 +74,8 @@ export class Parser {
 }
 
 class Node {
-    children: Node[];
+    children: Node[] = [];
+    blocks: string[] = [];
     parent: Node;
     textContent: string;
     level: number = 0;
@@ -80,7 +83,6 @@ class Node {
     constructor(textContent: string, level?: number) {
         this.textContent = textContent;
         this.level = level;
-        this.children = [];
     }
 
     append(node: Node) {
