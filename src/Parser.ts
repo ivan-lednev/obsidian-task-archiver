@@ -26,19 +26,26 @@ export class Parser {
         for (const section of flatSections) {
             const stepsUpToSection = context.level - section.level;
             if (stepsUpToSection >= 0) {
-                // todo: this will also break if the user skips headings (h1 => h3)
-                for (
-                    let stepsUpToParentSection = stepsUpToSection + 1;
-                    stepsUpToParentSection > 0;
-                    stepsUpToParentSection--
-                ) {
-                    context = context.parent;
-                }
+                const stepsUpToParent = stepsUpToSection + 1;
+                context = this.goUpToParentInNodeChain(
+                    stepsUpToParent,
+                    context
+                );
             }
 
             context.append(section);
             context = section;
         }
+    }
+
+    private goUpToParentInNodeChain(targetLevel: number, node: Section) {
+        let pointer = node;
+
+        for (let level = 0; level < targetLevel; level++) {
+            pointer = pointer.parent;
+        }
+
+        return pointer;
     }
 
     private parseRawSections(lines: string[]) {
@@ -71,79 +78,74 @@ class BlockParser {
     parse(lines: string[]): Block[] {
         const flatBlocks = this.parseFlatBlocks(lines);
 
-        const rootContainer: Block[] = [];
+        const root: Block = new Block("root sentinel", 0, "root");
+        root.blocks = [];
+        let context = root;
 
-        let context: Block = null;
-        let contextContainer: Block[] = rootContainer;
         for (const block of flatBlocks) {
             if (block.type === "list") {
-                // if (context) {
-                //     const stepsUpToSection = context.level - block.level;
-                //     if (stepsUpToSection >= 0) {
-                //         for (
-                //             let stepsUpToParentBlock = stepsUpToSection + 1;
-                //             stepsUpToParentBlock > 0;
-                //             stepsUpToParentBlock--
-                //         ) {
-                //             context = context.parent;
-                //         }
-                //     }
-                // }
-                contextContainer.push(block);
+                const stepsUpToSection = context.level - block.level;
+                if (stepsUpToSection >= 0) {
+                    const targetLevel = stepsUpToSection + 1;
 
+                    // TODO: copypasted
+                    for (let level = targetLevel; level > 0; level--) {
+                        context = context.parent;
+                    }
+                }
+                context.blocks.push(block);
                 block.parent = context;
-
-                contextContainer = block.blocks;
                 context = block;
-            } else if (block.level > 0) {
-                contextContainer.push(block);
             } else {
-                rootContainer.push(block);
+                const isTopLine = block.level === 1;
+                if (isTopLine) {
+                    context = root;
+                }
+                context.blocks.push(block);
             }
         }
 
-        return rootContainer;
+        return root.blocks;
     }
 
     private parseFlatBlocks(lines: string[]) {
         const rawBlocks: Block[] = [];
         for (const line of lines) {
             const listMatch = line.match(this.LIST_ITEM);
+            const indentedLineMatch = line.match(this.INDENTED_LINE);
+
             if (listMatch) {
                 const level = this.getLineLevel(listMatch.groups.indentation);
                 const block = new Block(line, level, "list");
                 rawBlocks.push(block);
-                continue;
-            }
-
-            const indentedLineMatch = line.match(this.INDENTED_LINE);
-            if (indentedLineMatch) {
+            } else if (indentedLineMatch) {
                 const level = this.getLineLevel(
                     indentedLineMatch.groups.indentation
                 );
                 const block = new Block(line, level, "text");
                 rawBlocks.push(block);
-                continue;
+            } else {
+                rawBlocks.push(new Block(line, 1, "text"));
             }
-
-            rawBlocks.push(new Block(line, 0, "text"));
         }
         return rawBlocks;
     }
 
     private getLineLevel(indentation: string) {
-        return Math.floor(indentation.length / 2);
+        return Math.floor(indentation.length / 2) + 1;
     }
 }
+
+type BlockType = "text" | "list" | "root";
 
 class Block {
     blocks: Block[] = [];
     line: string;
     level: number;
     parent: Block | null;
-    type: "text" | "list";
+    type: BlockType;
 
-    constructor(line: string, level: number, type: "text" | "list") {
+    constructor(line: string, level: number, type: BlockType) {
         this.line = line;
         this.level = level;
         this.type = type;

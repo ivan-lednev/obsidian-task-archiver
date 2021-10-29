@@ -1,12 +1,12 @@
 import { Parser } from "./Parser";
 
-test.skip("Builds a flat structure with non-hierarchical text", () => {
+test("Builds a flat structure with non-hierarchical text", () => {
     const lines = ["text", "|table|", "|----|", "|row|", "|another row|", ""];
 
     const doc = new Parser().parse(lines);
 
     for (let i = 0; i < lines.length; i++) {
-        expect(doc.children[i].textContent).toEqual(lines[i]);
+        expect(doc.blocks[i].line).toEqual(lines[i]);
     }
 });
 
@@ -78,26 +78,26 @@ describe("List items", () => {
         expect(listItem.blocks.length).toBe(2);
     });
 
-    test.skip("A higher-level list item pops nesting", () => {
+    test("A higher-level list item pops nesting", () => {
         const lines = ["- l", "  - l2", "- l2-2"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2);
+        expect(doc.blocks.length).toBe(2);
     });
 
-    test.skip("A top-level line breaks out of a list context", () => {
+    test("A top-level line breaks out of a list context", () => {
         const lines = ["- l", "  - l2", "line"];
         const doc = new Parser().parse(lines);
-        expect(doc.children.length).toBe(2);
+        expect(doc.blocks.length).toBe(2);
     });
 });
 
-describe.skip("Mixing headings and lists", () => {
+describe("Mixing headings and lists", () => {
     test("One heading, one list", () => {
         const lines = ["# h", "- l", "line"];
         const doc = new Parser().parse(lines);
         expect(doc.children.length).toBe(1);
         const h1 = doc.children[0];
-        expect(h1.children.length).toBe(2);
+        expect(h1.blocks.length).toBe(2);
     });
 
     test("Multiple heading levels", () => {
@@ -105,7 +105,8 @@ describe.skip("Mixing headings and lists", () => {
         const doc = new Parser().parse(lines);
         expect(doc.children.length).toBe(2);
         const h1 = doc.children[0];
-        expect(h1.children.length).toBe(3);
+        expect(h1.children.length).toBe(1);
+        expect(h1.blocks.length).toBe(2);
     });
 
     test("Multiple list levels", () => {
@@ -113,9 +114,9 @@ describe.skip("Mixing headings and lists", () => {
         const doc = new Parser().parse(lines);
         expect(doc.children.length).toBe(2);
         const h1 = doc.children[0];
-        expect(h1.children.length).toBe(1);
-        const list = h1.children[0];
-        expect(list.children.length).toBe(1);
+        expect(h1.blocks.length).toBe(1);
+        const list = h1.blocks[0];
+        expect(list.blocks.length).toBe(1);
     });
 });
 
