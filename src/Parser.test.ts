@@ -17,7 +17,7 @@ describe("Headings", () => {
         const root = new Parser().parse(lines);
 
         expect(root.children.length).toBe(1);
-        const h1 = root.children[0]
+        const h1 = root.children[0];
         expect(h1.blocks.length).toBe(1);
     });
 

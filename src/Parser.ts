@@ -1,14 +1,18 @@
 export class Parser {
     private readonly HEADING = /^(?<headingToken>#+)\s/;
-    private readonly LIST_ITEM = /^(?<indentation> *)-\s/;
-    private readonly INDENTED_LINE = /^(?<indentation>(?: {2})+)[^-]/;
     private root: Node = new Node(null);
     private blockContext: Node = this.root;
 
     parse(lines: string[]) {
+        let linesInSection: string[] = [];
         for (const line of lines) {
             const headingMatch = line.match(this.HEADING);
             if (headingMatch) {
+                this.blockContext.blocks = new BlockParser().parse(
+                    linesInSection
+                );
+                linesInSection = [];
+
                 const newHeadingLevel = headingMatch.groups.headingToken.length;
                 const node = new Node(line, newHeadingLevel);
 
@@ -21,29 +25,54 @@ export class Parser {
                 }
                 this.blockContext.append(node);
                 this.blockContext = node;
+            } else {
+                linesInSection.push(line);
+            }
+        }
+        // todo: duplication
+        this.blockContext.blocks = new BlockParser().parse(linesInSection);
+        return this.root;
+    }
 
-                continue;
+    private moveContextUpTheNodeChain(levels: number) {
+        for (let i = 0; i < levels; i++) {
+            this.blockContext = this.blockContext.parent;
+        }
+    }
+}
+
+class BlockParser {
+    private readonly LIST_ITEM = /^(?<indentation> *)-\s/;
+    private readonly INDENTED_LINE = /^(?<indentation>(?: {2})+)[^-]/;
+
+    parse(lines: string[]): Block[] {
+        const blocks = [];
+        let context: Block;
+        for (const line of lines) {
+            const listItemMatch = line.match(this.LIST_ITEM);
+            if (listItemMatch) {
+                const level = Math.floor(
+                    listItemMatch.groups.indentation.length / 2
+                );
+                const block = new Block(line, level);
+                if (context) {
+                    context.children.push(block);
+                }
+                context = block;
             }
 
-            this.blockContext.blocks.push(line)
+            blocks.push(new Block(line, 1));
 
-            // const listItemMatch = line.match(this.LIST_ITEM);
-            // if (listItemMatch) {
-            //     const level = Math.floor(
-            //         listItemMatch.groups.indentation.length / 2
-            //     );
-            //     const node = new ListNode(line, level);
-
-            //     if (this.blockContext instanceof ListNode) {
-            //         const levelsUpTheNodeChain =
-            //             this.blockContext.level - node.level;
-            //         if (levelsUpTheNodeChain >= 0) {
-            //             const insertionPointLevel = levelsUpTheNodeChain + 1;
-            //             this.moveContextUpTheNodeChain(insertionPointLevel);
-            //         }
+            // if (this.blockContext instanceof ListNode) {
+            //     const levelsUpTheNodeChain =
+            //         this.blockContext.level - block.level;
+            //     if (levelsUpTheNodeChain >= 0) {
+            //         const insertionPointLevel = levelsUpTheNodeChain + 1;
+            //         this.moveContextUpTheNodeChain(insertionPointLevel);
             //     }
-            //     this.blockContext.append(node);
-            //     this.blockContext = node;
+            // }
+            //     this.blockContext.append(block);
+            //     this.blockContext = block;
 
             //     continue;
             // }
@@ -54,28 +83,25 @@ export class Parser {
             //     continue;
             // }
 
-            // this.breakOutOfListContext();
             // this.blockContext.append(new Node(line));
         }
-        return this.root;
+        return blocks;
     }
+}
 
-    private breakOutOfListContext() {
-        while (this.blockContext instanceof ListNode) {
-            this.moveContextUpTheNodeChain(1);
-        }
-    }
-
-    private moveContextUpTheNodeChain(levels: number) {
-        for (let i = 0; i < levels; i++) {
-            this.blockContext = this.blockContext.parent;
-        }
+class Block {
+    children: Block[] = [];
+    line: string;
+    level: number;
+    constructor(line: string, level: number) {
+        this.line = line;
+        this.level = level;
     }
 }
 
 class Node {
     children: Node[] = [];
-    blocks: string[] = [];
+    blocks: Block[] = [];
     parent: Node;
     textContent: string;
     level: number = 0;
