@@ -1,23 +1,12 @@
-interface RawSection {
-    heading: string;
-    level: number;
-    lines: string[];
-}
-
 export class Parser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
 
     parse(lines: string[]) {
         const rawSections = this.parseRawSections(lines);
+        const flatSections = this.parseBlocksInSections(rawSections);
 
-        // todo: duplication
-        const rootLines = rawSections[0].lines;
-        const rootBlocks = new BlockParser().parse(rootLines);
-        const root = new Section(null, 0, rootBlocks);
-
-        const rawWithoutRoot = rawSections.slice(1);
-        const flatSections = this.parseBlocksInSections(rawWithoutRoot);
-        this.buildSectionHierarchy(root, flatSections);
+        const [root, children] = [flatSections[0], flatSections.slice(1)];
+        this.buildSectionHierarchy(root, children);
 
         return root;
     }
@@ -35,13 +24,13 @@ export class Parser {
     private buildSectionHierarchy(root: Section, flatSections: Section[]) {
         let context = root;
         for (const section of flatSections) {
-            const stepsToSection = context.level - section.level;
-            if (stepsToSection >= 0) {
+            const stepsUpToSection = context.level - section.level;
+            if (stepsUpToSection >= 0) {
                 // todo: this will also break if the user skips headings (h1 => h3)
                 for (
-                    let stepsToParentLevelIndex = stepsToSection + 1;
-                    stepsToParentLevelIndex > 0;
-                    stepsToParentLevelIndex--
+                    let stepsUpToParentSection = stepsUpToSection + 1;
+                    stepsUpToParentSection > 0;
+                    stepsUpToParentSection--
                 ) {
                     context = context.parent;
                 }
@@ -56,6 +45,7 @@ export class Parser {
         const sections: RawSection[] = [
             { heading: "root sentinel", level: 0, lines: [] },
         ];
+
         for (const line of lines) {
             const match = line.match(this.HEADING);
             if (match) {
@@ -79,36 +69,91 @@ class BlockParser {
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2})+)[^-]/;
 
     parse(lines: string[]): Block[] {
-        const blocks = [];
-        let context: Block;
+        const flatBlocks = this.parseFlatBlocks(lines);
 
-        for (const line of lines) {
-            const listItemMatch = line.match(this.LIST_ITEM);
-            if (listItemMatch) {
-                const level = Math.floor(
-                    listItemMatch.groups.indentation.length / 2
-                );
-                const block = new Block(line, level);
-                if (context) {
-                    context.children.push(block);
-                }
+        const rootContainer: Block[] = [];
+
+        let context: Block = null;
+        let contextContainer: Block[] = rootContainer;
+        for (const block of flatBlocks) {
+            if (block.type === "list") {
+                // if (context) {
+                //     const stepsUpToSection = context.level - block.level;
+                //     if (stepsUpToSection >= 0) {
+                //         for (
+                //             let stepsUpToParentBlock = stepsUpToSection + 1;
+                //             stepsUpToParentBlock > 0;
+                //             stepsUpToParentBlock--
+                //         ) {
+                //             context = context.parent;
+                //         }
+                //     }
+                // }
+                contextContainer.push(block);
+
+                block.parent = context;
+
+                contextContainer = block.blocks;
                 context = block;
+            } else if (block.level > 0) {
+                contextContainer.push(block);
+            } else {
+                rootContainer.push(block);
+            }
+        }
+
+        return rootContainer;
+    }
+
+    private parseFlatBlocks(lines: string[]) {
+        const rawBlocks: Block[] = [];
+        for (const line of lines) {
+            const listMatch = line.match(this.LIST_ITEM);
+            if (listMatch) {
+                const level = this.getLineLevel(listMatch.groups.indentation);
+                const block = new Block(line, level, "list");
+                rawBlocks.push(block);
+                continue;
             }
 
-            blocks.push(new Block(line, 1));
+            const indentedLineMatch = line.match(this.INDENTED_LINE);
+            if (indentedLineMatch) {
+                const level = this.getLineLevel(
+                    indentedLineMatch.groups.indentation
+                );
+                const block = new Block(line, level, "text");
+                rawBlocks.push(block);
+                continue;
+            }
+
+            rawBlocks.push(new Block(line, 0, "text"));
         }
-        return blocks;
+        return rawBlocks;
+    }
+
+    private getLineLevel(indentation: string) {
+        return Math.floor(indentation.length / 2);
     }
 }
 
 class Block {
-    children: Block[] = [];
+    blocks: Block[] = [];
     line: string;
     level: number;
-    constructor(line: string, level: number) {
+    parent: Block | null;
+    type: "text" | "list";
+
+    constructor(line: string, level: number, type: "text" | "list") {
         this.line = line;
         this.level = level;
+        this.type = type;
     }
+}
+
+interface RawSection {
+    heading: string;
+    level: number;
+    lines: string[];
 }
 
 class Section {

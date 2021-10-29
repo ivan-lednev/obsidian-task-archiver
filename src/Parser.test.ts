@@ -62,20 +62,20 @@ describe("List items", () => {
         // expect(listItem.blocks.length).toBe(1);
     });
 
-    test.skip("An indented list item creates another level of nesting", () => {
+    test("An indented list item creates another level of nesting", () => {
         const lines = ["- l", "  - l2", "    text"];
 
         const doc = new Parser().parse(lines);
-        const listItem = doc.children[0];
-        const indentedListItem = listItem.children[0];
-        expect(indentedListItem.children.length).toBe(1);
+        const listItem = doc.blocks[0];
+        const indentedListItem = listItem.blocks[0];
+        expect(indentedListItem.blocks.length).toBe(1);
     });
 
-    test.skip("A same level list item doesn't get nested", () => {
+    test("A same level list item doesn't get nested", () => {
         const lines = ["- l", "  - l2", "  - l2-2"];
         const doc = new Parser().parse(lines);
-        const listItem = doc.children[0];
-        expect(listItem.children.length).toBe(2);
+        const listItem = doc.blocks[0];
+        expect(listItem.blocks.length).toBe(2);
     });
 
     test.skip("A higher-level list item pops nesting", () => {
