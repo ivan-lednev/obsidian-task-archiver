@@ -1,7 +1,7 @@
 import { Parser, Section } from "./Parser";
 
 const DEFAULT_SETTINGS = {
-    useTab: false,
+    useTab: true,
     tabSize: 2,
 };
 
@@ -69,7 +69,7 @@ describe("Headings", () => {
 
 describe("List items", () => {
     test("Indented text after a list item gets nested", () => {
-        const lines = ["- l", "  text"];
+        const lines = ["- l", "\ttext"];
 
         const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.blocks.length).toBe(1);
@@ -78,7 +78,7 @@ describe("List items", () => {
     });
 
     test("An indented list item creates another level of nesting", () => {
-        const lines = ["- l", "  - l2", "    text"];
+        const lines = ["- l", "\t- l2", "\t\ttext"];
 
         const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         const listItem = doc.blocks[0];
@@ -87,50 +87,36 @@ describe("List items", () => {
     });
 
     test("A same level list item doesn't get nested", () => {
-        const lines = ["- l", "  - l2", "  - l2-2"];
+        const lines = ["- l", "\t- l2", "\t- l2-2"];
         const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         const listItem = doc.blocks[0];
         expect(listItem.blocks.length).toBe(2);
     });
 
     test("A higher-level list item pops nesting", () => {
-        const lines = ["- l", "  - l2", "- l2-2"];
+        const lines = ["- l", "\t- l2", "- l2-2"];
         const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.blocks.length).toBe(2);
     });
 
     test("A top-level line breaks out of a list context", () => {
-        const lines = ["- l", "  - l2", "line"];
+        const lines = ["- l", "\t- l2", "line"];
         const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.blocks.length).toBe(2);
     });
 
-    describe("Indentation", () => {
-        test("Tabs work", () => {
-            const lines = ["- l", "\t- l2", "\ttext", "", "\tTop-level text"];
-            const doc = new Parser({ ...DEFAULT_SETTINGS, useTab: true }).parse(
-                lines
-            );
-            expect(doc.blocks.length).toBe(3);
-            const listItem = doc.blocks[0];
-            expect(listItem.blocks.length).toBe(1);
-        });
-
-        test("Spaces of different lengths work", () => {
-            const lines = [
-                "- l",
-                "    - l2",
-                "      text",
-                "",
-                "    Top-level text",
-            ];
-            const doc = new Parser({ ...DEFAULT_SETTINGS, tabSize: 4 }).parse(
-                lines
-            );
-            expect(doc.blocks.length).toBe(3);
-            const listItem = doc.blocks[0];
-            expect(listItem.blocks.length).toBe(1);
-        });
+    test.each([
+        [2, ["- l", "  - l2", "    text", "", "  Top-level text"]],
+        [4, ["- l", "    - l2", "      text", "", "    Top-level text"]],
+    ])("Indentation with spaces of different lengths: %d", (tabSize, lines) => {
+        const doc = new Parser({
+            ...DEFAULT_SETTINGS,
+            useTab: false,
+            tabSize: tabSize,
+        }).parse(lines);
+        expect(doc.blocks.length).toBe(3);
+        const listItem = doc.blocks[0];
+        expect(listItem.blocks.length).toBe(1);
     });
 });
 
