@@ -77,7 +77,8 @@ export class Parser {
 }
 
 class BlockParser {
-    private readonly LIST_ITEM = /^(?<indentation>(?: {2}|\t)*)-\s/;
+    private readonly LIST_ITEM =
+        /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.)\s/;
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
     private readonly settings: ParserSettings;
 
@@ -117,7 +118,9 @@ class BlockParser {
                 const isTopLine = block.level === 1;
                 if (isTopLine) {
                     context = root;
+                    block.parent = context;
                 }
+                // TODO: duplication?
                 context.blocks.push(block);
             }
         }
@@ -240,7 +243,7 @@ export class Section {
         }
         for (const section of this.sections) {
             if (headingFilter(section.text)) {
-                extracted.push(...section.extractBlocks(headingFilter));
+                extracted.push(...section.extractBlocks(lineFilter, headingFilter));
             }
         }
         return extracted;

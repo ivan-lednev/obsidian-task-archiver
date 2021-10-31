@@ -118,6 +118,19 @@ describe("List items", () => {
         const listItem = doc.blocks[0];
         expect(listItem.blocks.length).toBe(1);
     });
+
+    test.each([
+        ["*", ["* l", "\t* l2", "\t\ttext"]],
+        ["Numbers", ["1. l", "\t11. l2", "\t\ttext"]],
+        ["Mixed", ["1. l", "\t* l2", "\t\ttext"]],
+    ])("Different types of list markers: %s", (_, lines) => {
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
+        expect(doc.blocks.length).toBe(1);
+        const listItem = doc.blocks[0];
+        expect(listItem.blocks.length).toBe(1);
+        const nestedListItem = listItem.blocks[0];
+        expect(nestedListItem.blocks.length).toBe(1);
+    });
 });
 
 describe("Mixing headings and lists", () => {
@@ -175,6 +188,23 @@ describe("Stringification", () => {
 
 // TODO: move this out into the AST files
 describe("Extraction", () => {
+    test("Extract top-level line", () => {
+        const lines = [
+            "Text",
+            "Extract me",
+        ];
+        const extracted = [
+            "Extract me",
+        ];
+        const theRest = ["Text"];
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
+        const actual = parsed.extractBlocks((line) =>
+            line === "Extract me"
+        );
+        expect(actual).toEqual(extracted);
+        expect(parsed.stringify()).toEqual(theRest);
+    })
+
     test("Extract completed tasks", () => {
         const lines = [
             "- [x] Task",
@@ -222,7 +252,8 @@ describe("Extraction", () => {
         ];
         const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
         const actualTasks = parsed.extractBlocks(
-            (line) => /^- \[x\]/.test(line),
+            // TODO: duplicated regex
+            (line) => /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line),
             (heading) => !heading.match(/^#+ Archived/)
         );
         expect(actualTasks).toEqual(tasks);

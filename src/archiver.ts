@@ -90,9 +90,9 @@ export class Archiver {
         const parser = new Parser(this.settings.indentationSettings)
         const tree = parser.parse(lines)
         // TODO: the AST should not leak details about bullets or heading tokens
-        // TODO: pull the archive name from the configuration
+        // TODO: duplicated regex
         const newlyCompletedTasks = tree.extractBlocks(
-            (line) => /^- \[x\]/.test(line),
+            (line) => /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line),
             (heading) => !heading.match(this.archivePattern)
         );
         const linesWithoutCompletedTasks = tree.stringify()
