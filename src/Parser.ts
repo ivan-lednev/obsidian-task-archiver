@@ -228,22 +228,28 @@ export class Section {
         this.sections.push(section);
     }
 
-    extractBlocks(
+    extractBlocksRecursively(
         lineFilter: (line: string) => boolean = this.alwaysTrue,
         headingFilter: (heading: string) => boolean = this.alwaysTrue
-    ): string[] {
+    ): Block[] {
         const extracted = [];
         // I'm mutating the array while traversing it!
         // todo: this is lame!
         for (const block of this.blocks.slice()) {
             if (lineFilter(block.text)) {
-                extracted.push(...block.stringify());
+                // TODO: no need to stringify here
+                extracted.push(block);
                 block.removeSelf();
             }
         }
         for (const section of this.sections) {
             if (headingFilter(section.text)) {
-                extracted.push(...section.extractBlocks(lineFilter, headingFilter));
+                extracted.push(
+                    ...section.extractBlocksRecursively(
+                        lineFilter,
+                        headingFilter
+                    )
+                );
             }
         }
         return extracted;
@@ -258,11 +264,10 @@ export class Section {
         if (this.text) {
             lines.push(this.text);
         }
-        for (const block of this.blocks) {
-            lines.push(...block.stringify());
-        }
-        for (const child of this.sections) {
-            lines.push(...child.stringify());
+        for (const tree of [this.blocks, this.sections]) {
+            for (const child of tree) {
+                lines.push(...child.stringify())
+            }
         }
         return lines;
     }

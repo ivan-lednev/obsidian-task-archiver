@@ -23,10 +23,11 @@ export class Archiver {
             lines = this.addEmptyArchive(lines);
         }
 
-        const { linesWithoutArchive, archive } =
-            this.extractArchiveContents(lines);
-
-        const { newlyCompletedTasks, linesWithoutCompletedTasks } = this.newExtractNewlyCompletedTasks(linesWithoutArchive)
+        const archiveLines = this.extractArchiveContents(lines);
+        const archive = new Archive(archiveLines, this.settings);
+        
+        const { newlyCompletedTasks, linesWithoutCompletedTasks } =
+            this.extractNewlyCompletedTasks(lines);
 
         if (newlyCompletedTasks.length === 0) {
             return {
@@ -65,66 +66,59 @@ export class Archiver {
     }
 
     private extractNewlyCompletedTasks(lines: string[]) {
-        const linesWithoutCompletedTasks = [];
-        const newlyCompletedTasks = [];
-
-        let linesAfterTask = false;
-        for (const line of lines) {
-            if (COMPLETED_TASK_PATTERN.test(line)) {
-                newlyCompletedTasks.push(line);
-                linesAfterTask = true;
-            } else if (INDENTED_LINE_PATTERN.test(line) && linesAfterTask) {
-                newlyCompletedTasks.push(line);
-            } else {
-                linesWithoutCompletedTasks.push(line);
-                linesAfterTask = false;
-            }
-        }
-        return {
-            linesWithoutCompletedTasks,
-            newlyCompletedTasks,
-        };
-    }
-
-    private newExtractNewlyCompletedTasks(lines: string[]) {
-        const parser = new Parser(this.settings.indentationSettings)
-        const tree = parser.parse(lines)
+        const parser = new Parser(this.settings.indentationSettings);
+        const tree = parser.parse(lines);
         // TODO: the AST should not leak details about bullets or heading tokens
         // TODO: duplicated regex
-        const newlyCompletedTasks = tree.extractBlocks(
-            (line) => /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line),
-            (heading) => !heading.match(this.archivePattern)
+
+        const isCompletedTask = (line: string) =>
+            /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line);
+        const isNonArchiveHeading = (heading: string) =>
+            !this.archivePattern.test(heading);
+
+        const newlyCompletedTasks = tree
+            .extractBlocksRecursively(isCompletedTask, isNonArchiveHeading)
+            .map((block) => block.stringify())
+            .reduce((acc, current) => {
+                return acc.concat(current);
+            }, []);
+
+        // TODO: remove the archive as a shim, remove this code later
+        const archiveSection = tree.sections.find((s) =>
+            this.archivePattern.test(s.text)
         );
-        const linesWithoutCompletedTasks = tree.stringify()
-        return { newlyCompletedTasks, linesWithoutCompletedTasks }
+        archiveSection.blocks
+            .slice() // TODO: this iteration with mutation got me again!
+            .map((b) => {
+                // TODO: secretly removing it from the tree here
+                b.removeSelf();
+                return b.stringify();
+            });
+
+        const linesWithoutCompletedTasks = tree.stringify();
+        return { newlyCompletedTasks, linesWithoutCompletedTasks };
     }
 
     private extractArchiveContents(lines: string[]) {
-        let archiveLines = [];
-        let linesWithoutArchive = [];
+        const parser = new Parser(this.settings.indentationSettings);
+        const tree = parser.parse(lines);
 
-        let insideArchive = false;
-
-        for (const line of lines) {
-            if (insideArchive) {
-                if (this.archiveEndPattern.test(line)) {
-                    insideArchive = false;
-                    linesWithoutArchive.push(line);
-                } else if (line.trim().length > 0) {
-                    archiveLines.push(line);
-                }
-            } else {
-                if (this.archivePattern.exec(line)) {
-                    insideArchive = true;
-                }
-                linesWithoutArchive.push(line);
-            }
-        }
-
-        return {
-            linesWithoutArchive,
-            archive: new Archive(archiveLines, this.settings),
-        };
+        const archiveSection = tree.sections.find((s) =>
+            this.archivePattern.test(s.text)
+        );
+        // TODO: duplication
+        const archiveLines = archiveSection.blocks
+            .slice() // TODO: this iteration with mutation got me again!
+            .map((b) => {
+                // TODO: secretly removing it from the tree here
+                b.removeSelf();
+                return b.stringify();
+            })
+            .reduce((acc, current) => {
+                return acc.concat(current);
+            }, [])
+            .filter((line) => line.trim().length > 0);
+        return archiveLines;
     }
 
     private addTasksToArchive(
@@ -140,9 +134,11 @@ export class Archiver {
                 "",
             ];
         }
+
         const archiveStart = lines.findIndex((l) =>
             this.archivePattern.exec(l)
         );
+
         lines.splice(archiveStart + 1, 0, ...archiveContentsWithNewTasks);
         return lines;
     }

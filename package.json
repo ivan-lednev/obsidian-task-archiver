@@ -7,7 +7,7 @@
         "dev": "rollup --config rollup.config.js -w",
         "build": "rollup --config rollup.config.js --environment BUILD:production",
         "test": "jest",
-        "testSpecific": "jest --testNamePattern=\"Moves sub-items with top-level items after the archive heading, indented with tabs\""
+        "testSpecific": "jest --testNamePattern=\"The week is already in the tree\""
     },
     "keywords": [],
     "author": "",

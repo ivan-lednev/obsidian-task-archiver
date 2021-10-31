@@ -188,75 +188,17 @@ describe("Stringification", () => {
 
 // TODO: move this out into the AST files
 describe("Extraction", () => {
-    test("Extract top-level line", () => {
-        const lines = [
-            "Text",
-            "Extract me",
-        ];
-        const extracted = [
-            "Extract me",
-        ];
+    test("Extract top-level block with a filter", () => {
+        const lines = ["Text", "Extract me"];
+        const extracted = [["Extract me"]];
         const theRest = ["Text"];
+
         const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
-        const actual = parsed.extractBlocks((line) =>
-            line === "Extract me"
-        );
+
+        const actual = parsed
+            .extractBlocksRecursively((line) => line === "Extract me")
+            .map((b) => b.stringify());
         expect(actual).toEqual(extracted);
-        expect(parsed.stringify()).toEqual(theRest);
-    })
-
-    test("Extract completed tasks", () => {
-        const lines = [
-            "- [x] Task",
-            "Text",
-            "- [x] Task",
-            "  Text",
-            "- [x] Task",
-            "    - [x] Task",
-        ];
-        const tasks = [
-            "- [x] Task",
-            "- [x] Task",
-            "  Text",
-            "- [x] Task",
-            "    - [x] Task",
-        ];
-        const theRest = ["Text"];
-        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
-        const actualTasks = parsed.extractBlocks((line) =>
-            /^- \[x\]/.test(line)
-        );
-        expect(actualTasks).toEqual(tasks);
-        expect(parsed.stringify()).toEqual(theRest);
-    });
-
-    test("Extract tasks and skip the archive", () => {
-        const lines = [
-            "- [x] Top level task",
-            "# Archived",
-            "- [x] Top level task in archive",
-            "    - [x] Subtask in archive",
-            "## Archive subheading",
-            "- [x] Task in subheading",
-            "# Another heading",
-            "- [x] Task after archive",
-        ];
-        const tasks = ["- [x] Top level task", "- [x] Task after archive"];
-        const theRest = [
-            "# Archived",
-            "- [x] Top level task in archive",
-            "    - [x] Subtask in archive",
-            "## Archive subheading",
-            "- [x] Task in subheading",
-            "# Another heading",
-        ];
-        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
-        const actualTasks = parsed.extractBlocks(
-            // TODO: duplicated regex
-            (line) => /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line),
-            (heading) => !heading.match(/^#+ Archived/)
-        );
-        expect(actualTasks).toEqual(tasks);
         expect(parsed.stringify()).toEqual(theRest);
     });
 });
