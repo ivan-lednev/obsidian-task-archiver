@@ -6,56 +6,19 @@ export class Parser {
         const flatSections = this.parseBlocksInSections(rawSections);
 
         const [root, children] = [flatSections[0], flatSections.slice(1)];
-        this.buildSectionHierarchy(root, children);
+        this.buildTree(root, children);
 
         return root;
     }
 
-    private parseBlocksInSections(raw: RawSection[]) {
-        return raw.map((s) => {
-            return new Section(
-                s.heading,
-                s.level,
-                new BlockParser().parse(s.lines)
-            );
-        });
-    }
-
-    private buildSectionHierarchy(root: Section, flatSections: Section[]) {
-        let context = root;
-        for (const section of flatSections) {
-            const stepsUpToSection = context.level - section.level;
-            if (stepsUpToSection >= 0) {
-                const stepsUpToParent = stepsUpToSection + 1;
-                context = this.goUpToParentInNodeChain(
-                    stepsUpToParent,
-                    context
-                );
-            }
-
-            context.append(section);
-            context = section;
-        }
-    }
-
-    private goUpToParentInNodeChain(targetLevel: number, node: Section) {
-        let pointer = node;
-
-        for (let level = 0; level < targetLevel; level++) {
-            pointer = pointer.parent;
-        }
-
-        return pointer;
-    }
-
     private parseRawSections(lines: string[]) {
-        const sections: RawSection[] = [{ heading: null, level: 0, lines: [] }];
+        const sections: RawSection[] = [{ text: null, level: 0, lines: [] }];
 
         for (const line of lines) {
             const match = line.match(this.HEADING);
             if (match) {
                 sections.push({
-                    heading: match[0],
+                    text: match[0],
                     level: match.groups.headingToken.length,
                     lines: [],
                 });
@@ -67,6 +30,40 @@ export class Parser {
 
         return sections;
     }
+
+    private parseBlocksInSections(raw: RawSection[]) {
+        return raw.map((s) => {
+            return new Section(
+                s.text,
+                s.level,
+                new BlockParser().parse(s.lines)
+            );
+        });
+    }
+
+    private buildTree(root: Section, flatSections: Section[]) {
+        let context = root;
+        for (const section of flatSections) {
+            const stepsUpToSection = context.level - section.level;
+            if (stepsUpToSection >= 0) {
+                const stepsUpToParent = stepsUpToSection + 1;
+                context = this.goUpInNodeChain(stepsUpToParent, context);
+            }
+
+            context.append(section);
+            context = section;
+        }
+    }
+
+    private goUpInNodeChain(targetLevel: number, node: Section) {
+        let pointer = node;
+
+        for (let level = 0; level < targetLevel; level++) {
+            pointer = pointer.parent;
+        }
+
+        return pointer;
+    }
 }
 
 class BlockParser {
@@ -75,10 +72,15 @@ class BlockParser {
 
     parse(lines: string[]): Block[] {
         const flatBlocks = this.parseFlatBlocks(lines);
+        // TODO: dummy block as a root, should be something simpler
 
-        // dummy block as a root
         const root: Block = new Block(null, 0, "root");
-        root.blocks = [];
+        this.buildTree(root, flatBlocks);
+
+        return root.blocks;
+    }
+
+    private buildTree(root: Block, flatBlocks: Block[]) {
         let context = root;
 
         for (const block of flatBlocks) {
@@ -92,6 +94,7 @@ class BlockParser {
                         context = context.parent;
                     }
                 }
+                // TODO: too much detail, wrap into a method
                 context.blocks.push(block);
                 block.parent = context;
                 context = block;
@@ -103,34 +106,34 @@ class BlockParser {
                 context.blocks.push(block);
             }
         }
-
-        return root.blocks;
     }
 
     private parseFlatBlocks(lines: string[]) {
-        const rawBlocks: Block[] = [];
+        const flatBlocks: Block[] = [];
         for (const line of lines) {
             const listMatch = line.match(this.LIST_ITEM);
             const indentedLineMatch = line.match(this.INDENTED_LINE);
 
             if (listMatch) {
-                const level = this.getLineLevel(listMatch.groups.indentation);
+                const level = this.getLineLevelByIndentation(
+                    listMatch.groups.indentation
+                );
                 const block = new Block(line, level, "list");
-                rawBlocks.push(block);
+                flatBlocks.push(block);
             } else if (indentedLineMatch) {
-                const level = this.getLineLevel(
+                const level = this.getLineLevelByIndentation(
                     indentedLineMatch.groups.indentation
                 );
                 const block = new Block(line, level, "text");
-                rawBlocks.push(block);
+                flatBlocks.push(block);
             } else {
-                rawBlocks.push(new Block(line, 1, "text"));
+                flatBlocks.push(new Block(line, 1, "text"));
             }
         }
-        return rawBlocks;
+        return flatBlocks;
     }
 
-    private getLineLevel(indentation: string) {
+    private getLineLevelByIndentation(indentation: string) {
         return Math.floor(indentation.length / 2) + 1;
     }
 }
@@ -177,22 +180,23 @@ class Block {
 }
 
 interface RawSection {
-    heading: string;
+    text: string;
     level: number;
     lines: string[];
 }
 
 export class Section {
-    sections: Section[] = [];
-    blocks: Block[] = [];
+    sections: Section[];
+    blocks: Block[];
     parent: Section;
     text: string;
-    level: number = 0;
+    level: number;
 
     constructor(textContent: string, level: number, blocks: Block[]) {
         this.text = textContent;
         this.level = level;
         this.blocks = blocks;
+        this.sections = [];
     }
 
     append(section: Section) {
@@ -204,21 +208,21 @@ export class Section {
         lineFilter: (line: string) => boolean = this.alwaysTrue,
         headingFilter: (heading: string) => boolean = this.alwaysTrue
     ): string[] {
-        const tasks = [];
+        const extracted = [];
         // I'm mutating the array while traversing it!
         // todo: this is lame!
         for (const block of this.blocks.slice()) {
             if (lineFilter(block.text)) {
-                tasks.push(...block.stringify());
+                extracted.push(...block.stringify());
                 block.removeSelf();
             }
         }
         for (const section of this.sections) {
             if (headingFilter(section.text)) {
-                tasks.push(...section.extractBlocks(headingFilter));
+                extracted.push(...section.extractBlocks(headingFilter));
             }
         }
-        return tasks;
+        return extracted;
     }
 
     private alwaysTrue() {
@@ -230,15 +234,11 @@ export class Section {
         if (this.text) {
             lines.push(this.text);
         }
-        if (this.blocks) {
-            for (const block of this.blocks) {
-                lines.push(...block.stringify());
-            }
+        for (const block of this.blocks) {
+            lines.push(...block.stringify());
         }
-        if (this.sections) {
-            for (const child of this.sections) {
-                lines.push(...child.stringify());
-            }
+        for (const child of this.sections) {
+            lines.push(...child.stringify());
         }
         return lines;
     }
