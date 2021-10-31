@@ -87,7 +87,7 @@ export class Archiver {
         const archiveSection = tree.sections.find((s) =>
             this.archivePattern.test(s.text)
         );
-        archiveSection.blocks
+        archiveSection.blockContent.blocks
             .slice() // TODO: this iteration with mutation got me again!
             .map((b) => {
                 // TODO: secretly removing it from the tree here
@@ -107,7 +107,7 @@ export class Archiver {
             this.archivePattern.test(s.text)
         );
         // TODO: duplication
-        const archiveLines = archiveSection.blocks
+        const archiveLines = archiveSection.blockContent.blocks
             .slice() // TODO: this iteration with mutation got me again!
             .map((b) => {
                 // TODO: secretly removing it from the tree here
