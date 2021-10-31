@@ -1,33 +1,22 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
-import { Parser } from "./Parser";
-
-const INDENTED_LINE_PATTERN = /^( {2,}|\t)\s*\S+/;
-const COMPLETED_TASK_PATTERN = /^(-|\d+\.) \[x\] /;
+import { Block, BlockParser, Parser, Section } from "./Parser";
 
 export class Archiver {
     private settings: ArchiverSettings;
     private archivePattern: RegExp;
-    private archiveEndPattern: RegExp;
 
     constructor(settings: ArchiverSettings) {
         this.settings = settings;
         const escapedHeading = escapeStringRegexp(settings.archiveHeading);
         this.archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
-        this.archiveEndPattern = new RegExp(`^#+\\s+(?!${escapedHeading})`);
     }
 
     archiveTasks(lines: string[]) {
-        // todo: this should be true only for one of the flows
-        if (!this.doLinesContainArchive(lines)) {
-            lines = this.addEmptyArchive(lines);
-        }
+        const parser = new Parser(this.settings.indentationSettings);
+        const tree = parser.parse(lines);
 
-        const archiveLines = this.extractArchiveContents(lines);
-        const archive = new Archive(archiveLines, this.settings);
-        
-        const { newlyCompletedTasks, linesWithoutCompletedTasks } =
-            this.extractNewlyCompletedTasks(lines);
+        const newlyCompletedTasks = this.extractNewlyCompletedTasks(tree);
 
         if (newlyCompletedTasks.length === 0) {
             return {
@@ -36,97 +25,22 @@ export class Archiver {
             };
         }
 
-        const linesWithInsertedArchivedTasks = this.addTasksToArchive(
-            newlyCompletedTasks,
-            linesWithoutCompletedTasks,
-            archive
-        );
-
-        return {
-            summary: `Archived ${newlyCompletedTasks.length} lines`,
-            lines: linesWithInsertedArchivedTasks,
-        };
-    }
-
-    private doLinesContainArchive(lines: string[]) {
-        return lines.findIndex((line) => this.archivePattern.exec(line)) >= 0;
-    }
-
-    private addEmptyArchive(lines: string[]) {
-        const linesWithArchive = [...lines];
-        const noNewline = linesWithArchive[lines.length - 1].trim() !== "";
-        if (noNewline && this.settings.addNewlinesAroundHeadings) {
-            linesWithArchive.push("");
-        }
-        const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
-        linesWithArchive.push(
-            `${headingToken} ${this.settings.archiveHeading}`
-        );
-        return linesWithArchive;
-    }
-
-    private extractNewlyCompletedTasks(lines: string[]) {
-        const parser = new Parser(this.settings.indentationSettings);
-        const tree = parser.parse(lines);
-        // TODO: the AST should not leak details about bullets or heading tokens
-        // TODO: duplicated regex
-
-        const isCompletedTask = (line: string) =>
-            /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line);
-        const isNonArchiveHeading = (heading: string) =>
-            !this.archivePattern.test(heading);
-
-        const newlyCompletedTasks = tree
-            .extractBlocksRecursively(isCompletedTask, isNonArchiveHeading)
-            .map((block) => block.stringify())
-            .reduce((acc, current) => {
-                return acc.concat(current);
-            }, []);
-
-        // TODO: remove the archive as a shim, remove this code later
-        const archiveSection = tree.sections.find((s) =>
+        // TODO: works only for top level sections
+        let archiveSection = tree.sections.find((s) =>
             this.archivePattern.test(s.text)
         );
-        archiveSection.blockContent.blocks
-            .slice() // TODO: this iteration with mutation got me again!
-            .map((b) => {
-                // TODO: secretly removing it from the tree here
-                b.removeSelf();
-                return b.stringify();
-            });
+        // TODO: no need to extract stuff, just pass the section handle to the archive
+        // and then I can just move the archive search or creation to a common place
+        const archiveLines = archiveSection
+            ? this.extractSectionContents(archiveSection)
+            : [];
 
-        const linesWithoutCompletedTasks = tree.stringify();
-        return { newlyCompletedTasks, linesWithoutCompletedTasks };
-    }
+        // --- old stuff ---
 
-    private extractArchiveContents(lines: string[]) {
-        const parser = new Parser(this.settings.indentationSettings);
-        const tree = parser.parse(lines);
+        const archive = new Archive(archiveLines, this.settings);
+        let archiveContentsWithNewTasks =
+            archive.appendCompletedTasks(newlyCompletedTasks);
 
-        const archiveSection = tree.sections.find((s) =>
-            this.archivePattern.test(s.text)
-        );
-        // TODO: duplication
-        const archiveLines = archiveSection.blockContent.blocks
-            .slice() // TODO: this iteration with mutation got me again!
-            .map((b) => {
-                // TODO: secretly removing it from the tree here
-                b.removeSelf();
-                return b.stringify();
-            })
-            .reduce((acc, current) => {
-                return acc.concat(current);
-            }, [])
-            .filter((line) => line.trim().length > 0);
-        return archiveLines;
-    }
-
-    private addTasksToArchive(
-        tasks: string[],
-        lines: string[],
-        archive: Archive
-    ) {
-        let archiveContentsWithNewTasks = archive.appendCompletedTasks(tasks);
         if (this.settings.addNewlinesAroundHeadings) {
             archiveContentsWithNewTasks = [
                 "",
@@ -134,13 +48,75 @@ export class Archiver {
                 "",
             ];
         }
+        // ---
 
-        const archiveStart = lines.findIndex((l) =>
-            this.archivePattern.exec(l)
+        const newArchiveBlocks = new BlockParser(
+            this.settings.indentationSettings
+        ).parse(archiveContentsWithNewTasks);
+
+        if (!archiveSection) {
+            const heading = this.buildArchiveHeading();
+            archiveSection = new Section(heading, 1, newArchiveBlocks);
+            tree.append(archiveSection);
+        }
+        archiveSection.blockContent = newArchiveBlocks;
+
+        return {
+            summary: `Archived ${newlyCompletedTasks.length} lines`,
+            lines: tree.stringify(),
+        };
+    }
+
+    private buildArchiveHeading() {
+        // TODO: do it some place else
+        // let archiveHeading = ""
+        // if (this.settings.addNewlinesAroundHeadings) {
+        //     archiveHeading += "\n";
+        // }
+        const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
+        return `${headingToken} ${this.settings.archiveHeading}`;
+    }
+
+    private extractNewlyCompletedTasks(tree: Section) {
+        const newlyCompletedTaskBlocks = tree.extractBlocksRecursively(
+            // TODO: got me again
+            this.isCompletedTask.bind(this),
+            this.isNonArchiveHeading.bind(this)
+        );
+        // TODO: no need to extract them as string after a rewrite
+        const newlyCompletedTasks = this.getBlocksAsStrings(
+            newlyCompletedTaskBlocks
         );
 
-        lines.splice(archiveStart + 1, 0, ...archiveContentsWithNewTasks);
-        return lines;
+        return newlyCompletedTasks;
+    }
+
+    // TODO: the AST should not leak details about bullets or heading tokens
+    // TODO: duplicated regex
+    private isCompletedTask(line: string) {
+        return /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line);
+    }
+
+    private isNonArchiveHeading(heading: string) {
+        return !this.archivePattern.test(heading);
+    }
+
+    // TODO: remove after a rewrite
+    private getBlocksAsStrings(blocks: Block[]) {
+        return blocks
+            .map((b) => {
+                return b.stringify();
+            })
+            .reduce((acc, current) => {
+                return acc.concat(current);
+            }, []);
+    }
+
+    private extractSectionContents(section: Section) {
+        const archiveLines = this.getBlocksAsStrings(
+            section.blockContent.blocks
+        ).filter((line) => line.trim().length > 0);
+        return archiveLines;
     }
 }
 

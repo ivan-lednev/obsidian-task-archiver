@@ -76,7 +76,7 @@ export class Parser {
     }
 }
 
-class BlockParser {
+export class BlockParser {
     private readonly LIST_ITEM =
         /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.)\s/;
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
@@ -169,7 +169,7 @@ class BlockParser {
 
 type BlockType = "text" | "list" | "root";
 
-class Block {
+export class Block {
     blocks: Block[] = [];
     text: string;
     level: number;

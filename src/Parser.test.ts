@@ -1,4 +1,4 @@
-import { Parser, Section } from "./Parser";
+import { Block, Parser, Section } from "./Parser";
 
 const DEFAULT_SETTINGS = {
     useTab: true,
@@ -204,11 +204,12 @@ describe("Extraction", () => {
 });
 
 describe("Insertion", () => {
-    test.skip("Append a block", () => {
+    test("Append a block", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.blocks.push() 
-        
+        parsed.blockContent.append(new Block("more text", 1, "text"));
+        const stringified = parsed.stringify();
+        expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
-})
+});
