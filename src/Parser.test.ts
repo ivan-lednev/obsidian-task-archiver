@@ -1,5 +1,9 @@
-import { parse } from "path";
 import { Parser, Section } from "./Parser";
+
+const DEFAULT_SETTINGS = {
+    useTab: false,
+    tabSize: 2,
+};
 
 test("Builds a flat structure with non-hierarchical text", () => {
     const lines = [
@@ -17,7 +21,7 @@ test("Builds a flat structure with non-hierarchical text", () => {
         "---",
     ];
 
-    const doc = new Parser().parse(lines);
+    const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
     expect(doc.blocks.length).toBe(lines.length);
 });
 
@@ -25,7 +29,7 @@ describe("Headings", () => {
     test("Text after a heading gets nested", () => {
         const lines = ["# H1", "line"];
 
-        const root = new Parser().parse(lines);
+        const root = new Parser(DEFAULT_SETTINGS).parse(lines);
 
         expect(root.sections.length).toBe(1);
         const h1 = root.sections[0];
@@ -35,7 +39,7 @@ describe("Headings", () => {
     test("A subheading creates another level of nesting", () => {
         const lines = ["# H1", "## H2", "line"];
 
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
 
         const h1 = doc.sections[0];
         expect(h1.sections.length).toBe(1);
@@ -46,7 +50,7 @@ describe("Headings", () => {
     test("A same-level heading doesn't get nested", () => {
         const lines = ["# H1", "## H2", "## H2-2"];
 
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
 
         const h1 = doc.sections[0];
         expect(h1.sections.length).toBe(2);
@@ -55,7 +59,7 @@ describe("Headings", () => {
     test("A higher-level heading pops nesting", () => {
         const lines = ["# H1", "## H2", "# H1", "line"];
 
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
 
         expect(doc.sections.length).toBe(2);
         const secondH1 = doc.sections[1];
@@ -67,16 +71,16 @@ describe("List items", () => {
     test("Indented text after a list item gets nested", () => {
         const lines = ["- l", "  text"];
 
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.blocks.length).toBe(1);
-        // const listItem = doc.blocks;
-        // expect(listItem.blocks.length).toBe(1);
+        const listItem = doc.blocks[0];
+        expect(listItem.blocks.length).toBe(1);
     });
 
     test("An indented list item creates another level of nesting", () => {
         const lines = ["- l", "  - l2", "    text"];
 
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         const listItem = doc.blocks[0];
         const indentedListItem = listItem.blocks[0];
         expect(indentedListItem.blocks.length).toBe(1);
@@ -84,28 +88,56 @@ describe("List items", () => {
 
     test("A same level list item doesn't get nested", () => {
         const lines = ["- l", "  - l2", "  - l2-2"];
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         const listItem = doc.blocks[0];
         expect(listItem.blocks.length).toBe(2);
     });
 
     test("A higher-level list item pops nesting", () => {
         const lines = ["- l", "  - l2", "- l2-2"];
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.blocks.length).toBe(2);
     });
 
     test("A top-level line breaks out of a list context", () => {
         const lines = ["- l", "  - l2", "line"];
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.blocks.length).toBe(2);
+    });
+
+    describe("Indentation", () => {
+        test("Tabs work", () => {
+            const lines = ["- l", "\t- l2", "\ttext", "", "\tTop-level text"];
+            const doc = new Parser({ ...DEFAULT_SETTINGS, useTab: true }).parse(
+                lines
+            );
+            expect(doc.blocks.length).toBe(3);
+            const listItem = doc.blocks[0];
+            expect(listItem.blocks.length).toBe(1);
+        });
+
+        test("Spaces of different lengths work", () => {
+            const lines = [
+                "- l",
+                "    - l2",
+                "      text",
+                "",
+                "    Top-level text",
+            ];
+            const doc = new Parser({ ...DEFAULT_SETTINGS, tabSize: 4 }).parse(
+                lines
+            );
+            expect(doc.blocks.length).toBe(3);
+            const listItem = doc.blocks[0];
+            expect(listItem.blocks.length).toBe(1);
+        });
     });
 });
 
 describe("Mixing headings and lists", () => {
     test("One heading, one list", () => {
         const lines = ["# h", "- l", "line"];
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.sections.length).toBe(1);
         const h1 = doc.sections[0];
         expect(h1.blocks.length).toBe(2);
@@ -113,7 +145,7 @@ describe("Mixing headings and lists", () => {
 
     test("Multiple heading levels", () => {
         const lines = ["# h", "- l", "text", "## h2", "# h1"];
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.sections.length).toBe(2);
         const h1 = doc.sections[0];
         expect(h1.sections.length).toBe(1);
@@ -122,7 +154,7 @@ describe("Mixing headings and lists", () => {
 
     test("Multiple list levels", () => {
         const lines = ["# h", "- l", "    - l2", "# h1"];
-        const doc = new Parser().parse(lines);
+        const doc = new Parser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.sections.length).toBe(2);
         const h1 = doc.sections[0];
         expect(h1.blocks.length).toBe(1);
@@ -149,7 +181,7 @@ describe("Stringification", () => {
             ],
         ],
     ])("Roundtripping doesn't mutate lines: %s", (lines) => {
-        const parsed = new Parser().parse(lines);
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
         const stringified = parsed.stringify();
         expect(stringified).toEqual(lines);
     });
@@ -174,7 +206,7 @@ describe("Extraction", () => {
             "    - [x] Task",
         ];
         const theRest = ["Text"];
-        const parsed = new Parser().parse(lines);
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
         const actualTasks = parsed.extractBlocks((line) =>
             /^- \[x\]/.test(line)
         );
@@ -202,7 +234,7 @@ describe("Extraction", () => {
             "- [x] Task in subheading",
             "# Another heading",
         ];
-        const parsed = new Parser().parse(lines);
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
         const actualTasks = parsed.extractBlocks(
             (line) => /^- \[x\]/.test(line),
             (heading) => !heading.match(/^#+ Archived/)

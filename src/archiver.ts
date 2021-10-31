@@ -1,57 +1,9 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
+import { Parser } from "./Parser";
 
 const INDENTED_LINE_PATTERN = /^( {2,}|\t)\s*\S+/;
 const COMPLETED_TASK_PATTERN = /^(-|\d+\.) \[x\] /;
-
-
-class TaskExtractor {
-    settings: ArchiverSettings;
-
-    constructor(settings: ArchiverSettings) {
-        // todo: give him only the heading
-        this.settings = settings;
-    }
-
-    extractCompletedTasks(lines: string[]) {
-        const withoutCompleted = [];
-        const completed = [];
-
-        let currentHeading = "";
-        let insideTask = false;
-
-        const escapedHeading = escapeStringRegexp(this.settings.archiveHeading);
-        const archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
-        const archiveEndPattern = new RegExp(`^#+\\s+(?!${escapedHeading})`);
-
-        const headingStack = [];
-        const currentHeadingLevel = 0;
-        const heading = /^(#+)\s.*$/;
-
-        for (const line of lines) {
-            const headingMatch = heading.exec(line)
-            if (headingMatch) {
-                currentHeadingLevel
-            }
-            const isCompletedTask = COMPLETED_TASK_PATTERN.test(line);
-            const isLineAfterCompletedTask =
-                INDENTED_LINE_PATTERN.test(line) && insideTask;
-            if (isCompletedTask) {
-                completed.push(line);
-                insideTask = true;
-            } else if (isLineAfterCompletedTask) {
-                completed.push(line);
-            } else {
-                withoutCompleted.push(line);
-                insideTask = false;
-            }
-        }
-        return {
-            linesWithoutCompletedTasks: withoutCompleted,
-            newlyCompletedTasks: completed,
-        };
-    }
-}
 
 export class Archiver {
     private settings: ArchiverSettings;
@@ -74,8 +26,7 @@ export class Archiver {
         const { linesWithoutArchive, archive } =
             this.extractArchiveContents(lines);
 
-        const { linesWithoutCompletedTasks, newlyCompletedTasks } =
-            this.extractNewlyCompletedTasks(linesWithoutArchive);
+        const { newlyCompletedTasks, linesWithoutCompletedTasks } = this.newExtractNewlyCompletedTasks(linesWithoutArchive)
 
         if (newlyCompletedTasks.length === 0) {
             return {
@@ -133,6 +84,19 @@ export class Archiver {
             linesWithoutCompletedTasks,
             newlyCompletedTasks,
         };
+    }
+
+    private newExtractNewlyCompletedTasks(lines: string[]) {
+        const parser = new Parser(this.settings.indentationSettings)
+        const tree = parser.parse(lines)
+        // TODO: the AST should not leak details about bullets or heading tokens
+        // TODO: pull the archive name from the configuration
+        const newlyCompletedTasks = tree.extractBlocks(
+            (line) => /^- \[x\]/.test(line),
+            (heading) => !heading.match(this.archivePattern)
+        );
+        const linesWithoutCompletedTasks = tree.stringify()
+        return { newlyCompletedTasks, linesWithoutCompletedTasks }
     }
 
     private extractArchiveContents(lines: string[]) {

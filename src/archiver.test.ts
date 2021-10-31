@@ -345,7 +345,3 @@ describe("Date tree", () => {
         });
     });
 });
-
-// describe("Archiving to a separate file", () => {
-//     test("")
-// })

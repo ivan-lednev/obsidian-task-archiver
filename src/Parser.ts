@@ -1,5 +1,15 @@
+interface ParserSettings {
+    useTab: boolean;
+    tabSize: number;
+}
+
 export class Parser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
+    private readonly settings: ParserSettings;
+
+    constructor(settings: ParserSettings) {
+        this.settings = settings;
+    }
 
     parse(lines: string[]) {
         const rawSections = this.parseRawSections(lines);
@@ -36,7 +46,7 @@ export class Parser {
             return new Section(
                 s.text,
                 s.level,
-                new BlockParser().parse(s.lines)
+                new BlockParser(this.settings).parse(s.lines) // TODO: this doesn't have to know anything about block parser
             );
         });
     }
@@ -67,8 +77,13 @@ export class Parser {
 }
 
 class BlockParser {
-    private readonly LIST_ITEM = /^(?<indentation> *)-\s/;
-    private readonly INDENTED_LINE = /^(?<indentation>(?: {2})+)[^-]/;
+    private readonly LIST_ITEM = /^(?<indentation>(?: {2}|\t)*)-\s/;
+    private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
+    private readonly settings: ParserSettings;
+
+    constructor(settings: ParserSettings) {
+        this.settings = settings;
+    }
 
     parse(lines: string[]): Block[] {
         const flatBlocks = this.parseFlatBlocks(lines);
@@ -134,7 +149,13 @@ class BlockParser {
     }
 
     private getLineLevelByIndentation(indentation: string) {
-        return Math.floor(indentation.length / 2) + 1;
+        let levelsOfIndentation;
+        if (this.settings.useTab) {
+            levelsOfIndentation = indentation.length;
+        } else {
+            levelsOfIndentation = Math.floor(indentation.length / 2);
+        }
+        return levelsOfIndentation + 1;
     }
 }
 
