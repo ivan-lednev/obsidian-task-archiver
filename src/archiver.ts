@@ -36,8 +36,9 @@ export class Archiver {
     }
 
     archiveTasks(linesWithTasks: string[]) {
-        const tree = this.parser.parse(linesWithTasks);
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(tree);
+        const treeWithTasks = this.parser.parse(linesWithTasks);
+        const newlyCompletedTasks =
+            this.extractNewlyCompletedTasks(treeWithTasks);
 
         if (newlyCompletedTasks.length === 0) {
             return {
@@ -46,11 +47,37 @@ export class Archiver {
             };
         }
 
-        this.archiveToThisFile(tree, newlyCompletedTasks);
+        const archiveTree = treeWithTasks;
+
+        this.archiveToThisFile(archiveTree, newlyCompletedTasks);
 
         return {
             summary: `Archived ${newlyCompletedTasks.length} lines`,
-            lines: tree.stringify(),
+            lines: treeWithTasks.stringify(),
+        };
+    }
+
+    // todo: copypaste
+    archiveTasksToSeparateFile(linesWithTasks: string[], archive: string[]) {
+        const treeWithTasks = this.parser.parse(linesWithTasks);
+        const newlyCompletedTasks =
+            this.extractNewlyCompletedTasks(treeWithTasks);
+
+        if (newlyCompletedTasks.length === 0) {
+            return {
+                summary: "No tasks to archive",
+                lines: linesWithTasks,
+            };
+        }
+
+        const archiveTree = this.parser.parse(archive);
+
+        this.archiveToThisFile(archiveTree, newlyCompletedTasks);
+
+        return {
+            summary: `Archived ${newlyCompletedTasks.length} lines`,
+            lines: treeWithTasks.stringify(),
+            archiveLines: archiveTree.stringify(),
         };
     }
 
@@ -61,7 +88,7 @@ export class Archiver {
     }
 
     private getArchiveSection(tree: Section) {
-        // TODO: works only for top level sections
+        // TODO: (later) works only for top level sections
         // Archives are always top-level, even when people use ## as top-level
         // But people can use # for file names
         let archiveSection = tree.sections.find((s) =>
@@ -73,7 +100,7 @@ export class Archiver {
             archiveSection = new Section(heading, 1, rootBlock);
             tree.append(archiveSection);
         }
-        return archiveSection
+        return archiveSection;
     }
 
     private extractNewlyCompletedTasks(tree: Section) {
@@ -116,11 +143,20 @@ export class Archiver {
 
         // TODO: Don't add indentation manually. Do it based on level while stringifying things
         const indentation = this.indentation.repeat(this.dateLevels.length);
-        newCompletedTasks.forEach((block) => {
+        // TODO: bug: this indents properly only top-level items
+
+        // TODO: walkTree(visitor: NodeVisitor)
+        const addIndentationRecursively = (block: Block) => {
             block.text = indentation + block.text;
+            block.blocks.forEach(addIndentationRecursively);
+        };
+
+        newCompletedTasks.forEach((block) => {
+            addIndentationRecursively(block);
             parentBlock.append(block);
         });
     }
+
     private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {
         const thisMoment = window.moment();
         const dateFormat = this.dateFormats.get(dateTreeLevel);

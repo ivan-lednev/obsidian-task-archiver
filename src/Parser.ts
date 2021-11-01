@@ -199,6 +199,7 @@ export class Block {
 
 
     remove(child: Block) {
+        child.parent = null
         this.blocks.splice(this.blocks.indexOf(child), 1);
     }
 

@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
         tabSize: 4,
     },
     archiveToSeparateFile: false,
-    defaultArchiveFileName: "<filename> (archive)"
+    defaultArchiveFileName: "<filename> (archive)",
 };
 
 function checkArchiverOutput(
@@ -58,7 +58,7 @@ describe("Moving top-level tasks to the archive", () => {
             ["- [x] foo", "- [ ] bar", "## Archived"],
             ["- [ ] bar", "## Archived", "", "- [x] foo", ""]
         );
-    })
+    });
 
     test("Moves multiple tasks to the end of a populated archive", () => {
         checkArchiverOutput(
@@ -170,7 +170,7 @@ describe("Moving top-level tasks to the archive", () => {
             checkArchiverOutput(
                 {
                     ...DEFAULT_SETTINGS,
-                    archiveHeadingDepth: 3
+                    archiveHeadingDepth: 3,
                 },
                 ["- [x] foo"],
                 ["### Archived", "", "- [x] foo", ""]
@@ -190,6 +190,26 @@ describe("Moving top-level tasks to the archive", () => {
     });
 });
 
+describe("Separate files", () => {
+    test("Creates a new archive in a separate file", () => {
+        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const { lines, archiveLines } = archiver.archiveTasksToSeparateFile(
+            ["- [x] foo", "- [ ] bar"],
+            []
+        );
+        expect(lines).toEqual([
+            "- [ ] bar",
+        ]);
+
+        expect(archiveLines).toEqual([
+            "# Archived",
+            "",
+            "- [x] foo",
+            "",
+        ]);
+    });
+});
+
 describe("Date tree", () => {
     test("Archives tasks under a bullet with the current week", () => {
         checkArchiverOutput(
@@ -201,6 +221,17 @@ describe("Date tree", () => {
             ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""]
         );
     });
+
+    test("Handles indentation for child blocks of tasks", () => {
+        checkArchiverOutput(
+            {
+                ...DEFAULT_SETTINGS,
+                useWeeks: true,
+            },
+            ["- [x] foo", "\t- Child", "- [ ] bar", "# Archived"],
+            ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", "\t\t- Child", ""]
+        );
+    })
 
     test("Uses indentation values from settings", () => {
         checkArchiverOutput(

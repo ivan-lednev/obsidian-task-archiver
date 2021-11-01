@@ -1,4 +1,11 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+    App,
+    Notice,
+    Plugin,
+    PluginSettingTab,
+    Setting,
+    TFile,
+} from "obsidian";
 import { Archiver } from "src/Archiver";
 import { ArchiverSettings } from "./ArchiverSettings";
 
@@ -15,7 +22,7 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
         tabSize: 4,
     },
     archiveToSeparateFile: false,
-    defaultArchiveFileName: "<filename> (archive)"
+    defaultArchiveFileName: "% (archive)",
 };
 
 export default class ObsidianTaskArchiver extends Plugin {
@@ -38,14 +45,60 @@ export default class ObsidianTaskArchiver extends Plugin {
             new Notice("The archiver works only in markdown (.md) files!");
             return;
         }
-        const fileContents = await this.app.vault.read(activeFile);
-        const lines = fileContents.split("\n");
+        const activeFileContents = await this.app.vault.read(activeFile);
+        const activeFileLines = activeFileContents.split("\n");
+
         const archiver = new Archiver(this.settings);
-        const archiveResult = archiver.archiveTasks(lines);
 
-        new Notice(archiveResult.summary);
+        if (this.settings.archiveToSeparateFile) {
+            const archiveFileHandle = await this.getArchiveFileHandle(
+                activeFile
+            );
+            const archiveFileContents = await this.app.vault.read(
+                archiveFileHandle
+            );
+            const archiveFileLines = archiveFileContents.split("\n");
 
-        this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
+            const archiveResult = archiver.archiveTasksToSeparateFile(
+                activeFileLines,
+                archiveFileLines
+            );
+            new Notice(archiveResult.summary);
+
+            this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
+            this.app.vault.modify(
+                archiveFileHandle,
+                archiveResult.archiveLines.join("\n")
+            );
+        } else {
+            const archiveResult = archiver.archiveTasks(activeFileLines);
+            new Notice(archiveResult.summary);
+            this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
+        }
+    }
+
+    private async getArchiveFileHandle(activeFile: TFile) {
+        const archiveFileName =
+            this.settings.defaultArchiveFileName.replace(
+                "%",
+                activeFile.basename
+            ) + ".md";
+        // TODO: archiving to a folder will happen here
+        const archiveExists = await this.app.vault.adapter.exists(
+            archiveFileName
+        );
+
+        if (!archiveExists) {
+            try {
+                await this.app.vault.create(archiveFileName, "");
+            } catch (error) {
+                console.error(
+                    `Unable to create an archive file with the name '${archiveFileName}'`
+                );
+            }
+        }
+
+        return this.app.vault.getAbstractFileByPath(archiveFileName) as TFile;
     }
 
     async loadSettings() {
@@ -84,6 +137,34 @@ class ArchiverSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         containerEl.createEl("h2", { text: "Obsidian Task Archiver Settings" });
+
+        new Setting(containerEl)
+            .setName("Archive to a separate file")
+            .setDesc(
+                "If checked, the archiver will search for a file based on the pattern and will try to create it if needed"
+            )
+            .addToggle((toggleComponent) => {
+                toggleComponent
+                    .setValue(this.plugin.settings.archiveToSeparateFile)
+                    .onChange(async (value) => {
+                        this.plugin.settings.archiveToSeparateFile = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(containerEl)
+            .setName("Separate archive file name")
+            .setDesc(
+                "If archiving to a separate file is on, replace the '%' with the active file name and try to find a file with this base name"
+            )
+            .addText((textComponent) => {
+                textComponent
+                    .setValue(this.plugin.settings.defaultArchiveFileName)
+                    .onChange(async (value) => {
+                        this.plugin.settings.defaultArchiveFileName = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
 
         new Setting(containerEl)
             .setName("Archive heading")
