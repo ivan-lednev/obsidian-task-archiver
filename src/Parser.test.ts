@@ -212,6 +212,25 @@ describe("Insertion", () => {
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
+
+    test("Append a block to the start", () => {
+        const lines = ["- list", "- text"];
+
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
+        parsed.blockContent.appendFirst(new Block("more text", 1, "text"));
+        const stringified = parsed.stringify();
+        expect(stringified).toEqual(["more text", "- list", "- text"]);
+    });
+
+    test("Append sibling", () => {
+        const lines = ["- list", "text"];
+
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
+        const listItem = parsed.blockContent.blocks[0];
+        listItem.appendSibling(new Block("list sibling", 0, "text"));
+        const stringified = parsed.stringify();
+        expect(stringified).toEqual(["- list", "list sibling", "text"]);
+    });
 });
 
 describe("Block search", () => {
@@ -219,9 +238,10 @@ describe("Block search", () => {
         const lines = ["- list", "\t- text"];
         const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
 
-        const searchResult = parsed.blockContent.findRecursively((b) =>
-            // TODO: Another problem with null as a sentinel
-            b.text !== null && b.text.includes("text")
+        const searchResult = parsed.blockContent.findRecursively(
+            (b) =>
+                // TODO: Another problem with null as a sentinel
+                b.text !== null && b.text.includes("text")
         );
 
         expect(searchResult.stringify()[0]).toBe("\t- text");

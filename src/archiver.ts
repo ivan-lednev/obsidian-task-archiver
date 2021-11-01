@@ -1,6 +1,6 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
-import { Block, BlockParser, Parser, Section } from "./Parser";
+import { Block, Parser, Section } from "./Parser";
 
 export class Archiver {
     private settings: ArchiverSettings;
@@ -21,45 +21,11 @@ export class Archiver {
         if (newlyCompletedTasks.length === 0) {
             return {
                 summary: "No tasks to archive",
-                lines: lines,
+                lines,
             };
         }
 
-        // TODO: works only for top level sections
-        let archiveSection = tree.sections.find((s) =>
-            this.archivePattern.test(s.text)
-        );
-        // TODO: no need to extract stuff, just pass the section handle to the archive
-        // and then I can just move the archive search or creation to a common place
-        const archiveLines = archiveSection
-            ? archiveSection.blockContent
-            : new Block(null, 0, "root");
-
-        // --- old stuff ---
-
-        const archive = new Archive(archiveLines, this.settings);
-        let archiveContentsWithNewTasks =
-            archive.appendCompletedTasks(newlyCompletedTasks);
-
-        if (this.settings.addNewlinesAroundHeadings) {
-            archiveContentsWithNewTasks = [
-                "",
-                ...archiveContentsWithNewTasks,
-                "",
-            ];
-        }
-        // ---
-
-        const newArchiveBlocks = new BlockParser(
-            this.settings.indentationSettings
-        ).parse(archiveContentsWithNewTasks);
-
-        if (!archiveSection) {
-            const heading = this.buildArchiveHeading();
-            archiveSection = new Section(heading, 1, newArchiveBlocks);
-            tree.append(archiveSection);
-        }
-        archiveSection.blockContent = newArchiveBlocks;
+        this.archiveToThisFile(tree, newlyCompletedTasks);
 
         return {
             summary: `Archived ${newlyCompletedTasks.length} lines`,
@@ -67,49 +33,56 @@ export class Archiver {
         };
     }
 
+    private archiveToThisFile(tree: Section, tasks: Block[]) {
+        // TODO: works only for top level sections
+        let archiveSection = tree.sections.find((s) =>
+            this.archivePattern.test(s.text)
+        );
+        // TODO: no need to extract stuff, just pass the section handle to the archive
+        // and then I can just move the archive search or creation to a common place
+        const archiveContents = archiveSection
+            ? archiveSection.blockContent
+            : new Block(null, 0, "root");
+
+        const archive = new Archive(archiveContents, this.settings);
+        let archiveContentsWithNewTasks = archive.appendCompletedTasks(tasks);
+
+        this.complyWithNewlineRules(archiveContentsWithNewTasks);
+
+        if (!archiveSection) {
+            const heading = this.buildArchiveHeading();
+            archiveSection = new Section(
+                heading,
+                1,
+                archiveContentsWithNewTasks
+            );
+            tree.append(archiveSection);
+        }
+    }
+
+    private complyWithNewlineRules(blockContent: Block) {
+        if (this.settings.addNewlinesAroundHeadings) {
+            // TODO: leaking details about block types
+            blockContent.appendFirst(new Block("", 1, "text"));
+            blockContent.append(new Block("", 1, "text"));
+        }
+    }
+
     private buildArchiveHeading() {
-        // TODO: do it some place else
-        // let archiveHeading = ""
-        // if (this.settings.addNewlinesAroundHeadings) {
-        //     archiveHeading += "\n";
-        // }
+        // TODO: if there is no archive heading, I should build an ast, not a manual thing
         const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
         return `${headingToken} ${this.settings.archiveHeading}`;
     }
 
     private extractNewlyCompletedTasks(tree: Section) {
-        const newlyCompletedTaskBlocks = tree.extractBlocksRecursively(
-            // TODO: got me again
-            this.isCompletedTask.bind(this),
-            this.isNonArchiveHeading.bind(this)
+        // TODO: pass a struct, not 2 arguments
+        // TODO: I check lines here, but pass blocks to matchers elsewhere, need consistency
+        // TODO: the AST should not leak details about bullets or heading tokens
+        // TODO: duplicated regex
+        return tree.extractBlocksRecursively(
+            (line: string) => /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line),
+            (heading: string) => !this.archivePattern.test(heading)
         );
-        // TODO: no need to extract them as string after a rewrite
-        const newlyCompletedTasks = this.getBlocksAsStrings(
-            newlyCompletedTaskBlocks
-        );
-
-        return newlyCompletedTasks;
-    }
-
-    // TODO: the AST should not leak details about bullets or heading tokens
-    // TODO: duplicated regex
-    private isCompletedTask(line: string) {
-        return /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line);
-    }
-
-    private isNonArchiveHeading(heading: string) {
-        return !this.archivePattern.test(heading);
-    }
-
-    // TODO: remove after a rewrite
-    private getBlocksAsStrings(blocks: Block[]) {
-        return blocks
-            .map((b) => {
-                return b.stringify();
-            })
-            .reduce((acc, current) => {
-                return acc.concat(current);
-            }, []);
     }
 }
 
@@ -142,53 +115,38 @@ class Archive {
         return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
     }
 
-    appendCompletedTasks(newCompletedTasks: string[]) {
-        let newArchiveContents = this.contents
-            .stringify()
-            .filter((l) => l.trim().length > 0);
-          
-        let contentInsertionIndex = newArchiveContents.length;
-        let searchStartIndexForNextDateLevel = 0;
+    appendCompletedTasks(newCompletedTasks: Block[]) {
+        let parentBlock = this.contents;
+
+        // TODO: cludge for newlines
+        parentBlock.blocks = parentBlock.blocks.filter(
+            (b) => b.text !== null && b.text.trim().length > 0
+        );
+
         for (const [i, level] of this.dateLevels.entries()) {
             const indentedDateLine = this.buildDateLine(i, level);
-
-            const positionOfthisDateInArchive = newArchiveContents.findIndex(
-                (line, i) =>
-                    i >= searchStartIndexForNextDateLevel &&
-                    line.includes(indentedDateLine)
+            const thisDateInArchive = this.contents.findRecursively(
+                (b) => b.text !== null && b.text === indentedDateLine
             );
-            const thisDateIsInArchive = positionOfthisDateInArchive >= 0;
 
-            if (thisDateIsInArchive) {
-                const lineAfterThisDate = positionOfthisDateInArchive + 1;
-                searchStartIndexForNextDateLevel = lineAfterThisDate;
-                contentInsertionIndex = this.findBlockEndByIndentation(
-                    newArchiveContents,
-                    positionOfthisDateInArchive
-                );
+            if (thisDateInArchive !== null) {
+                parentBlock = thisDateInArchive;
             } else {
-                newArchiveContents.push(indentedDateLine);
-                contentInsertionIndex = newArchiveContents.length;
+                // TODO, this will break once I stringify based on levels
+                const newBlock = new Block(indentedDateLine, 1, "list");
+                this.contents.append(newBlock);
+                parentBlock = newBlock;
             }
         }
 
-        // todo: start from here. Insert new lines into an AST
-        const indentationForContent = this.dateLevels.length;
-        const linesWithAddedIndentation = newCompletedTasks.map(
-            (line) => this.indentation.repeat(indentationForContent) + line
-        );
+        // TODO: Don't add indentation manually. Do it based on level while stringifying things
+        const indentation = this.indentation.repeat(this.dateLevels.length);
+        newCompletedTasks.forEach((block) => {
+            block.text = indentation + block.text;
+            parentBlock.append(block);
+        });
 
-        // newContents = new BlockParser(
-        //     this.settings.indentationSettings
-        // ).parse(lines);
-
-        newArchiveContents.splice(
-            contentInsertionIndex,
-            0,
-            ...linesWithAddedIndentation
-        );
-
-        return newArchiveContents;
+        return this.contents;
     }
 
     private buildDateLine(lineLevel: number, dateTreeLevel: string) {
@@ -196,24 +154,5 @@ class Archive {
         const dateFormat = this.dateFormats.get(dateTreeLevel);
         const date = thisMoment.format(dateFormat);
         return this.indentation.repeat(lineLevel) + `- [[${date}]]`;
-    }
-
-    private findBlockEndByIndentation(list: string[], startIndex: number) {
-        const initialIndentationLength = this.findIndentationLength(
-            list[startIndex]
-        );
-        const lineAfterBlockStart = startIndex + 1;
-        for (let i = lineAfterBlockStart; i < list.length; i++) {
-            const indentationLength = this.findIndentationLength(list[i]);
-            if (indentationLength <= initialIndentationLength) {
-                return i;
-            }
-        }
-        return list.length;
-    }
-
-    private findIndentationLength(line: string) {
-        const leadingSpacePattern = /^\s*/;
-        return leadingSpacePattern.exec(line)[0].length;
     }
 }

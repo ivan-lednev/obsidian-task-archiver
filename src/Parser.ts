@@ -187,6 +187,17 @@ export class Block {
         block.parent = this;
     }
 
+    appendFirst(block: Block) {
+        this.blocks.unshift(block);
+        block.parent = this;
+    }
+
+    appendSibling(block: Block) {
+        const indexOfThis = this.parent.blocks.findIndex((b) => b === this);
+        this.parent.blocks.splice(indexOfThis + 1, 0, block);
+    }
+
+
     remove(child: Block) {
         this.blocks.splice(this.blocks.indexOf(child), 1);
     }
@@ -197,15 +208,15 @@ export class Block {
 
     findRecursively(matcher: (block: Block) => boolean): Block | null {
         if (matcher(this)) {
-            return this
+            return this;
         }
         for (const child of this.blocks) {
-            const found = child.findRecursively(matcher)
+            const found = child.findRecursively(matcher);
             if (found !== null) {
-                return found
+                return found;
             }
         }
-        return null
+        return null;
     }
 
     stringify(): string[] {
