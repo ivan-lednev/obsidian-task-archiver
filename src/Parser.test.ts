@@ -148,6 +148,17 @@ describe("List items", () => {
         const nestedListItem = listItem.blocks[0];
         expect(nestedListItem.blocks.length).toBe(1);
     });
+
+    test("Handles misaligned lists", () => {
+        const lines = ["- l", "  - text"];
+
+        const doc = new Parser({
+            ...DEFAULT_SETTINGS,
+            useTab: false,
+            tabSize: 4,
+        }).parse(lines);
+        expect(doc.blockContent.blocks.length).toBe(1);
+    });
 });
 
 describe("Mixing headings and lists", () => {
