@@ -99,6 +99,23 @@ describe("List items", () => {
         expect(doc.blockContent.blocks.length).toBe(2);
     });
 
+    test("Multiple list items on different levels with spaces", () => {
+        const lines = [
+            "- 1",
+            "    - 1a",
+            "        - 1a1",
+            "            - 1a1a",
+            "    - 1b",
+        ];
+
+        const doc = new Parser({
+            ...DEFAULT_SETTINGS,
+            useTab: false,
+            tabSize: 4,
+        }).parse(lines);
+        expect(doc.blockContent.blocks.length).toBe(1);
+    });
+
     test("A top-level line breaks out of a list context", () => {
         const lines = ["- l", "\t- l2", "line"];
         const doc = new Parser(DEFAULT_SETTINGS).parse(lines);

@@ -7,7 +7,7 @@
         "dev": "rollup --config rollup.config.js -w",
         "build": "rollup --config rollup.config.js --environment BUILD:production",
         "test": "jest",
-        "testSpecific": "jest --testNamePattern=\"Moves a single task to an h2 archive\""
+        "testSpecific": "jest --testNamePattern=\"Multiple list items on different levels with spaces\""
     },
     "keywords": [],
     "author": "",

@@ -161,7 +161,7 @@ export class BlockParser {
         if (this.settings.useTab) {
             levelsOfIndentation = indentation.length;
         } else {
-            levelsOfIndentation = Math.floor(indentation.length / 2);
+            levelsOfIndentation = Math.floor(indentation.length / this.settings.tabSize);
         }
         return levelsOfIndentation + 1;
     }
