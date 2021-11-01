@@ -121,7 +121,7 @@ export class BlockParser {
     }
 
     // TODO: copypasted. Common to blocks & sections
-    goUpInNodeChain(targetLevel: number, node: Block) {
+    private goUpInNodeChain(targetLevel: number, node: Block) {
         let pointer = node;
 
         for (let level = 0; level < targetLevel; level++) {
@@ -195,9 +195,25 @@ export class Block {
         this.parent.remove(this);
     }
 
+    findRecursively(matcher: (block: Block) => boolean): Block | null {
+        if (matcher(this)) {
+            return this
+        }
+        for (const child of this.blocks) {
+            const found = child.findRecursively(matcher)
+            if (found !== null) {
+                return found
+            }
+        }
+        return null
+    }
+
     stringify(): string[] {
         const lines = [];
-        lines.push(this.text);
+        // TODO: this should not handle the root block this
+        if (this.text !== null) {
+            lines.push(this.text);
+        }
         for (const block of this.blocks) {
             lines.push(...block.stringify());
         }

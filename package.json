@@ -7,7 +7,7 @@
         "dev": "rollup --config rollup.config.js -w",
         "build": "rollup --config rollup.config.js --environment BUILD:production",
         "test": "jest",
-        "testSpecific": "jest --testNamePattern=\"The week is already in the tree\""
+        "testSpecific": "jest --testNamePattern=\"Find a block matching a matcher\""
     },
     "keywords": [],
     "author": "",

@@ -32,8 +32,8 @@ export class Archiver {
         // TODO: no need to extract stuff, just pass the section handle to the archive
         // and then I can just move the archive search or creation to a common place
         const archiveLines = archiveSection
-            ? this.extractSectionContents(archiveSection)
-            : [];
+            ? archiveSection.blockContent
+            : new Block(null, 0, "root");
 
         // --- old stuff ---
 
@@ -111,23 +111,17 @@ export class Archiver {
                 return acc.concat(current);
             }, []);
     }
-
-    private extractSectionContents(section: Section) {
-        const archiveLines = this.getBlocksAsStrings(
-            section.blockContent.blocks
-        ).filter((line) => line.trim().length > 0);
-        return archiveLines;
-    }
 }
 
 class Archive {
-    private contents: string[];
-    private dateLevels: string[];
-    private dateFormats: Map<string, string>;
-    private settings: ArchiverSettings;
+    private readonly contents: Block;
+    private readonly dateLevels: string[];
+    private readonly dateFormats: Map<string, string>;
+    private readonly settings: ArchiverSettings;
+    private readonly indentation: string;
 
-    constructor(lines: string[], settings: ArchiverSettings) {
-        this.contents = lines;
+    constructor(contents: Block, settings: ArchiverSettings) {
+        this.contents = contents;
         this.settings = settings;
         this.dateLevels = [];
         if (settings.useWeeks) {
@@ -140,25 +134,25 @@ class Archive {
             ["days", this.settings.dailyNoteFormat],
             ["weeks", this.settings.weeklyNoteFormat],
         ]);
+        this.indentation = this.buildIndentation();
     }
 
-    appendCompletedTasks(lines: string[]) {
-        const indentationSettings = this.settings.indentationSettings;
-        const indentation = indentationSettings.useTab
-            ? "\t"
-            : " ".repeat(indentationSettings.tabSize);
+    private buildIndentation() {
+        const settings = this.settings.indentationSettings;
+        return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
+    }
 
-        const thisMoment = window.moment();
-        const newContents = [...this.contents];
-
-        let contentInsertionIndex = newContents.length;
+    appendCompletedTasks(newCompletedTasks: string[]) {
+        let newArchiveContents = this.contents
+            .stringify()
+            .filter((l) => l.trim().length > 0);
+          
+        let contentInsertionIndex = newArchiveContents.length;
         let searchStartIndexForNextDateLevel = 0;
         for (const [i, level] of this.dateLevels.entries()) {
-            const dateFormat = this.dateFormats.get(level);
-            const date = thisMoment.format(dateFormat);
-            const indentedDateLine = indentation.repeat(i) + `- [[${date}]]`;
+            const indentedDateLine = this.buildDateLine(i, level);
 
-            const positionOfthisDateInArchive = this.contents.findIndex(
+            const positionOfthisDateInArchive = newArchiveContents.findIndex(
                 (line, i) =>
                     i >= searchStartIndexForNextDateLevel &&
                     line.includes(indentedDateLine)
@@ -169,27 +163,39 @@ class Archive {
                 const lineAfterThisDate = positionOfthisDateInArchive + 1;
                 searchStartIndexForNextDateLevel = lineAfterThisDate;
                 contentInsertionIndex = this.findBlockEndByIndentation(
-                    newContents,
+                    newArchiveContents,
                     positionOfthisDateInArchive
                 );
             } else {
-                newContents.push(indentedDateLine);
-                contentInsertionIndex = newContents.length;
+                newArchiveContents.push(indentedDateLine);
+                contentInsertionIndex = newArchiveContents.length;
             }
         }
 
+        // todo: start from here. Insert new lines into an AST
         const indentationForContent = this.dateLevels.length;
-        const linesWithAddedIndentation = lines.map(
-            (line) => indentation.repeat(indentationForContent) + line
+        const linesWithAddedIndentation = newCompletedTasks.map(
+            (line) => this.indentation.repeat(indentationForContent) + line
         );
 
-        newContents.splice(
+        // newContents = new BlockParser(
+        //     this.settings.indentationSettings
+        // ).parse(lines);
+
+        newArchiveContents.splice(
             contentInsertionIndex,
             0,
             ...linesWithAddedIndentation
         );
 
-        return newContents;
+        return newArchiveContents;
+    }
+
+    private buildDateLine(lineLevel: number, dateTreeLevel: string) {
+        const thisMoment = window.moment();
+        const dateFormat = this.dateFormats.get(dateTreeLevel);
+        const date = thisMoment.format(dateFormat);
+        return this.indentation.repeat(lineLevel) + `- [[${date}]]`;
     }
 
     private findBlockEndByIndentation(list: string[], startIndex: number) {

@@ -213,3 +213,17 @@ describe("Insertion", () => {
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
 });
+
+describe("Block search", () => {
+    test("Find a block matching a matcher", () => {
+        const lines = ["- list", "\t- text"];
+        const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
+
+        const searchResult = parsed.blockContent.findRecursively((b) =>
+            // TODO: Another problem with null as a sentinel
+            b.text !== null && b.text.includes("text")
+        );
+
+        expect(searchResult.stringify()[0]).toBe("\t- text");
+    });
+});
