@@ -37,13 +37,15 @@ Add an "Archived" Heading to a file and run the following command: "Archive task
 
 ## Roadmap
 
-- [ ] Move completed tasks to a separate archive file
+- [x] Move completed tasks to a separate archive file
 - [ ] Per-file configuration through front-matter
 - [ ] More options for the date tree
-  - [ ] Days
+  - [x] Days
   - [ ] Months
   - [ ] Years
 - [ ] Multiple archive subheadings per file
+- [ ] Archive sublists per list item
+- [ ] Archive any document section
 
 ## Acknowledgements
 
