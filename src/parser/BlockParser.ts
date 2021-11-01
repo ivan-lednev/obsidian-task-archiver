@@ -1,5 +1,6 @@
 import { ParserSettings } from "./SectionParser";
 import { Block } from "../model/Block";
+import { MarkdownNode } from "src/model/MarkdownNode";
 
 export type BlockType = "text" | "list" | "root";
 
@@ -22,7 +23,7 @@ export class BlockParser {
         return root;
     }
 
-    private buildTree(root: Block, flatBlocks: Block[]) {
+    private buildTree(root: MarkdownNode, flatBlocks: Block[]) {
         let context = root;
 
         for (const block of flatBlocks) {
@@ -32,7 +33,7 @@ export class BlockParser {
 
                 if (stepsUpToSection >= 0) {
                     const targetLevel = stepsUpToSection + 1;
-                    context = this.goUpInNodeChain(targetLevel, context);
+                    context = context.getNthAncestor(targetLevel);
                 }
 
                 context.append(block);
@@ -45,17 +46,6 @@ export class BlockParser {
                 context.append(block);
             }
         }
-    }
-
-    // TODO: copypasted. Common to blocks & sections
-    private goUpInNodeChain(targetLevel: number, node: Block) {
-        let pointer = node;
-
-        for (let level = 0; level < targetLevel; level++) {
-            pointer = pointer.parent;
-        }
-
-        return pointer;
     }
 
     private parseFlatBlocks(lines: string[]) {

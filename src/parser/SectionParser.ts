@@ -1,6 +1,7 @@
 import { Block } from "../model/Block";
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
+import { MarkdownNode } from "src/model/MarkdownNode";
 
 export interface ParserSettings {
     useTab: boolean;
@@ -55,50 +56,22 @@ export class SectionParser {
         });
     }
 
-    private buildTree(root: Section, flatSections: Section[]) {
+    private buildTree(root: MarkdownNode, flatSections: Section[]) {
         let context = root;
         for (const section of flatSections) {
             const stepsUpToSection = context.level - section.level;
             if (stepsUpToSection >= 0) {
                 const stepsUpToParent = stepsUpToSection + 1;
-                context = this.goUpInNodeChain(stepsUpToParent, context);
+                context = context.getNthAncestor(stepsUpToParent);
             }
 
             context.append(section);
             context = section;
         }
     }
-
-    goUpInNodeChain(targetLevel: number, node: Section) {
-        let pointer = node;
-
-        for (let level = 0; level < targetLevel; level++) {
-            pointer = pointer.parent;
-        }
-
-        return pointer;
-    }
 }
 
-
-interface Node {
-    children: Node[];
-    text: string | null;
-    parent: Node | null;
-
-    append(node: Node): void;
-
-    appendFirst(node: Node): void;
-
-    appendSibling(node: Node): void;
-
-    remove(node: Node): void;
-
-    removeSelf(): void;
-
-    stringify(): string[];
-}
-
+// TODO: implement
 interface RawSection {
     text: string;
     level: number;

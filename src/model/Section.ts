@@ -1,28 +1,20 @@
 import { Block } from "./Block";
+import { MarkdownNode } from "./MarkdownNode";
 
-export class Section {
-    sections: Section[];
+export class Section extends MarkdownNode {
+    children: Section[];
     blockContent: Block;
     parent: Section;
-    text: string;
-    level: number;
 
-    constructor(textContent: string, level: number, blockContent: Block) {
-        this.text = textContent;
-        this.level = level;
+    constructor(text: string, level: number, blockContent: Block) {
+        super(text, level);
         this.blockContent = blockContent;
-        this.sections = [];
-    }
-
-    append(section: Section) {
-        section.parent = this;
-        this.sections.push(section);
     }
 
     // TODO: replace with visitor
     extractBlocksRecursively(filter: TreeFilter): Block[] {
         const extracted = [];
-        for (const block of this.blockContent.blocks) {
+        for (const block of this.blockContent.children) {
             if (!filter.blockFilter || filter.blockFilter(block)) {
                 extracted.push(block);
             }
@@ -30,7 +22,7 @@ export class Section {
         for (const block of extracted) {
             block.removeSelf();
         }
-        for (const section of this.sections) {
+        for (const section of this.children) {
             if (!filter.sectionFilter || filter.sectionFilter(section)) {
                 extracted.push(...section.extractBlocksRecursively(filter));
             }
@@ -38,26 +30,12 @@ export class Section {
         return extracted;
     }
 
-    // TODO: duplicated Block's method
-    findRecursively(matcher: (section: Section) => boolean): Section | null {
-        if (matcher(this)) {
-            return this;
-        }
-        for (const child of this.sections) {
-            const found = child.findRecursively(matcher);
-            if (found !== null) {
-                return found;
-            }
-        }
-        return null;
-    }
-
     stringify(): string[] {
         const lines = [];
         if (this.text) {
             lines.push(this.text);
         }
-        for (const tree of [this.blockContent.blocks, this.sections]) {
+        for (const tree of [this.blockContent.children, this.children]) {
             for (const child of tree) {
                 lines.push(...child.stringify());
             }

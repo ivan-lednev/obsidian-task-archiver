@@ -92,7 +92,7 @@ export class Archiver {
         // TODO: (later) works only for top level sections
         // Archives are always top-level, even when people use ## as top-level
         // But people can use # for file names
-        let archiveSection = tree.sections.find((s) =>
+        let archiveSection = tree.children.find((s) =>
             this.archivePattern.test(s.text)
         );
         if (!archiveSection) {
@@ -122,7 +122,7 @@ export class Archiver {
         let parentBlock = contents;
 
         // TODO: cludge for newlines
-        parentBlock.blocks = parentBlock.blocks.filter(
+        parentBlock.children = parentBlock.children.filter(
             (b) => b.text !== null && b.text.trim().length > 0
         );
 
@@ -149,7 +149,7 @@ export class Archiver {
         // TODO: walkTree(visitor: NodeVisitor)
         const addIndentationRecursively = (block: Block) => {
             block.text = indentation + block.text;
-            block.blocks.forEach(addIndentationRecursively);
+            block.children.forEach(addIndentationRecursively);
         };
 
         newCompletedTasks.forEach((block) => {

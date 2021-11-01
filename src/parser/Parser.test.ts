@@ -23,7 +23,7 @@ test("Builds a flat structure with non-hierarchical text", () => {
     ];
 
     const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-    expect(doc.blockContent.blocks.length).toBe(lines.length);
+    expect(doc.blockContent.children.length).toBe(lines.length);
 });
 
 describe("Headings", () => {
@@ -32,9 +32,9 @@ describe("Headings", () => {
 
         const root = new SectionParser(DEFAULT_SETTINGS).parse(lines);
 
-        expect(root.sections.length).toBe(1);
-        const h1 = root.sections[0];
-        expect(h1.blockContent.blocks.length).toBe(1);
+        expect(root.children.length).toBe(1);
+        const h1 = root.children[0];
+        expect(h1.blockContent.children.length).toBe(1);
     });
 
     test("A subheading creates another level of nesting", () => {
@@ -42,10 +42,10 @@ describe("Headings", () => {
 
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
 
-        const h1 = doc.sections[0];
-        expect(h1.sections.length).toBe(1);
-        const h2 = h1.sections[0];
-        expect(h2.blockContent.blocks.length).toBe(1);
+        const h1 = doc.children[0];
+        expect(h1.children.length).toBe(1);
+        const h2 = h1.children[0];
+        expect(h2.blockContent.children.length).toBe(1);
     });
 
     test("A same-level heading doesn't get nested", () => {
@@ -53,8 +53,8 @@ describe("Headings", () => {
 
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
 
-        const h1 = doc.sections[0];
-        expect(h1.sections.length).toBe(2);
+        const h1 = doc.children[0];
+        expect(h1.children.length).toBe(2);
     });
 
     test("A higher-level heading pops nesting", () => {
@@ -62,9 +62,9 @@ describe("Headings", () => {
 
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
 
-        expect(doc.sections.length).toBe(2);
-        const secondH1 = doc.sections[1];
-        expect(secondH1.blockContent.blocks.length).toBe(1);
+        expect(doc.children.length).toBe(2);
+        const secondH1 = doc.children[1];
+        expect(secondH1.blockContent.children.length).toBe(1);
     });
 });
 
@@ -73,31 +73,31 @@ describe("List items", () => {
         const lines = ["- l", "\ttext"];
 
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(1);
-        const listItem = doc.blockContent.blocks[0];
-        expect(listItem.blocks.length).toBe(1);
+        expect(doc.blockContent.children.length).toBe(1);
+        const listItem = doc.blockContent.children[0];
+        expect(listItem.children.length).toBe(1);
     });
 
     test("An indented list item creates another level of nesting", () => {
         const lines = ["- l", "\t- l2", "\t\ttext"];
 
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        const listItem = doc.blockContent.blocks[0];
-        const indentedListItem = listItem.blocks[0];
-        expect(indentedListItem.blocks.length).toBe(1);
+        const listItem = doc.blockContent.children[0];
+        const indentedListItem = listItem.children[0];
+        expect(indentedListItem.children.length).toBe(1);
     });
 
     test("A same level list item doesn't get nested", () => {
         const lines = ["- l", "\t- l2", "\t- l2-2"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        const listItem = doc.blockContent.blocks[0];
-        expect(listItem.blocks.length).toBe(2);
+        const listItem = doc.blockContent.children[0];
+        expect(listItem.children.length).toBe(2);
     });
 
     test("A higher-level list item pops nesting", () => {
         const lines = ["- l", "\t- l2", "- l2-2"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(2);
+        expect(doc.blockContent.children.length).toBe(2);
     });
 
     test("Multiple list items on different levels with spaces", () => {
@@ -114,13 +114,13 @@ describe("List items", () => {
             useTab: false,
             tabSize: 4,
         }).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(1);
+        expect(doc.blockContent.children.length).toBe(1);
     });
 
     test("A top-level line breaks out of a list context", () => {
         const lines = ["- l", "\t- l2", "line"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(2);
+        expect(doc.blockContent.children.length).toBe(2);
     });
 
     test.each([
@@ -132,9 +132,9 @@ describe("List items", () => {
             useTab: false,
             tabSize: tabSize,
         }).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(3);
-        const listItem = doc.blockContent.blocks[0];
-        expect(listItem.blocks.length).toBe(1);
+        expect(doc.blockContent.children.length).toBe(3);
+        const listItem = doc.blockContent.children[0];
+        expect(listItem.children.length).toBe(1);
     });
 
     test.each([
@@ -143,11 +143,11 @@ describe("List items", () => {
         ["Mixed", ["1. l", "\t* l2", "\t\ttext"]],
     ])("Different types of list markers: %s", (_, lines) => {
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(1);
-        const listItem = doc.blockContent.blocks[0];
-        expect(listItem.blocks.length).toBe(1);
-        const nestedListItem = listItem.blocks[0];
-        expect(nestedListItem.blocks.length).toBe(1);
+        expect(doc.blockContent.children.length).toBe(1);
+        const listItem = doc.blockContent.children[0];
+        expect(listItem.children.length).toBe(1);
+        const nestedListItem = listItem.children[0];
+        expect(nestedListItem.children.length).toBe(1);
     });
 
     test("Handles misaligned lists", () => {
@@ -158,7 +158,7 @@ describe("List items", () => {
             useTab: false,
             tabSize: 4,
         }).parse(lines);
-        expect(doc.blockContent.blocks.length).toBe(1);
+        expect(doc.blockContent.children.length).toBe(1);
     });
 });
 
@@ -166,28 +166,28 @@ describe("Mixing headings and lists", () => {
     test("One heading, one list", () => {
         const lines = ["# h", "- l", "line"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.sections.length).toBe(1);
-        const h1 = doc.sections[0];
-        expect(h1.blockContent.blocks.length).toBe(2);
+        expect(doc.children.length).toBe(1);
+        const h1 = doc.children[0];
+        expect(h1.blockContent.children.length).toBe(2);
     });
 
     test("Multiple heading levels", () => {
         const lines = ["# h", "- l", "text", "## h2", "# h1"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.sections.length).toBe(2);
-        const h1 = doc.sections[0];
-        expect(h1.sections.length).toBe(1);
-        expect(h1.blockContent.blocks.length).toBe(2);
+        expect(doc.children.length).toBe(2);
+        const h1 = doc.children[0];
+        expect(h1.children.length).toBe(1);
+        expect(h1.blockContent.children.length).toBe(2);
     });
 
     test("Multiple list levels", () => {
         const lines = ["# h", "- l", "    - l2", "# h1"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        expect(doc.sections.length).toBe(2);
-        const h1 = doc.sections[0];
-        expect(h1.blockContent.blocks.length).toBe(1);
-        const list = h1.blockContent.blocks[0];
-        expect(list.blocks.length).toBe(1);
+        expect(doc.children.length).toBe(2);
+        const h1 = doc.children[0];
+        expect(h1.blockContent.children.length).toBe(1);
+        const list = h1.blockContent.children[0];
+        expect(list.children.length).toBe(1);
     });
 });
 
@@ -258,7 +258,7 @@ describe("Insertion", () => {
         const lines = ["- list", "text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        const listItem = parsed.blockContent.blocks[0];
+        const listItem = parsed.blockContent.children[0];
         listItem.appendSibling(new Block("list sibling", 0, "text"));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["- list", "list sibling", "text"]);
