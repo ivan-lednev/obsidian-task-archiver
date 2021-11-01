@@ -221,7 +221,7 @@ export class Block {
 
     stringify(): string[] {
         const lines = [];
-        // TODO: this should not handle the root block this
+        // TODO: this should not handle the root block
         if (this.text !== null) {
             lines.push(this.text);
         }
@@ -236,6 +236,11 @@ interface RawSection {
     text: string;
     level: number;
     lines: string[];
+}
+
+interface TreeFilter {
+    sectionFilter?(section: Section): boolean;
+    blockFilter?(block: Block): boolean;
 }
 
 export class Section {
@@ -258,12 +263,11 @@ export class Section {
     }
 
     extractBlocksRecursively(
-        lineFilter: (line: string) => boolean = this.alwaysTrue,
-        headingFilter: (heading: string) => boolean = this.alwaysTrue
+        filter: TreeFilter
     ): Block[] {
         const extracted = [];
         for (const block of this.blockContent.blocks) {
-            if (lineFilter(block.text)) {
+            if (!filter.blockFilter || filter.blockFilter(block)) {
                 extracted.push(block);
             }
         }
@@ -271,11 +275,10 @@ export class Section {
             block.removeSelf();
         }
         for (const section of this.sections) {
-            if (headingFilter(section.text)) {
+            if (!filter.sectionFilter || filter.sectionFilter(section)) {
                 extracted.push(
                     ...section.extractBlocksRecursively(
-                        lineFilter,
-                        headingFilter
+                        filter
                     )
                 );
             }
@@ -283,10 +286,20 @@ export class Section {
         return extracted;
     }
 
-    private alwaysTrue() {
-        return true;
+    // TODO: duplicated Block's method
+    findRecursively(matcher: (section: Section) => boolean): Section | null {
+        if (matcher(this)) {
+            return this;
+        }
+        for (const child of this.sections) {
+            const found = child.findRecursively(matcher);
+            if (found !== null) {
+                return found;
+            }
+        }
+        return null;
     }
-
+    
     stringify(): string[] {
         const lines = [];
         if (this.text) {

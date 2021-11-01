@@ -196,7 +196,10 @@ describe("Extraction", () => {
         const parsed = new Parser(DEFAULT_SETTINGS).parse(lines);
 
         const actual = parsed
-            .extractBlocksRecursively((line) => line === "Extract me")
+            .extractBlocksRecursively({
+                blockFilter: (block) =>
+                    block.text !== null && block.text === "Extract me",
+            })
             .map((b) => b.stringify());
         expect(actual).toEqual(extracted);
         expect(parsed.stringify()).toEqual(theRest);

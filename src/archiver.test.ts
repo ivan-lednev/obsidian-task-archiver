@@ -52,6 +52,14 @@ describe("Moving top-level tasks to the archive", () => {
         );
     });
 
+    test("Moves a single task to an h2 archive", () => {
+        checkArchiverOutput(
+            DEFAULT_SETTINGS,
+            ["- [x] foo", "- [ ] bar", "## Archived"],
+            ["- [ ] bar", "## Archived", "", "- [x] foo", ""]
+        );
+    })
+
     test("Moves multiple tasks to the end of a populated archive", () => {
         checkArchiverOutput(
             DEFAULT_SETTINGS,

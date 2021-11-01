@@ -2,26 +2,47 @@ import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
 import { Block, Parser, Section } from "./Parser";
 
+type DateLevel = "years" | "months" | "weeks" | "days";
+
 export class Archiver {
-    private settings: ArchiverSettings;
-    private archivePattern: RegExp;
+    private readonly settings: ArchiverSettings;
+    private readonly archivePattern: RegExp;
+    private readonly dateLevels: DateLevel[];
+    private readonly dateFormats: Map<DateLevel, string>;
+    private readonly indentation: string;
+    private readonly parser: Parser;
 
     constructor(settings: ArchiverSettings) {
         this.settings = settings;
+
         const escapedHeading = escapeStringRegexp(settings.archiveHeading);
         this.archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
+
+        this.dateLevels = [];
+        if (settings.useWeeks) {
+            this.dateLevels.push("weeks");
+        }
+        if (settings.useDays) {
+            this.dateLevels.push("days");
+        }
+
+        this.dateFormats = new Map([
+            ["days", this.settings.dailyNoteFormat],
+            ["weeks", this.settings.weeklyNoteFormat],
+        ]);
+
+        this.indentation = this.buildIndentation();
+        this.parser = new Parser(this.settings.indentationSettings);
     }
 
-    archiveTasks(lines: string[]) {
-        const parser = new Parser(this.settings.indentationSettings);
-        const tree = parser.parse(lines);
-
+    archiveTasks(linesWithTasks: string[]) {
+        const tree = this.parser.parse(linesWithTasks);
         const newlyCompletedTasks = this.extractNewlyCompletedTasks(tree);
 
         if (newlyCompletedTasks.length === 0) {
             return {
                 summary: "No tasks to archive",
-                lines,
+                lines: linesWithTasks,
             };
         }
 
@@ -33,90 +54,44 @@ export class Archiver {
         };
     }
 
-    private archiveToThisFile(tree: Section, tasks: Block[]) {
+    private archiveToThisFile(tree: Section, completedTasks: Block[]) {
+        const archiveBlock = this.getArchiveSection(tree).blockContent;
+        this.appendCompletedTasks(archiveBlock, completedTasks);
+        this.addNewLinesIfNeeded(archiveBlock);
+    }
+
+    private getArchiveSection(tree: Section) {
         // TODO: works only for top level sections
+        // Archives are always top-level, even when people use ## as top-level
+        // But people can use # for file names
         let archiveSection = tree.sections.find((s) =>
             this.archivePattern.test(s.text)
         );
-        // TODO: no need to extract stuff, just pass the section handle to the archive
-        // and then I can just move the archive search or creation to a common place
-        const archiveContents = archiveSection
-            ? archiveSection.blockContent
-            : new Block(null, 0, "root");
-
-        const archive = new Archive(archiveContents, this.settings);
-        let archiveContentsWithNewTasks = archive.appendCompletedTasks(tasks);
-
-        this.complyWithNewlineRules(archiveContentsWithNewTasks);
-
         if (!archiveSection) {
             const heading = this.buildArchiveHeading();
-            archiveSection = new Section(
-                heading,
-                1,
-                archiveContentsWithNewTasks
-            );
+            const rootBlock = new Block(null, 0, "root");
+            archiveSection = new Section(heading, 1, rootBlock);
             tree.append(archiveSection);
         }
-    }
-
-    private complyWithNewlineRules(blockContent: Block) {
-        if (this.settings.addNewlinesAroundHeadings) {
-            // TODO: leaking details about block types
-            blockContent.appendFirst(new Block("", 1, "text"));
-            blockContent.append(new Block("", 1, "text"));
-        }
-    }
-
-    private buildArchiveHeading() {
-        // TODO: if there is no archive heading, I should build an ast, not a manual thing
-        const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
-        return `${headingToken} ${this.settings.archiveHeading}`;
+        return archiveSection
     }
 
     private extractNewlyCompletedTasks(tree: Section) {
-        // TODO: pass a struct, not 2 arguments
-        // TODO: I check lines here, but pass blocks to matchers elsewhere, need consistency
         // TODO: the AST should not leak details about bullets or heading tokens
         // TODO: duplicated regex
-        return tree.extractBlocksRecursively(
-            (line: string) => /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(line),
-            (heading: string) => !this.archivePattern.test(heading)
-        );
-    }
-}
-
-class Archive {
-    private readonly contents: Block;
-    private readonly dateLevels: string[];
-    private readonly dateFormats: Map<string, string>;
-    private readonly settings: ArchiverSettings;
-    private readonly indentation: string;
-
-    constructor(contents: Block, settings: ArchiverSettings) {
-        this.contents = contents;
-        this.settings = settings;
-        this.dateLevels = [];
-        if (settings.useWeeks) {
-            this.dateLevels.push("weeks");
-        }
-        if (settings.useDays) {
-            this.dateLevels.push("days");
-        }
-        this.dateFormats = new Map([
-            ["days", this.settings.dailyNoteFormat],
-            ["weeks", this.settings.weeklyNoteFormat],
-        ]);
-        this.indentation = this.buildIndentation();
+        const filter = {
+            // TODO: another needless null test
+            blockFilter: (block: Block) =>
+                block.text !== null &&
+                /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(block.text),
+            sectionFilter: (section: Section) =>
+                !this.archivePattern.test(section.text),
+        };
+        return tree.extractBlocksRecursively(filter);
     }
 
-    private buildIndentation() {
-        const settings = this.settings.indentationSettings;
-        return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
-    }
-
-    appendCompletedTasks(newCompletedTasks: Block[]) {
-        let parentBlock = this.contents;
+    appendCompletedTasks(contents: Block, newCompletedTasks: Block[]) {
+        let parentBlock = contents;
 
         // TODO: cludge for newlines
         parentBlock.blocks = parentBlock.blocks.filter(
@@ -125,7 +100,7 @@ class Archive {
 
         for (const [i, level] of this.dateLevels.entries()) {
             const indentedDateLine = this.buildDateLine(i, level);
-            const thisDateInArchive = this.contents.findRecursively(
+            const thisDateInArchive = contents.findRecursively(
                 (b) => b.text !== null && b.text === indentedDateLine
             );
 
@@ -134,7 +109,7 @@ class Archive {
             } else {
                 // TODO, this will break once I stringify based on levels
                 const newBlock = new Block(indentedDateLine, 1, "list");
-                this.contents.append(newBlock);
+                contents.append(newBlock);
                 parentBlock = newBlock;
             }
         }
@@ -145,14 +120,30 @@ class Archive {
             block.text = indentation + block.text;
             parentBlock.append(block);
         });
-
-        return this.contents;
     }
-
-    private buildDateLine(lineLevel: number, dateTreeLevel: string) {
+    private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {
         const thisMoment = window.moment();
         const dateFormat = this.dateFormats.get(dateTreeLevel);
         const date = thisMoment.format(dateFormat);
         return this.indentation.repeat(lineLevel) + `- [[${date}]]`;
+    }
+
+    private buildIndentation() {
+        const settings = this.settings.indentationSettings;
+        return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
+    }
+
+    private buildArchiveHeading() {
+        // TODO: if there is no archive heading, I should build an ast, not a manual thing
+        const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
+        return `${headingToken} ${this.settings.archiveHeading}`;
+    }
+
+    private addNewLinesIfNeeded(blockContent: Block) {
+        if (this.settings.addNewlinesAroundHeadings) {
+            // TODO: leaking details about block types
+            blockContent.appendFirst(new Block("", 1, "text"));
+            blockContent.append(new Block("", 1, "text"));
+        }
     }
 }
