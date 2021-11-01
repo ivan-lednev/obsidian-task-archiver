@@ -1,6 +1,8 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import escapeStringRegexp from "escape-string-regexp";
-import { Block, Parser, Section } from "./Parser";
+import { SectionParser } from "../parser/SectionParser";
+import { Section } from "../model/Section";
+import { Block } from "../model/Block";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -10,7 +12,7 @@ export class Archiver {
     private readonly dateLevels: DateLevel[];
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly indentation: string;
-    private readonly parser: Parser;
+    private readonly parser: SectionParser;
 
     constructor(settings: ArchiverSettings) {
         this.settings = settings;
@@ -32,7 +34,7 @@ export class Archiver {
         ]);
 
         this.indentation = this.buildIndentation();
-        this.parser = new Parser(this.settings.indentationSettings);
+        this.parser = new SectionParser(this.settings.indentationSettings);
     }
 
     archiveTasks(linesWithTasks: string[]) {
@@ -48,12 +50,11 @@ export class Archiver {
         }
 
         const archiveTree = treeWithTasks;
-
         this.archiveToThisFile(archiveTree, newlyCompletedTasks);
-
+        const lines = treeWithTasks.stringify();
         return {
-            summary: `Archived ${newlyCompletedTasks.length} lines`,
-            lines: treeWithTasks.stringify(),
+            summary: `Archived ${lines.length} lines`,
+            lines: lines,
         };
     }
 

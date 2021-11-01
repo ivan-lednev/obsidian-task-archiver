@@ -6,8 +6,8 @@ import {
     Setting,
     TFile,
 } from "obsidian";
-import { Archiver } from "src/Archiver";
-import { ArchiverSettings } from "./ArchiverSettings";
+import { Archiver } from "src/archiver/Archiver";
+import { ArchiverSettings } from "./archiver/ArchiverSettings";
 
 const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",

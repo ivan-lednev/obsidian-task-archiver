@@ -79,7 +79,7 @@ describe("Moving top-level tasks to the archive", () => {
                 "\t\t- child 2",
                 "\t\t\t- child 3",
                 "\t\t\t\t- [x] child with tasks 4",
-                ""
+                "",
             ]
         );
     });
