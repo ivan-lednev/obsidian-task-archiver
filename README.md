@@ -1,6 +1,6 @@
-This is a simple plugin that moves completed tasks in a file to the "Archived" heading.
+The plugin adds a sindgle command that moves completed tasks in the active file either under a pre-configured heading in the same file or to a separate file.
 
-This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still see your accomplishments and feel proud about them.
+This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still go back to them.
 
 ## Here is what it looks like
 
@@ -28,12 +28,16 @@ Turns into
 
 The plugin lets you configure the following:
 - what text makes a heading an archive;
-- whether completed tasks should be added under a link to the current week;
-- the pattern of the weekly note link.
+- whether to add newlines around headings when moving stuff around;
+- moving tasks to the current file or to a separate file.
+
+### Date tree
+
+Each checked date tree option (weeks, days) will create an additional level in the archive hierarchy with a link to the corresponding periodic note.
 
 ## Usage
 
-Add an "Archived" Heading to a file and run the following command: "Archive tasks in this file".
+Just open the command palette and run: `Archive tasks in this file`.
 
 ## Roadmap
 
