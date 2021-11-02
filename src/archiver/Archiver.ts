@@ -143,9 +143,8 @@ export class Archiver {
 
         // TODO: Don't add indentation manually. Do it based on level while stringifying things
         const indentation = this.indentation.repeat(this.dateLevels.length);
-        // TODO: bug: this indents properly only top-level items
 
-        // TODO: walkTree(visitor: NodeVisitor)
+        // TODO: TreeWalker will make this obsolete
         const addIndentationRecursively = (block: Block) => {
             block.text = indentation + block.text;
             block.children.forEach(addIndentationRecursively);

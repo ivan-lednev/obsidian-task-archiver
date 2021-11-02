@@ -11,7 +11,7 @@ export class Section extends MarkdownNode {
         this.blockContent = blockContent;
     }
 
-    // TODO: replace with visitor
+    // TODO: TreeWalker should make this obsolete
     extractBlocksRecursively(filter: TreeFilter): Block[] {
         const extracted = [];
         for (const block of this.blockContent.children) {

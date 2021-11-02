@@ -1,9 +1,3 @@
-enum VisitResult {
-    SkipChildren,
-    SkipRest,
-    Continue,
-}
-
 export abstract class MarkdownNode {
     children: MarkdownNode[];
     text: string | null;
@@ -49,19 +43,6 @@ export abstract class MarkdownNode {
 
         return pointer;
     }
-
-    // walkNodeTree(visitor: (node: MarkdownNode) => VisitResult) {
-    //     let visitResult = visitor(this);
-    //     if (visitResult === VisitResult.SkipRest) {
-    //         return visitResult
-    //     }
-    //     for (const child of this.children) {
-    //         visitResult = child.walkNodeTree(visitor);
-    //         if (visitResult === VisitResult.SkipRest) {
-    //             return visitResult
-    //         }
-    //     }
-    // }
 
     abstract stringify(): string[];
 }
