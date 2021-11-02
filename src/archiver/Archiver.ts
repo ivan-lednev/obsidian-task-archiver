@@ -37,20 +37,20 @@ export class Archiver {
         this.parser = new SectionParser(this.settings.indentationSettings);
     }
 
-    archiveTasks(linesWithTasks: string[]) {
+    archiveTasksToSameFile(linesWithTasks: string[]) {
         const treeWithTasks = this.parser.parse(linesWithTasks);
         const newlyCompletedTasks =
             this.extractNewlyCompletedTasks(treeWithTasks);
-
         if (newlyCompletedTasks.length === 0) {
             return {
                 summary: "No tasks to archive",
                 lines: linesWithTasks,
             };
         }
+        
+        const archiveSection = this.getOrCreateArchiveSectionIn(treeWithTasks);
 
-        const archiveTree = treeWithTasks;
-        this.archiveToThisFile(archiveTree, newlyCompletedTasks);
+        this.archive(archiveSection, newlyCompletedTasks);
         const lines = treeWithTasks.stringify();
         return {
             summary: `Archived ${lines.length} lines`,
@@ -58,12 +58,11 @@ export class Archiver {
         };
     }
 
-    // todo: copypaste
     archiveTasksToSeparateFile(linesWithTasks: string[], archive: string[]) {
+        // TODO: copypasted part
         const treeWithTasks = this.parser.parse(linesWithTasks);
         const newlyCompletedTasks =
             this.extractNewlyCompletedTasks(treeWithTasks);
-
         if (newlyCompletedTasks.length === 0) {
             return {
                 summary: "No tasks to archive",
@@ -73,7 +72,7 @@ export class Archiver {
 
         const archiveTree = this.parser.parse(archive);
 
-        this.archiveToThisFile(archiveTree, newlyCompletedTasks);
+        this.archive(archiveTree, newlyCompletedTasks);
 
         return {
             summary: `Archived ${newlyCompletedTasks.length} lines`,
@@ -82,13 +81,13 @@ export class Archiver {
         };
     }
 
-    private archiveToThisFile(tree: Section, completedTasks: Block[]) {
-        const archiveBlock = this.getArchiveSection(tree).blockContent;
+    private archive(archiveSection: Section, completedTasks: Block[]) {
+        const archiveBlock = archiveSection.blockContent;
         this.appendCompletedTasks(archiveBlock, completedTasks);
         this.addNewLinesIfNeeded(archiveBlock);
     }
 
-    private getArchiveSection(tree: Section) {
+    private getOrCreateArchiveSectionIn(tree: Section) {
         // TODO: (later) works only for top level sections
         // Archives are always top-level, even when people use ## as top-level
         // But people can use # for file names

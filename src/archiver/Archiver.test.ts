@@ -31,7 +31,7 @@ function checkArchiverOutput(
     output: string[]
 ) {
     const archiver = new Archiver(settings);
-    const result = archiver.archiveTasks(input).lines;
+    const result = archiver.archiveTasksToSameFile(input).lines;
     expect(result).toEqual(output);
 }
 
@@ -224,7 +224,7 @@ describe("Separate files", () => {
         );
         expect(lines).toEqual(["- [ ] bar"]);
 
-        expect(archiveLines).toEqual(["# Archived", "", "- [x] foo", ""]);
+        expect(archiveLines).toEqual(["", "- [x] foo", ""]);
     });
 });
 

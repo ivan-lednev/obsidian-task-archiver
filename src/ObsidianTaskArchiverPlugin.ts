@@ -51,7 +51,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         const archiver = new Archiver(this.settings);
 
         if (this.settings.archiveToSeparateFile) {
-            const archiveFileHandle = await this.getArchiveFileHandle(
+            const archiveFileHandle = await this.getArchiveForFile(
                 activeFile
             );
             const archiveFileContents = await this.app.vault.read(
@@ -71,26 +71,25 @@ export default class ObsidianTaskArchiver extends Plugin {
                 archiveResult.archiveLines.join("\n")
             );
         } else {
-            const archiveResult = archiver.archiveTasks(activeFileLines);
+            const archiveResult = archiver.archiveTasksToSameFile(activeFileLines);
             new Notice(archiveResult.summary);
             this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
         }
     }
 
-    private async getArchiveFileHandle(activeFile: TFile) {
+    private async getArchiveForFile(activeFile: TFile) {
         const archiveFileName =
             this.settings.defaultArchiveFileName.replace(
                 "%",
                 activeFile.basename
             ) + ".md";
-        // TODO: archiving to a folder will happen here
-        const archiveExists = await this.app.vault.adapter.exists(
-            archiveFileName
-        );
 
-        if (!archiveExists) {
+        // TODO: archiving to a folder will happen here
+        let archiveFile = this.app.vault.getAbstractFileByPath(archiveFileName);
+
+        if (!archiveFile) {
             try {
-                await this.app.vault.create(archiveFileName, "");
+                archiveFile = await this.app.vault.create(archiveFileName, "");
             } catch (error) {
                 console.error(
                     `Unable to create an archive file with the name '${archiveFileName}'`
@@ -98,7 +97,13 @@ export default class ObsidianTaskArchiver extends Plugin {
             }
         }
 
-        return this.app.vault.getAbstractFileByPath(archiveFileName) as TFile;
+        archiveFile = this.app.vault.getAbstractFileByPath(archiveFileName);
+
+        if (!(archiveFile instanceof TFile)) {
+            throw new Error(`${archiveFileName} is a folder, not a file`);
+        }
+
+        return archiveFile;
     }
 
     async loadSettings() {
