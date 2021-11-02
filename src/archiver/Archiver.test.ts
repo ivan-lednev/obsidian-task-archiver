@@ -115,11 +115,14 @@ describe("Moving top-level tasks to the archive", () => {
     test.each([
         [["- [x] foo", "- [x] foo #2", "\t- [x] foo #3"], "Archived 2 tasks"],
         [["- [ ] foo"], "No tasks to archive"],
-    ])("Reports the number of top-level archived tasks: %s -> %s", (input, message) => {
-        const archiver = new Archiver(DEFAULT_SETTINGS);
-        const result = archiver.archiveTasksToSameFile(input);
-        expect(result.summary).toBe(message);
-    });
+    ])(
+        "Reports the number of top-level archived tasks: %s -> %s",
+        (input, message) => {
+            const archiver = new Archiver(DEFAULT_SETTINGS);
+            const result = archiver.archiveTasksToSameFile(input);
+            expect(result.summary).toBe(message);
+        }
+    );
 
     test("Moves sub-items with top-level items after the archive heading, indented with tabs", () => {
         checkArchiverOutput(
@@ -191,12 +194,22 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     describe("Creating a new archive", () => {
-        // TODO: do it last
-        test.skip("Appends an archive heading to the end of file with a newline if there isn't any", () => {
+        test("Appends an archive heading to the end of file with a newline if there isn't any", () => {
             checkArchiverOutput(
                 DEFAULT_SETTINGS,
                 ["- Text", "1. [x] foo"],
                 ["- Text", "", "# Archived", "", "1. [x] foo", ""]
+            );
+        });
+
+        test("Doesn't add newlines around the archive heading if configured so", () => {
+            checkArchiverOutput(
+                {
+                    ...DEFAULT_SETTINGS,
+                    addNewlinesAroundHeadings: false,
+                },
+                ["- [x] foo", "Some text"],
+                ["Some text", "# Archived", "- [x] foo"]
             );
         });
 
@@ -208,17 +221,6 @@ describe("Moving top-level tasks to the archive", () => {
                 },
                 ["- [x] foo"],
                 ["### Archived", "", "- [x] foo", ""]
-            );
-        });
-
-        test("Doesn't add newlines around the archive heading if configured so", () => {
-            checkArchiverOutput(
-                {
-                    ...DEFAULT_SETTINGS,
-                    addNewlinesAroundHeadings: false,
-                },
-                ["- [x] foo"],
-                ["# Archived", "- [x] foo"]
             );
         });
     });

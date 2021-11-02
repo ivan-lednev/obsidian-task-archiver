@@ -7,7 +7,7 @@
         "dev": "rollup --config rollup.config.js -w",
         "build": "rollup --config rollup.config.js --environment BUILD:production",
         "test": "jest",
-        "testSpecific": "jest --testNamePattern=\"Multiple list items on different levels with spaces\""
+        "testSpecific": "jest --testNamePattern=\"Appends an archive heading to the end of file with a newline if there isn't any\""
     },
     "keywords": [],
     "author": "Ivan Lednev",

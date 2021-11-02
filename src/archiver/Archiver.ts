@@ -87,20 +87,42 @@ export class Archiver {
         this.addNewLinesIfNeeded(archiveBlock);
     }
 
-    private getOrCreateArchiveSectionIn(tree: Section) {
+    private getOrCreateArchiveSectionIn(section: Section) {
         // TODO: (later) works only for top level sections
         // Archives are always top-level, even when people use ## as top-level
         // But people can use # for file names
-        let archiveSection = tree.children.find((s) =>
+        // Define an option: top-level archive heading level. Heading-specific archives are the ones that are one level below top headings
+        let archiveSection = section.children.find((s) =>
             this.archivePattern.test(s.text)
         );
         if (!archiveSection) {
+            if (this.settings.addNewlinesAroundHeadings) {
+                this.ensureNewlineFor(section);
+            }
             const heading = this.buildArchiveHeading();
             const rootBlock = new Block(null, 0, "root");
             archiveSection = new Section(heading, 1, rootBlock);
-            tree.append(archiveSection);
+            section.append(archiveSection);
         }
         return archiveSection;
+    }
+
+    private ensureNewlineFor(section: Section) {
+        let lastSection = section;
+        const childrenLength = section.children.length;
+        if (childrenLength > 0) {
+            lastSection = section.children[childrenLength - 1];
+        }
+        const blocksLength = lastSection.blockContent.children.length;
+        if (blocksLength > 0) {
+            const lastBlock =
+                lastSection.blockContent.children[blocksLength - 1];
+            // TODO: another needless null check
+            if (lastBlock.text && lastBlock.text.trim().length !== 0) {
+                // TODO: add an abstraction like appendText, appendListItem
+                lastSection.blockContent.append(new Block("", 1, "text"));
+            }
+        }
     }
 
     private extractNewlyCompletedTasks(tree: Section) {
