@@ -53,7 +53,7 @@ export class Archiver {
         this.archive(archiveSection, newlyCompletedTasks);
         const lines = treeWithTasks.stringify();
         return {
-            summary: `Archived ${lines.length} lines`,
+            summary: `Archived ${newlyCompletedTasks.length} tasks`,
             lines: lines,
         };
     }
@@ -70,14 +70,14 @@ export class Archiver {
             };
         }
 
-        const archiveTree = this.parser.parse(archive);
+        const archiveSection = this.parser.parse(archive);
 
-        this.archive(archiveTree, newlyCompletedTasks);
+        this.archive(archiveSection, newlyCompletedTasks);
 
         return {
-            summary: `Archived ${newlyCompletedTasks.length} lines`,
+            summary: `Archived ${newlyCompletedTasks.length} tasks`,
             lines: treeWithTasks.stringify(),
-            archiveLines: archiveTree.stringify(),
+            archiveLines: archiveSection.stringify(),
         };
     }
 

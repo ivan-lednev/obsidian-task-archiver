@@ -112,6 +112,15 @@ describe("Moving top-level tasks to the archive", () => {
         );
     });
 
+    test.each([
+        [["- [x] foo", "- [x] foo #2", "\t- [x] foo #3"], "Archived 2 tasks"],
+        [["- [ ] foo"], "No tasks to archive"],
+    ])("Reports the number of top-level archived tasks: %s -> %s", (input, message) => {
+        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const result = archiver.archiveTasksToSameFile(input);
+        expect(result.summary).toBe(message);
+    });
+
     test("Moves sub-items with top-level items after the archive heading, indented with tabs", () => {
         checkArchiverOutput(
             DEFAULT_SETTINGS,
