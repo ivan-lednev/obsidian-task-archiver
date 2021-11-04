@@ -1,13 +1,7 @@
-import {
-    App,
-    Notice,
-    Plugin,
-    PluginSettingTab,
-    Setting,
-    TFile,
-} from "obsidian";
+import { Notice, Plugin, TFile } from "obsidian";
 import { Archiver } from "src/archiver/Archiver";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
+import { ArchiverSettingTab } from "./ArchiverSettingTab";
 
 const DEFAULT_SETTINGS: ArchiverSettings = {
     archiveHeading: "Archived",
@@ -40,41 +34,45 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     private async archiveTasksInCurrentFile() {
-        const activeFile = this.app.workspace.getActiveFile();
-        if (activeFile === null || activeFile.extension !== "md") {
-            new Notice("The archiver works only in markdown (.md) files!");
-            return;
-        }
-        const activeFileContents = await this.app.vault.read(activeFile);
-        const activeFileLines = activeFileContents.split("\n");
+        const currentFile = this.app.workspace.getActiveFile();
+        const currentFileLines = await this.readFile(currentFile);
 
         const archiver = new Archiver(this.settings);
 
         if (this.settings.archiveToSeparateFile) {
-            const archiveFileHandle = await this.getArchiveForFile(
-                activeFile
-            );
-            const archiveFileContents = await this.app.vault.read(
-                archiveFileHandle
-            );
-            const archiveFileLines = archiveFileContents.split("\n");
+            const archiveFile = await this.getArchiveForFile(currentFile);
+            const archiveFileLines = await this.readFile(archiveFile);
 
             const archiveResult = archiver.archiveTasksToSeparateFile(
-                activeFileLines,
+                currentFileLines,
                 archiveFileLines
             );
+
             new Notice(archiveResult.summary);
 
-            this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
-            this.app.vault.modify(
-                archiveFileHandle,
-                archiveResult.archiveLines.join("\n")
-            );
+            this.writeToFile(currentFile, archiveResult.lines);
+            this.writeToFile(archiveFile, archiveResult.archiveLines);
         } else {
-            const archiveResult = archiver.archiveTasksToSameFile(activeFileLines);
+            const archiveResult =
+                archiver.archiveTasksToSameFile(currentFileLines);
+
             new Notice(archiveResult.summary);
-            this.app.vault.modify(activeFile, archiveResult.lines.join("\n"));
+
+            this.writeToFile(currentFile, archiveResult.lines);
         }
+    }
+
+    private writeToFile(file: TFile, lines: string[]) {
+        this.app.vault.modify(file, lines.join("\n"));
+    }
+
+    private async readFile(file: TFile) {
+        if (file === null || file.extension !== "md") {
+            new Notice("The archiver works only in markdown (.md) files!");
+            return;
+        }
+        const fileContents = await this.app.vault.read(file);
+        return fileContents.split("\n");
     }
 
     private async getArchiveForFile(activeFile: TFile) {
@@ -91,7 +89,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             try {
                 archiveFile = await this.app.vault.create(archiveFileName, "");
             } catch (error) {
-                console.error(
+                new Notice(
                     `Unable to create an archive file with the name '${archiveFileName}'`
                 );
             }
@@ -100,7 +98,9 @@ export default class ObsidianTaskArchiver extends Plugin {
         archiveFile = this.app.vault.getAbstractFileByPath(archiveFileName);
 
         if (!(archiveFile instanceof TFile)) {
-            throw new Error(`${archiveFileName} is a folder, not a file`);
+            const message = `${archiveFileName} is not a valid file`;
+            new Notice(message);
+            throw new Error(message);
         }
 
         return archiveFile;

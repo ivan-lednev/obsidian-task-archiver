@@ -69,6 +69,7 @@ export class Archiver {
                 lines: linesWithTasks,
             };
         }
+        // ---
 
         const archiveSection = this.parser.parse(archive);
 
