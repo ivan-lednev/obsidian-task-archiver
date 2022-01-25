@@ -30,7 +30,7 @@ function checkArchiverOutput(
     input: string[],
     output: string[]
 ) {
-    const archiver = new Archiver(settings);
+    const archiver = new Archiver(null, null, settings);
     const result = archiver.archiveTasksToSameFile(input).lines;
     expect(result).toEqual(output);
 }
@@ -118,7 +118,7 @@ describe("Moving top-level tasks to the archive", () => {
     ])(
         "Reports the number of top-level archived tasks: %s -> %s",
         (input, message) => {
-            const archiver = new Archiver(DEFAULT_SETTINGS);
+            const archiver = new Archiver(null, null, DEFAULT_SETTINGS);
             const result = archiver.archiveTasksToSameFile(input);
             expect(result.summary).toBe(message);
         }
@@ -228,7 +228,7 @@ describe("Moving top-level tasks to the archive", () => {
 
 describe("Separate files", () => {
     test("Creates a new archive in a separate file", () => {
-        const archiver = new Archiver(DEFAULT_SETTINGS);
+        const archiver = new Archiver(null, null, DEFAULT_SETTINGS);
         const { lines, archiveLines } = archiver.archiveTasksToSeparateFile(
             ["- [x] foo", "- [ ] bar"],
             []

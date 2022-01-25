@@ -3,6 +3,7 @@ import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
+import { Vault, Workspace } from "obsidian";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -14,7 +15,11 @@ export class Archiver {
     private readonly indentation: string;
     private readonly parser: SectionParser;
 
-    constructor(settings: ArchiverSettings) {
+    constructor(
+        vault: Vault,
+        workspace: Workspace,
+        settings: ArchiverSettings
+    ) {
         this.settings = settings;
 
         const escapedHeading = escapeStringRegexp(settings.archiveHeading);
@@ -47,7 +52,7 @@ export class Archiver {
                 lines: linesWithTasks,
             };
         }
-        
+
         const archiveSection = this.getOrCreateArchiveSectionIn(treeWithTasks);
 
         this.archive(archiveSection, newlyCompletedTasks);
