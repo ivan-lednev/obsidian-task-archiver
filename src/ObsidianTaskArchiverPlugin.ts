@@ -2,25 +2,11 @@ import { Notice, Plugin, TFile } from "obsidian";
 import { Archiver } from "src/archiver/Archiver";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
-
-const DEFAULT_SETTINGS: ArchiverSettings = {
-    archiveHeading: "Archived",
-    archiveHeadingDepth: 1,
-    weeklyNoteFormat: "YYYY-MM-[W]-w",
-    useWeeks: true,
-    dailyNoteFormat: "YYYY-MM-DD",
-    useDays: false,
-    addNewlinesAroundHeadings: true,
-    indentationSettings: {
-        useTab: true,
-        tabSize: 4,
-    },
-    archiveToSeparateFile: false,
-    defaultArchiveFileName: "% (archive)",
-};
+import { DefaultSettings } from "./defaultSettings";
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;
+
     async onload() {
         this.addCommand({
             id: "archive-tasks",
@@ -113,7 +99,7 @@ export default class ObsidianTaskArchiver extends Plugin {
 
         this.settings = Object.assign(
             {},
-            DEFAULT_SETTINGS,
+            DefaultSettings,
             await this.loadData(),
             {
                 indentationSettings: {
