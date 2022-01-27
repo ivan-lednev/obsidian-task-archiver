@@ -53,17 +53,19 @@ export class Archiver {
         const treeWithTasks = this.parser.parse(linesWithTasks);
         const newlyCompletedTasks =
             this.extractNewlyCompletedTasks(treeWithTasks);
+
         if (newlyCompletedTasks.length === 0) {
             new Notice("No tasks to archive");
+        } else {
+            const archiveSection =
+                this.getOrCreateArchiveSectionIn(treeWithTasks);
+            this.archive(archiveSection, newlyCompletedTasks);
+
+            const lines = treeWithTasks.stringify();
+            this.writeToFile(currentFile, lines);
+
+            new Notice(`Archived ${newlyCompletedTasks.length} tasks`);
         }
-
-        const archiveSection = this.getOrCreateArchiveSectionIn(treeWithTasks);
-
-        this.archive(archiveSection, newlyCompletedTasks);
-        const lines = treeWithTasks.stringify();
-
-        new Notice(`Archived ${newlyCompletedTasks.length} tasks`);
-        this.writeToFile(currentFile, lines);
     }
 
     private async readFile(file: TFile) {

@@ -23,55 +23,57 @@ const DEFAULT_SETTINGS = {
     defaultArchiveFileName: "<filename> (archive)",
 };
 
-async function checkArchiverOutput(settings, input, output) {
-    const file = {
+async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
+    const currentFile = {
         extension: "md",
     };
-
     const workspace = {
-        getActiveFile: () => file,
+        getActiveFile: () => currentFile,
     };
-
-    const vault = {
-        read: () => input.join("\n"),
-        modify: jest.fn(),
-    };
-
-    // noinspection JSCheckFunctionSignatures
+    const read = jest.fn(() => input.join("\n"));
+    const modify = jest.fn();
+    const vault = { read, modify };
     const archiver = new Archiver(vault, workspace, settings);
 
     await archiver.archiveTasksToSameFile();
-    expect(vault.modify).toHaveBeenCalledWith(file, output.join("\n"));
+
+    return { read, modify };
+}
+
+async function checkVaultModifyOutput(
+    input,
+    output,
+    settings = DEFAULT_SETTINGS
+) {
+    const { modify } = await runArchiverWithMocks(input, settings);
+    expect(modify).toHaveBeenCalledWith(expect.anything(), output.join("\n"));
 }
 
 describe("Moving top-level tasks to the archive", () => {
     test("No-op for files without completed tasks", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
-            ["foo", "bar", "# Archived"],
-            ["foo", "bar", "# Archived"]
-        );
+        const input = ["foo", "bar", "# Archived"];
+
+        const { modify } = await runArchiverWithMocks(input);
+
+        expect(modify).not.toBeCalled();
     });
 
     test("Moves a single task to an empty archive", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             ["- [x] foo", "- [ ] bar", "# Archived"],
             ["- [ ] bar", "# Archived", "", "- [x] foo", ""]
         );
     });
 
     test("Moves a single task to an h2 archive", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             ["- [x] foo", "- [ ] bar", "## Archived"],
             ["- [ ] bar", "## Archived", "", "- [x] foo", ""]
         );
     });
 
     test("Handles multiple levels of indentation", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             [
                 "- [x] root",
                 "\t- child 1",
@@ -94,8 +96,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Moves multiple tasks to the end of a populated archive", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             [
                 "- [x] foo",
                 "- [x] foo #2",
@@ -134,8 +135,7 @@ describe("Moving top-level tasks to the archive", () => {
     );
 
     test("Moves sub-items with top-level items after the archive heading, indented with tabs", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             [
                 "- [ ] bar",
                 "# Archived",
@@ -164,8 +164,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Works only with top-level tasks", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             [
                 "- [ ] bar",
                 "\t- [x] completed sub-task",
@@ -184,52 +183,50 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Supports numbered tasks", async () => {
-        await checkArchiverOutput(
-            DEFAULT_SETTINGS,
+        await checkVaultModifyOutput(
             ["1. [x] foo", "# Archived"],
             ["# Archived", "", "1. [x] foo", ""]
         );
     });
 
     test("Escapes regex characters in the archive heading value", async () => {
-        await checkArchiverOutput(
+        await checkVaultModifyOutput(
+            ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
+            ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""],
             {
                 ...DEFAULT_SETTINGS,
                 archiveHeading: "[[Archived]]",
-            },
-            ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
-            ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""]
+            }
         );
     });
 
     describe("Creating a new archive", () => {
-        test("Appends an archive heading to the end of file with a newline if there isn't any", () => {
-            checkArchiverOutput(
-                DEFAULT_SETTINGS,
+        test("Appends an archive heading to the end of file with a newline if there isn't any", async () => {
+            await checkVaultModifyOutput(
                 ["- Text", "1. [x] foo"],
                 ["- Text", "", "# Archived", "", "1. [x] foo", ""]
             );
         });
 
         test("Doesn't add newlines around the archive heading if configured so", async () => {
-            await checkArchiverOutput(
+            await checkVaultModifyOutput(
+                ["- [x] foo", "Some text"],
+                ["Some text", "# Archived", "- [x] foo"],
                 {
                     ...DEFAULT_SETTINGS,
                     addNewlinesAroundHeadings: false,
-                },
-                ["- [x] foo", "Some text"],
-                ["Some text", "# Archived", "- [x] foo"]
+                }
             );
         });
 
         test("Pulls heading depth from the config", async () => {
-            await checkArchiverOutput(
+            await checkVaultModifyOutput(
+                ["- [x] foo"],
+                ["### Archived", "", "- [x] foo", ""],
                 {
                     ...DEFAULT_SETTINGS,
                     archiveHeadingDepth: 3,
-                },
-                ["- [x] foo"],
-                ["### Archived", "", "- [x] foo", ""]
+                }
             );
         });
     });
@@ -250,7 +247,7 @@ describe.skip("Separate files", () => {
 
 describe.skip("Date tree", () => {
     test("Archives tasks under a bullet with the current week", () => {
-        checkArchiverOutput(
+        runArchiverWithMocks(
             {
                 ...DEFAULT_SETTINGS,
                 useWeeks: true,
@@ -261,7 +258,7 @@ describe.skip("Date tree", () => {
     });
 
     test("Uses indentation values from settings", () => {
-        checkArchiverOutput(
+        runArchiverWithMocks(
             {
                 ...DEFAULT_SETTINGS,
                 useWeeks: true,
@@ -276,7 +273,7 @@ describe.skip("Date tree", () => {
     });
 
     test("Appends tasks under the current week bullet if it exists", () => {
-        checkArchiverOutput(
+        runArchiverWithMocks(
             {
                 ...DEFAULT_SETTINGS,
                 useWeeks: true,
@@ -304,7 +301,7 @@ describe.skip("Date tree", () => {
 
     describe("Days", () => {
         test("Archives tasks under a bullet with the current day", () => {
-            checkArchiverOutput(
+            runArchiverWithMocks(
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
@@ -324,7 +321,7 @@ describe.skip("Date tree", () => {
 
     describe("Combining dates", () => {
         test("Creates & indents weekly & daily blocks", () => {
-            checkArchiverOutput(
+            runArchiverWithMocks(
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
@@ -344,7 +341,7 @@ describe.skip("Date tree", () => {
         });
 
         test("The week is already in the tree", () => {
-            checkArchiverOutput(
+            runArchiverWithMocks(
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
@@ -364,7 +361,7 @@ describe.skip("Date tree", () => {
         });
 
         test("The week and the day are already in the tree", () => {
-            checkArchiverOutput(
+            runArchiverWithMocks(
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
@@ -391,7 +388,7 @@ describe.skip("Date tree", () => {
         });
 
         test("The day is there, but the week is not (the user has changed the configuration)", () => {
-            checkArchiverOutput(
+            runArchiverWithMocks(
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
