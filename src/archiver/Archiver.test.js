@@ -1,15 +1,13 @@
 import moment from "moment";
 import { Archiver } from "./Archiver";
-import { ArchiverSettings } from "./ArchiverSettings";
 
 window.moment = moment;
-
 const WEEK = "2021-01-W-1";
 const DAY = "2021-01-01";
 const mockDate = jest.fn(() => new Date(DAY).valueOf());
-Date.now = mockDate as jest.MockedFunction<typeof Date.now>;
+Date.now = mockDate;
 
-const DEFAULT_SETTINGS: ArchiverSettings = {
+const DEFAULT_SETTINGS = {
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",
@@ -25,11 +23,7 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
     defaultArchiveFileName: "<filename> (archive)",
 };
 
-function checkArchiverOutput(
-    settings: ArchiverSettings,
-    input: string[],
-    output: string[]
-) {
+function checkArchiverOutput(settings, input, output) {
     const archiver = new Archiver(null, null, settings);
     const result = archiver.archiveTasksToSameFile(input).lines;
     expect(result).toEqual(output);
