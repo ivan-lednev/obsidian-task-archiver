@@ -1,5 +1,6 @@
 import moment from "moment";
 import { Archiver } from "./Archiver";
+import { Notice } from "obsidian";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -24,15 +25,17 @@ const DEFAULT_SETTINGS = {
 };
 
 async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
+    const read = jest.fn(() => input.join("\n"));
+    const modify = jest.fn();
+    const vault = { read, modify };
+
     const currentFile = {
         extension: "md",
     };
     const workspace = {
         getActiveFile: () => currentFile,
     };
-    const read = jest.fn(() => input.join("\n"));
-    const modify = jest.fn();
-    const vault = { read, modify };
+
     const archiver = new Archiver(vault, workspace, settings);
 
     await archiver.archiveTasksToSameFile();
@@ -122,15 +125,14 @@ describe("Moving top-level tasks to the archive", () => {
         );
     });
 
-    test.skip.each([
+    test.each([
         [["- [x] foo", "- [x] foo #2", "\t- [x] foo #3"], "Archived 2 tasks"],
         [["- [ ] foo"], "No tasks to archive"],
     ])(
         "Reports the number of top-level archived tasks: %s -> %s",
-        (input, message) => {
-            const archiver = new Archiver(null, null, DEFAULT_SETTINGS);
-            const result = archiver.archiveTasksToSameFile(input);
-            expect(result.summary).toBe(message);
+        async (input, message) => {
+            await runArchiverWithMocks(input);
+            expect(Notice).toBeCalledWith(message);
         }
     );
 
@@ -245,20 +247,22 @@ describe.skip("Separate files", () => {
     });
 });
 
-describe.skip("Date tree", () => {
-    test("Archives tasks under a bullet with the current week", () => {
-        runArchiverWithMocks(
+describe("Date tree", () => {
+    test("Archives tasks under a bullet with the current week", async () => {
+        await checkVaultModifyOutput(
+            ["- [x] foo", "- [ ] bar", "# Archived"],
+            ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""],
             {
                 ...DEFAULT_SETTINGS,
                 useWeeks: true,
-            },
-            ["- [x] foo", "- [ ] bar", "# Archived"],
-            ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""]
+            }
         );
     });
 
-    test("Uses indentation values from settings", () => {
-        runArchiverWithMocks(
+    test("Uses indentation values from settings", async () => {
+        await checkVaultModifyOutput(
+            ["- [x] foo", "# Archived"],
+            ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""],
             {
                 ...DEFAULT_SETTINGS,
                 useWeeks: true,
@@ -266,18 +270,12 @@ describe.skip("Date tree", () => {
                     useTab: false,
                     tabSize: 3,
                 },
-            },
-            ["- [x] foo", "# Archived"],
-            ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""]
+            }
         );
     });
 
-    test("Appends tasks under the current week bullet if it exists", () => {
-        runArchiverWithMocks(
-            {
-                ...DEFAULT_SETTINGS,
-                useWeeks: true,
-            },
+    test("Appends tasks under the current week bullet if it exists", async () => {
+        await checkVaultModifyOutput(
             [
                 "- [x] foo",
                 "# Archived",
@@ -295,17 +293,17 @@ describe.skip("Date tree", () => {
                 "\t- [x] baz",
                 "\t- [x] foo",
                 "",
-            ]
+            ],
+            {
+                ...DEFAULT_SETTINGS,
+                useWeeks: true,
+            }
         );
     });
 
     describe("Days", () => {
-        test("Archives tasks under a bullet with the current day", () => {
-            runArchiverWithMocks(
-                {
-                    ...DEFAULT_SETTINGS,
-                    useDays: true,
-                },
+        test("Archives tasks under a bullet with the current day", async () => {
+            await checkVaultModifyOutput(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 [
                     "- [ ] bar",
@@ -314,19 +312,18 @@ describe.skip("Date tree", () => {
                     `- [[${DAY}]]`,
                     "\t- [x] foo",
                     "",
-                ]
+                ],
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                }
             );
         });
     });
 
     describe("Combining dates", () => {
-        test("Creates & indents weekly & daily blocks", () => {
-            runArchiverWithMocks(
-                {
-                    ...DEFAULT_SETTINGS,
-                    useDays: true,
-                    useWeeks: true,
-                },
+        test("Creates & indents weekly & daily blocks", async () => {
+            await checkVaultModifyOutput(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 [
                     "- [ ] bar",
@@ -336,17 +333,17 @@ describe.skip("Date tree", () => {
                     `\t- [[${DAY}]]`,
                     "\t\t- [x] foo",
                     "",
-                ]
-            );
-        });
-
-        test("The week is already in the tree", () => {
-            runArchiverWithMocks(
+                ],
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
                     useWeeks: true,
-                },
+                }
+            );
+        });
+
+        test("The week is already in the tree", async () => {
+            await checkVaultModifyOutput(
                 ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${WEEK}]]`],
                 [
                     "- [ ] bar",
@@ -356,17 +353,17 @@ describe.skip("Date tree", () => {
                     `\t- [[${DAY}]]`,
                     "\t\t- [x] foo",
                     "",
-                ]
-            );
-        });
-
-        test("The week and the day are already in the tree", () => {
-            runArchiverWithMocks(
+                ],
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
                     useWeeks: true,
-                },
+                }
+            );
+        });
+
+        test("The week and the day are already in the tree", async () => {
+            checkVaultModifyOutput(
                 [
                     "- [x] foo",
                     "- [ ] bar",
@@ -383,17 +380,17 @@ describe.skip("Date tree", () => {
                     `\t- [[${DAY}]]`,
                     "\t\t- [x] foo",
                     "",
-                ]
-            );
-        });
-
-        test("The day is there, but the week is not (the user has changed the configuration)", () => {
-            runArchiverWithMocks(
+                ],
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
                     useWeeks: true,
-                },
+                }
+            );
+        });
+
+        test("The day is there, but the week is not (the user has changed the configuration)", async () => {
+            await checkVaultModifyOutput(
                 ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${DAY}]]`],
                 [
                     "- [ ] bar",
@@ -404,7 +401,12 @@ describe.skip("Date tree", () => {
                     `\t- [[${DAY}]]`,
                     "\t\t- [x] foo",
                     "",
-                ]
+                ],
+                {
+                    ...DEFAULT_SETTINGS,
+                    useDays: true,
+                    useWeeks: true,
+                }
             );
         });
     });
