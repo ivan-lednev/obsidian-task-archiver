@@ -43,12 +43,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             this.writeToFile(currentFile, archiveResult.lines);
             this.writeToFile(archiveFile, archiveResult.archiveLines);
         } else {
-            const archiveResult =
-                archiver.archiveTasksToSameFile(currentFileLines);
-
-            new Notice(archiveResult.summary);
-
-            this.writeToFile(currentFile, archiveResult.lines);
+            await archiver.archiveTasksToSameFile();
         }
     }
 

@@ -3,7 +3,7 @@ import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
-import { Vault, Workspace } from "obsidian";
+import { Notice, TFile, Vault, Workspace } from "obsidian";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -14,6 +14,8 @@ export class Archiver {
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly indentation: string;
     private readonly parser: SectionParser;
+    private readonly workspace: Workspace;
+    private readonly vault: Vault;
 
     constructor(
         vault: Vault,
@@ -21,6 +23,8 @@ export class Archiver {
         settings: ArchiverSettings
     ) {
         this.settings = settings;
+        this.workspace = workspace;
+        this.vault = vault;
 
         const escapedHeading = escapeStringRegexp(settings.archiveHeading);
         this.archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
@@ -42,25 +46,37 @@ export class Archiver {
         this.parser = new SectionParser(this.settings.indentationSettings);
     }
 
-    archiveTasksToSameFile(linesWithTasks: string[]) {
+    async archiveTasksToSameFile() {
+        const currentFile = this.workspace.getActiveFile();
+        const linesWithTasks = await this.readFile(currentFile);
+
         const treeWithTasks = this.parser.parse(linesWithTasks);
         const newlyCompletedTasks =
             this.extractNewlyCompletedTasks(treeWithTasks);
         if (newlyCompletedTasks.length === 0) {
-            return {
-                summary: "No tasks to archive",
-                lines: linesWithTasks,
-            };
+            new Notice("No tasks to archive");
         }
 
         const archiveSection = this.getOrCreateArchiveSectionIn(treeWithTasks);
 
         this.archive(archiveSection, newlyCompletedTasks);
         const lines = treeWithTasks.stringify();
-        return {
-            summary: `Archived ${newlyCompletedTasks.length} tasks`,
-            lines: lines,
-        };
+
+        new Notice(`Archived ${newlyCompletedTasks.length} tasks`);
+        this.writeToFile(currentFile, lines);
+    }
+
+    private async readFile(file: TFile) {
+        if (file === null || file.extension !== "md") {
+            new Notice("The archiver works only in markdown (.md) files!");
+            return;
+        }
+        const fileContents = await this.vault.read(file);
+        return fileContents.split("\n");
+    }
+
+    private writeToFile(file: TFile, lines: string[]) {
+        this.vault.modify(file, lines.join("\n"));
     }
 
     archiveTasksToSeparateFile(linesWithTasks: string[], archive: string[]) {
