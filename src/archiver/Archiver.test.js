@@ -38,7 +38,7 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
 
     const archiver = new Archiver(vault, workspace, settings);
 
-    await archiver.archiveTasksToSameFile();
+    await archiver.archiveTasksInActiveFile();
 
     return { read, modify };
 }

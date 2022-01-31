@@ -20,9 +20,6 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     private async archiveTasksInCurrentFile() {
-        const currentFile = this.app.workspace.getActiveFile();
-        const currentFileLines = await this.readFile(currentFile);
-
         const archiver = new Archiver(
             this.app.vault,
             this.app.workspace,
@@ -30,20 +27,22 @@ export default class ObsidianTaskArchiver extends Plugin {
         );
 
         if (this.settings.archiveToSeparateFile) {
-            const archiveFile = await this.getArchiveForFile(currentFile);
-            const archiveFileLines = await this.readFile(archiveFile);
-
-            const archiveResult = archiver.archiveTasksToSeparateFile(
-                currentFileLines,
-                archiveFileLines
-            );
-
-            new Notice(archiveResult.summary);
-
-            this.writeToFile(currentFile, archiveResult.lines);
-            this.writeToFile(archiveFile, archiveResult.archiveLines);
+            // const currentFile = this.app.workspace.getActiveFile();
+            // const currentFileLines = await this.readFile(currentFile);
+            // const archiveFile = await this.getArchiveForFile(currentFile);
+            // const archiveFileLines = await this.readFile(archiveFile);
+            //
+            // const archiveResult = archiver.archiveTasksToSeparateFile(
+            //     currentFileLines,
+            //     archiveFileLines
+            // );
+            //
+            // new Notice(archiveResult.summary);
+            //
+            // this.writeToFile(currentFile, archiveResult.lines);
+            // this.writeToFile(archiveFile, archiveResult.archiveLines);
         } else {
-            await archiver.archiveTasksToSameFile();
+            await archiver.archiveTasksInActiveFile();
         }
     }
 

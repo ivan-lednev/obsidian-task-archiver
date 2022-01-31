@@ -46,7 +46,7 @@ export class Archiver {
         this.parser = new SectionParser(this.settings.indentationSettings);
     }
 
-    async archiveTasksToSameFile() {
+    async archiveTasksInActiveFile() {
         const currentFile = this.workspace.getActiveFile();
         const linesWithTasks = await this.readFile(currentFile);
 
