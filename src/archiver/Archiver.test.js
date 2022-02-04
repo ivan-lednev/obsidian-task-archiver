@@ -8,6 +8,8 @@ const DAY = "2021-01-01";
 const mockDate = jest.fn(() => new Date(DAY).valueOf());
 Date.now = mockDate;
 
+jest.mock("obsidian");
+
 const DEFAULT_SETTINGS = {
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,
@@ -40,7 +42,7 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
 
     await archiver.archiveTasksInActiveFile();
 
-    return { read, modify };
+    return vault;
 }
 
 async function checkVaultModifyOutput(
@@ -234,7 +236,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 });
 
-describe.skip("Separate files", () => {
+describe("Separate files", () => {
     test("Creates a new archive in a separate file", () => {
         const archiver = new Archiver(null, null, DEFAULT_SETTINGS);
         const { lines, archiveLines } = archiver.archiveTasksToSeparateFile(

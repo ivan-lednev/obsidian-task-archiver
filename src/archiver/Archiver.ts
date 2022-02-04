@@ -17,11 +17,7 @@ export class Archiver {
     private readonly workspace: Workspace;
     private readonly vault: Vault;
 
-    constructor(
-        vault: Vault,
-        workspace: Workspace,
-        settings: ArchiverSettings
-    ) {
+    constructor(vault: Vault, workspace: Workspace, settings: ArchiverSettings) {
         this.settings = settings;
         this.workspace = workspace;
         this.vault = vault;
@@ -51,14 +47,12 @@ export class Archiver {
         const linesWithTasks = await this.readFile(currentFile);
 
         const treeWithTasks = this.parser.parse(linesWithTasks);
-        const newlyCompletedTasks =
-            this.extractNewlyCompletedTasks(treeWithTasks);
+        const newlyCompletedTasks = this.extractNewlyCompletedTasks(treeWithTasks);
 
         if (newlyCompletedTasks.length === 0) {
             new Notice("No tasks to archive");
         } else {
-            const archiveSection =
-                this.getOrCreateArchiveSectionIn(treeWithTasks);
+            const archiveSection = this.getOrCreateArchiveSectionIn(treeWithTasks);
             this.archive(archiveSection, newlyCompletedTasks);
 
             const lines = treeWithTasks.stringify();
@@ -81,11 +75,10 @@ export class Archiver {
         this.vault.modify(file, lines.join("\n"));
     }
 
+    // todo: remove
     archiveTasksToSeparateFile(linesWithTasks: string[], archive: string[]) {
-        // TODO: copypasted part
         const treeWithTasks = this.parser.parse(linesWithTasks);
-        const newlyCompletedTasks =
-            this.extractNewlyCompletedTasks(treeWithTasks);
+        const newlyCompletedTasks = this.extractNewlyCompletedTasks(treeWithTasks);
         if (newlyCompletedTasks.length === 0) {
             return {
                 summary: "No tasks to archive",
@@ -139,8 +132,7 @@ export class Archiver {
         }
         const blocksLength = lastSection.blockContent.children.length;
         if (blocksLength > 0) {
-            const lastBlock =
-                lastSection.blockContent.children[blocksLength - 1];
+            const lastBlock = lastSection.blockContent.children[blocksLength - 1];
             // TODO: another needless null check
             if (lastBlock.text && lastBlock.text.trim().length !== 0) {
                 // TODO: add an abstraction like appendText, appendListItem

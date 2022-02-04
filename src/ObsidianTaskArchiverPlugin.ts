@@ -61,10 +61,8 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     private async getArchiveForFile(activeFile: TFile) {
         const archiveFileName =
-            this.settings.defaultArchiveFileName.replace(
-                "%",
-                activeFile.basename
-            ) + ".md";
+            this.settings.defaultArchiveFileName.replace("%", activeFile.basename) +
+            ".md";
 
         // TODO: archiving to a folder will happen here
         let archiveFile = this.app.vault.getAbstractFileByPath(archiveFileName);
@@ -95,17 +93,12 @@ export default class ObsidianTaskArchiver extends Plugin {
             return (this.app.vault as any).getConfig(key);
         };
 
-        this.settings = Object.assign(
-            {},
-            DefaultSettings,
-            await this.loadData(),
-            {
-                indentationSettings: {
-                    useTab: getConfig("useTab"),
-                    tabSize: getConfig("tabSize"),
-                },
-            }
-        );
+        this.settings = Object.assign({}, DefaultSettings, await this.loadData(), {
+            indentationSettings: {
+                useTab: getConfig("useTab"),
+                tabSize: getConfig("tabSize"),
+            },
+        });
     }
 
     async saveSettings() {
