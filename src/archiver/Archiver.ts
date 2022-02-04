@@ -43,21 +43,30 @@ export class Archiver {
     }
 
     async archiveTasksInActiveFile() {
-        const currentFile = this.workspace.getActiveFile();
-        const linesWithTasks = await this.readFile(currentFile);
-
-        const treeWithTasks = this.parser.parse(linesWithTasks);
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(treeWithTasks);
+        const activeFile = this.workspace.getActiveFile();
+        const activeFileLines = await this.readFile(activeFile);
+        const activeFileTree = this.parser.parse(activeFileLines);
+        // todo: don't mutate that
+        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
 
         if (newlyCompletedTasks.length === 0) {
             new Notice("No tasks to archive");
         } else {
-            const archiveSection = this.getOrCreateArchiveSectionIn(treeWithTasks);
-            this.archive(archiveSection, newlyCompletedTasks);
+            if (this.settings.archiveToSeparateFile) {
+                const archiveFile = await this.getArchiveForFile(activeFile);
+                const archiveLines = await this.readFile(archiveFile);
+                const archiveTree = this.parser.parse(archiveLines);
 
-            const lines = treeWithTasks.stringify();
-            this.writeToFile(currentFile, lines);
+                const archiveSection = this.getOrCreateArchiveSectionIn(archiveTree)
+                this.archive(archiveSection, newlyCompletedTasks);
 
+                this.writeToFile(archiveFile, archiveTree.stringify());
+            } else {
+                const archiveSection = this.getOrCreateArchiveSectionIn(activeFileTree);
+                this.archive(archiveSection, newlyCompletedTasks);
+            }
+
+            this.writeToFile(activeFile, activeFileTree.stringify());
             new Notice(`Archived ${newlyCompletedTasks.length} tasks`);
         }
     }
@@ -75,29 +84,6 @@ export class Archiver {
         this.vault.modify(file, lines.join("\n"));
     }
 
-    // todo: remove
-    archiveTasksToSeparateFile(linesWithTasks: string[], archive: string[]) {
-        const treeWithTasks = this.parser.parse(linesWithTasks);
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(treeWithTasks);
-        if (newlyCompletedTasks.length === 0) {
-            return {
-                summary: "No tasks to archive",
-                lines: linesWithTasks,
-            };
-        }
-        // ---
-
-        const archiveSection = this.parser.parse(archive);
-
-        this.archive(archiveSection, newlyCompletedTasks);
-
-        return {
-            summary: `Archived ${newlyCompletedTasks.length} tasks`,
-            lines: treeWithTasks.stringify(),
-            archiveLines: archiveSection.stringify(),
-        };
-    }
-
     private archive(archiveSection: Section, completedTasks: Block[]) {
         const archiveBlock = archiveSection.blockContent;
         this.appendCompletedTasks(archiveBlock, completedTasks);
@@ -105,16 +91,12 @@ export class Archiver {
     }
 
     private getOrCreateArchiveSectionIn(section: Section) {
-        // TODO: (later) works only for top level sections
-        // Archives are always top-level, even when people use ## as top-level
-        // But people can use # for file names
-        // Define an option: top-level archive heading level. Heading-specific archives are the ones that are one level below top headings
         let archiveSection = section.children.find((s) =>
             this.archivePattern.test(s.text)
         );
         if (!archiveSection) {
             if (this.settings.addNewlinesAroundHeadings) {
-                this.ensureNewlineFor(section);
+                Archiver.ensureNewlineFor(section);
             }
             const heading = this.buildArchiveHeading();
             const rootBlock = new Block(null, 0, "root");
@@ -124,7 +106,7 @@ export class Archiver {
         return archiveSection;
     }
 
-    private ensureNewlineFor(section: Section) {
+    private static ensureNewlineFor(section: Section) {
         let lastSection = section;
         const childrenLength = section.children.length;
         if (childrenLength > 0) {
@@ -148,7 +130,7 @@ export class Archiver {
             // TODO: another needless null test
             blockFilter: (block: Block) =>
                 block.text !== null &&
-                /^(?<listMarker>[-*]|\d+\.) \[x\]/.test(block.text),
+                /^(?<listMarker>[-*]|\d+\.) \[x]/.test(block.text),
             sectionFilter: (section: Section) =>
                 !this.archivePattern.test(section.text),
         };
@@ -192,6 +174,32 @@ export class Archiver {
             addIndentationRecursively(block);
             parentBlock.append(block);
         });
+    }
+
+    private async getArchiveForFile(activeFile: TFile) {
+        const archiveFileName =
+            this.settings.defaultArchiveFileName.replace("%", activeFile.basename) +
+            ".md";
+
+        let archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
+        if (!archiveFile) {
+            try {
+                archiveFile = await this.vault.create(archiveFileName, "");
+            } catch (error) {
+                new Notice(
+                    `Unable to create an archive file with the name '${archiveFileName}'`
+                );
+            }
+        }
+
+        archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
+        if (!(archiveFile instanceof TFile)) {
+            const message = `${archiveFileName} is not a valid file`;
+            new Notice(message);
+            throw new Error(message);
+        }
+
+        return archiveFile;
     }
 
     private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {

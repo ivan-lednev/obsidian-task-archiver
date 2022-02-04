@@ -26,11 +26,27 @@ const DEFAULT_SETTINGS = {
     defaultArchiveFileName: "<filename> (archive)",
 };
 
-async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
-    const read = jest.fn(() => input.join("\n"));
-    const modify = jest.fn();
-    const vault = { read, modify };
+async function checkVaultModifyOutput(
+    input,
+    expectedOutput,
+    settings = DEFAULT_SETTINGS
+) {
+    const { modify } = await runArchiverWithMocks(input, settings);
+    expect(modify).toHaveBeenCalledWith(expect.anything(), expectedOutput.join("\n"));
+}
 
+async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
+    const read = jest
+        .fn()
+        .mockImplementationOnce(() => input.join("\n"))
+        .mockImplementationOnce(() => "");
+    const modify = jest.fn();
+    const TFileMock = jest.requireMock("obsidian").TFile;
+    const archiveFile = Object.assign(Object.create(TFileMock.prototype), {
+        extension: "md",
+    });
+    const getAbstractFileByPath = jest.fn(() => archiveFile);
+    const vault = { read, modify, getAbstractFileByPath };
     const currentFile = {
         extension: "md",
     };
@@ -39,19 +55,8 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
     };
 
     const archiver = new Archiver(vault, workspace, settings);
-
     await archiver.archiveTasksInActiveFile();
-
     return vault;
-}
-
-async function checkVaultModifyOutput(
-    input,
-    output,
-    settings = DEFAULT_SETTINGS
-) {
-    const { modify } = await runArchiverWithMocks(input, settings);
-    expect(modify).toHaveBeenCalledWith(expect.anything(), output.join("\n"));
 }
 
 describe("Moving top-level tasks to the archive", () => {
@@ -169,12 +174,7 @@ describe("Moving top-level tasks to the archive", () => {
 
     test("Works only with top-level tasks", async () => {
         await checkVaultModifyOutput(
-            [
-                "- [ ] bar",
-                "\t- [x] completed sub-task",
-                "- [x] foo",
-                "# Archived",
-            ],
+            ["- [ ] bar", "\t- [x] completed sub-task", "- [x] foo", "# Archived"],
             [
                 "- [ ] bar",
                 "\t- [x] completed sub-task",
@@ -237,15 +237,21 @@ describe("Moving top-level tasks to the archive", () => {
 });
 
 describe("Separate files", () => {
-    test("Creates a new archive in a separate file", () => {
-        const archiver = new Archiver(null, null, DEFAULT_SETTINGS);
-        const { lines, archiveLines } = archiver.archiveTasksToSeparateFile(
-            ["- [x] foo", "- [ ] bar"],
-            []
-        );
-        expect(lines).toEqual(["- [ ] bar"]);
+    test("Creates a new archive in a separate file", async () => {
+        const input = ["- [x] foo", "- [ ] bar"];
 
-        expect(archiveLines).toEqual(["", "- [x] foo", ""]);
+        const { modify } = await runArchiverWithMocks(input, {
+            ...DEFAULT_SETTINGS,
+            archiveToSeparateFile: true,
+        });
+
+        expect(modify).toHaveBeenNthCalledWith(
+            1,
+            expect.anything(),
+            "\n# Archived\n\n- [x] foo\n"
+        );
+
+        expect(modify).toHaveBeenNthCalledWith(2, expect.anything(), "- [ ] bar");
     });
 });
 
@@ -307,14 +313,7 @@ describe("Date tree", () => {
         test("Archives tasks under a bullet with the current day", async () => {
             await checkVaultModifyOutput(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
-                [
-                    "- [ ] bar",
-                    "# Archived",
-                    "",
-                    `- [[${DAY}]]`,
-                    "\t- [x] foo",
-                    "",
-                ],
+                ["- [ ] bar", "# Archived", "", `- [[${DAY}]]`, "\t- [x] foo", ""],
                 {
                     ...DEFAULT_SETTINGS,
                     useDays: true,
