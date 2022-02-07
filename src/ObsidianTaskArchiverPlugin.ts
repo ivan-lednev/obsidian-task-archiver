@@ -23,7 +23,13 @@ export default class ObsidianTaskArchiver extends Plugin {
             this.app.workspace,
             this.settings
         );
-        await archiver.archiveTasksInActiveFile();
+
+        try {
+            const message = await archiver.archiveTasksInActiveFile();
+            new Notice(message);
+        } catch (e) {
+            new Notice(e);
+        }
     }
 
     async loadSettings() {

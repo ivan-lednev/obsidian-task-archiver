@@ -1,6 +1,5 @@
 import moment from "moment";
 import { Archiver } from "./Archiver";
-import { Notice } from "obsidian";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -31,8 +30,11 @@ async function checkVaultModifyOutput(
     expectedOutput,
     settings = DEFAULT_SETTINGS
 ) {
-    const { modify } = await runArchiverWithMocks(input, settings);
-    expect(modify).toHaveBeenCalledWith(expect.anything(), expectedOutput.join("\n"));
+    const { vault } = await runArchiverWithMocks(input, settings);
+    expect(vault.modify).toHaveBeenCalledWith(
+        expect.anything(),
+        expectedOutput.join("\n")
+    );
 }
 
 async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
@@ -55,17 +57,17 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
     };
 
     const archiver = new Archiver(vault, workspace, settings);
-    await archiver.archiveTasksInActiveFile();
-    return vault;
+    const archiverMessage = await archiver.archiveTasksInActiveFile();
+    return { vault, archiverMessage };
 }
 
 describe("Moving top-level tasks to the archive", () => {
     test("No-op for files without completed tasks", async () => {
         const input = ["foo", "bar", "# Archived"];
 
-        const { modify } = await runArchiverWithMocks(input);
+        const { vault } = await runArchiverWithMocks(input);
 
-        expect(modify).not.toBeCalled();
+        expect(vault.modify).not.toBeCalled();
     });
 
     test("Moves a single task to an empty archive", async () => {
@@ -138,8 +140,8 @@ describe("Moving top-level tasks to the archive", () => {
     ])(
         "Reports the number of top-level archived tasks: %s -> %s",
         async (input, message) => {
-            await runArchiverWithMocks(input);
-            expect(Notice).toBeCalledWith(message);
+            const { archiverMessage } = await runArchiverWithMocks(input);
+            expect(archiverMessage).toBe(message);
         }
     );
 
@@ -240,18 +242,18 @@ describe("Separate files", () => {
     test("Creates a new archive in a separate file", async () => {
         const input = ["- [x] foo", "- [ ] bar"];
 
-        const { modify } = await runArchiverWithMocks(input, {
+        const { vault } = await runArchiverWithMocks(input, {
             ...DEFAULT_SETTINGS,
             archiveToSeparateFile: true,
         });
 
-        expect(modify).toHaveBeenNthCalledWith(
+        expect(vault.modify).toHaveBeenNthCalledWith(
             1,
             expect.anything(),
             "\n# Archived\n\n- [x] foo\n"
         );
 
-        expect(modify).toHaveBeenNthCalledWith(2, expect.anything(), "- [ ] bar");
+        expect(vault.modify).toHaveBeenNthCalledWith(2, expect.anything(), "- [ ] bar");
     });
 });
 

@@ -3,110 +3,36 @@ import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
-import { Notice, TFile, Vault, Workspace } from "obsidian";
-
-type DateLevel = "years" | "months" | "weeks" | "days";
+import { TFile, Vault, Workspace } from "obsidian";
+import { DateTreeResolver } from "./DateTreeResolver";
 
 export class Archiver {
     private readonly settings: ArchiverSettings;
-    private readonly archivePattern: RegExp;
-    private readonly dateLevels: DateLevel[];
-    private readonly dateFormats: Map<DateLevel, string>;
-    private readonly indentation: string;
+    private readonly archiveHeadingPattern: RegExp;
     private readonly parser: SectionParser;
     private readonly workspace: Workspace;
     private readonly vault: Vault;
+    private readonly dateTreeResolver: DateTreeResolver;
 
     constructor(vault: Vault, workspace: Workspace, settings: ArchiverSettings) {
-        this.settings = settings;
-        this.workspace = workspace;
         this.vault = vault;
+        this.workspace = workspace;
+        // todo: push the deps outwards
+        this.parser = new SectionParser(settings.indentationSettings);
+        this.dateTreeResolver = new DateTreeResolver(settings);
 
-        const escapedHeading = escapeStringRegexp(settings.archiveHeading);
-        this.archivePattern = new RegExp(`^#+\\s+${escapedHeading}`);
-
-        this.dateLevels = [];
-        if (settings.useWeeks) {
-            this.dateLevels.push("weeks");
-        }
-        if (settings.useDays) {
-            this.dateLevels.push("days");
-        }
-
-        this.dateFormats = new Map([
-            ["days", this.settings.dailyNoteFormat],
-            ["weeks", this.settings.weeklyNoteFormat],
-        ]);
-
-        this.indentation = this.buildIndentation();
-        this.parser = new SectionParser(this.settings.indentationSettings);
-    }
-
-    async archiveTasksInActiveFile() {
-        const activeFile = this.workspace.getActiveFile();
-        const activeFileLines = await this.readFile(activeFile);
-        const activeFileTree = this.parser.parse(activeFileLines);
-        // todo: don't mutate that
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
-
-        if (newlyCompletedTasks.length === 0) {
-            new Notice("No tasks to archive");
-        } else {
-            if (this.settings.archiveToSeparateFile) {
-                const archiveFile = await this.getArchiveForFile(activeFile);
-                const archiveLines = await this.readFile(archiveFile);
-                const archiveTree = this.parser.parse(archiveLines);
-
-                const archiveSection = this.getOrCreateArchiveSectionIn(archiveTree)
-                this.archive(archiveSection, newlyCompletedTasks);
-
-                this.writeToFile(archiveFile, archiveTree.stringify());
-            } else {
-                const archiveSection = this.getOrCreateArchiveSectionIn(activeFileTree);
-                this.archive(archiveSection, newlyCompletedTasks);
-            }
-
-            this.writeToFile(activeFile, activeFileTree.stringify());
-            new Notice(`Archived ${newlyCompletedTasks.length} tasks`);
-        }
-    }
-
-    private async readFile(file: TFile) {
-        if (file === null || file.extension !== "md") {
-            new Notice("The archiver works only in markdown (.md) files!");
-            return;
-        }
-        const fileContents = await this.vault.read(file);
-        return fileContents.split("\n");
-    }
-
-    private writeToFile(file: TFile, lines: string[]) {
-        this.vault.modify(file, lines.join("\n"));
-    }
-
-    private archive(archiveSection: Section, completedTasks: Block[]) {
-        const archiveBlock = archiveSection.blockContent;
-        this.appendCompletedTasks(archiveBlock, completedTasks);
-        this.addNewLinesIfNeeded(archiveBlock);
-    }
-
-    private getOrCreateArchiveSectionIn(section: Section) {
-        let archiveSection = section.children.find((s) =>
-            this.archivePattern.test(s.text)
+        this.settings = settings;
+        this.archiveHeadingPattern = Archiver.buildArchiveHeadingPattern(
+            settings.archiveHeading
         );
-        if (!archiveSection) {
-            if (this.settings.addNewlinesAroundHeadings) {
-                Archiver.ensureNewlineFor(section);
-            }
-            const heading = this.buildArchiveHeading();
-            const rootBlock = new Block(null, 0, "root");
-            archiveSection = new Section(heading, 1, rootBlock);
-            section.append(archiveSection);
-        }
-        return archiveSection;
     }
 
-    private static ensureNewlineFor(section: Section) {
+    private static buildArchiveHeadingPattern(archiveHeading: string) {
+        const escapedArchiveHeading = escapeStringRegexp(archiveHeading);
+        return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
+    }
+
+    private static addNewlinesIfNeeded(section: Section) {
         let lastSection = section;
         const childrenLength = section.children.length;
         if (childrenLength > 0) {
@@ -123,6 +49,58 @@ export class Archiver {
         }
     }
 
+    async archiveTasksInActiveFile() {
+        const activeFile = this.workspace.getActiveFile();
+        const activeFileTree = await this.parseFile(activeFile);
+        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
+
+        if (newlyCompletedTasks.length === 0) {
+            return "No tasks to archive";
+        }
+
+        if (this.settings.archiveToSeparateFile) {
+            const archiveFile = await this.getArchiveForFile(activeFile);
+            const archiveTree = await this.parseFile(archiveFile);
+
+            this.archiveToRootSection(newlyCompletedTasks, archiveTree);
+            await this.writeToFile(archiveFile, archiveTree.stringify());
+        } else {
+            this.archiveToRootSection(newlyCompletedTasks, activeFileTree);
+        }
+
+        await this.writeToFile(activeFile, activeFileTree.stringify());
+        return `Archived ${newlyCompletedTasks.length} tasks`;
+    }
+
+    private archiveToRootSection(newlyCompletedTasks: Block[], root: Section) {
+        const archiveSection = this.getArchiveSection(root);
+        this.archiveToSection(newlyCompletedTasks, archiveSection);
+    }
+
+    private getArchiveSection(section: Section) {
+        let archiveSection = section.children.find((s) =>
+            this.archiveHeadingPattern.test(s.text)
+        );
+        if (!archiveSection) {
+            if (this.settings.addNewlinesAroundHeadings) {
+                Archiver.addNewlinesIfNeeded(section);
+            }
+            const heading = this.buildArchiveHeading();
+            const rootBlock = new Block(null, 0, "root");
+            archiveSection = new Section(heading, 1, rootBlock);
+            section.append(archiveSection);
+        }
+        return archiveSection;
+    }
+
+    private async parseFile(file: TFile) {
+        if (file === null || file.extension !== "md") {
+            throw new Error("The archiver works only in markdown (.md) files!");
+        }
+        const fileContents = await this.vault.read(file);
+        return this.parser.parse(fileContents.split("\n"));
+    }
+
     private extractNewlyCompletedTasks(tree: Section) {
         // TODO: the AST should not leak details about bullets or heading tokens
         // TODO: duplicated regex
@@ -132,48 +110,9 @@ export class Archiver {
                 block.text !== null &&
                 /^(?<listMarker>[-*]|\d+\.) \[x]/.test(block.text),
             sectionFilter: (section: Section) =>
-                !this.archivePattern.test(section.text),
+                !this.archiveHeadingPattern.test(section.text),
         };
         return tree.extractBlocksRecursively(filter);
-    }
-
-    appendCompletedTasks(contents: Block, newCompletedTasks: Block[]) {
-        let parentBlock = contents;
-
-        // TODO: cludge for newlines
-        parentBlock.children = parentBlock.children.filter(
-            (b) => b.text !== null && b.text.trim().length > 0
-        );
-
-        for (const [i, level] of this.dateLevels.entries()) {
-            const indentedDateLine = this.buildDateLine(i, level);
-            const thisDateInArchive = contents.findRecursively(
-                (b) => b.text !== null && b.text === indentedDateLine
-            );
-
-            if (thisDateInArchive !== null) {
-                parentBlock = thisDateInArchive;
-            } else {
-                // TODO, this will break once I stringify based on levels
-                const newBlock = new Block(indentedDateLine, 1, "list");
-                contents.append(newBlock);
-                parentBlock = newBlock;
-            }
-        }
-
-        // TODO: Don't add indentation manually. Do it based on level while stringifying things
-        const indentation = this.indentation.repeat(this.dateLevels.length);
-
-        // TODO: TreeWalker will make this obsolete
-        const addIndentationRecursively = (block: Block) => {
-            block.text = indentation + block.text;
-            block.children.forEach(addIndentationRecursively);
-        };
-
-        newCompletedTasks.forEach((block) => {
-            addIndentationRecursively(block);
-            parentBlock.append(block);
-        });
     }
 
     private async getArchiveForFile(activeFile: TFile) {
@@ -186,7 +125,7 @@ export class Archiver {
             try {
                 archiveFile = await this.vault.create(archiveFileName, "");
             } catch (error) {
-                new Notice(
+                throw new Error(
                     `Unable to create an archive file with the name '${archiveFileName}'`
                 );
             }
@@ -194,24 +133,21 @@ export class Archiver {
 
         archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
         if (!(archiveFile instanceof TFile)) {
-            const message = `${archiveFileName} is not a valid file`;
-            new Notice(message);
-            throw new Error(message);
+            throw new Error(`${archiveFileName} is not a valid markdown file`);
         }
 
         return archiveFile;
     }
 
-    private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {
-        const thisMoment = window.moment();
-        const dateFormat = this.dateFormats.get(dateTreeLevel);
-        const date = thisMoment.format(dateFormat);
-        return this.indentation.repeat(lineLevel) + `- [[${date}]]`;
+    private async writeToFile(file: TFile, lines: string[]) {
+        await this.vault.modify(file, lines.join("\n"));
     }
 
-    private buildIndentation() {
-        const settings = this.settings.indentationSettings;
-        return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
+    private archiveToSection(completedTasks: Block[], archiveSection: Section) {
+        const archiveBlock = archiveSection.blockContent;
+        // todo: no mutation?
+        this.dateTreeResolver.mergeBlocksWithTree(archiveBlock, completedTasks);
+        this.addNewLinesIfNeeded(archiveBlock);
     }
 
     private buildArchiveHeading() {
