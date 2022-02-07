@@ -1,5 +1,7 @@
 import moment from "moment";
 import { Archiver } from "./Archiver";
+import { SectionParser } from "../parser/SectionParser";
+import { DateTreeResolver } from "./DateTreeResolver";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -56,7 +58,13 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
         getActiveFile: () => currentFile,
     };
 
-    const archiver = new Archiver(vault, workspace, settings);
+    const archiver = new Archiver(
+        vault,
+        workspace,
+        new SectionParser(settings.indentationSettings),
+        new DateTreeResolver(settings),
+        settings
+    );
     const archiverMessage = await archiver.archiveTasksInActiveFile();
     return { vault, archiverMessage };
 }

@@ -14,13 +14,17 @@ export class Archiver {
     private readonly vault: Vault;
     private readonly dateTreeResolver: DateTreeResolver;
 
-    constructor(vault: Vault, workspace: Workspace, settings: ArchiverSettings) {
+    constructor(
+        vault: Vault,
+        workspace: Workspace,
+        parser: SectionParser,
+        dateTreeResolver: DateTreeResolver,
+        settings: ArchiverSettings
+    ) {
         this.vault = vault;
         this.workspace = workspace;
-        // todo: push the deps outwards
-        this.parser = new SectionParser(settings.indentationSettings);
-        this.dateTreeResolver = new DateTreeResolver(settings);
-
+        this.parser = parser;
+        this.dateTreeResolver = dateTreeResolver;
         this.settings = settings;
         this.archiveHeadingPattern = Archiver.buildArchiveHeadingPattern(
             settings.archiveHeading
