@@ -67,12 +67,12 @@ export class Archiver {
             const archiveTree = await this.parseFile(archiveFile);
 
             this.archiveToRootSection(newlyCompletedTasks, archiveTree);
-            await this.writeToFile(archiveFile, archiveTree.stringify());
+            await this.writeToFile(archiveFile, archiveTree);
         } else {
             this.archiveToRootSection(newlyCompletedTasks, activeFileTree);
         }
 
-        await this.writeToFile(activeFile, activeFileTree.stringify());
+        await this.writeToFile(activeFile, activeFileTree);
         return `Archived ${newlyCompletedTasks.length} tasks`;
     }
 
@@ -143,8 +143,8 @@ export class Archiver {
         return archiveFile;
     }
 
-    private async writeToFile(file: TFile, lines: string[]) {
-        await this.vault.modify(file, lines.join("\n"));
+    private async writeToFile(file: TFile, tree: Section) {
+        await this.vault.modify(file, tree.stringify().join("\n"));
     }
 
     private archiveToSection(completedTasks: Block[], archiveSection: Section) {

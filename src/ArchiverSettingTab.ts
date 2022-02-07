@@ -3,6 +3,7 @@ import ObsidianTaskArchiver from "./ObsidianTaskArchiverPlugin";
 
 export class ArchiverSettingTab extends PluginSettingTab {
     plugin: ObsidianTaskArchiver;
+
     constructor(app: App, plugin: ObsidianTaskArchiver) {
         super(app, plugin);
         this.plugin = plugin;
@@ -42,9 +43,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Depth of new archive headings")
-            .setDesc(
-                "New archives will be created by repeating '#' this many times"
-            )
+            .setDesc("New archives will be created by repeating '#' this many times")
             .addDropdown((dropdownComponent) => {
                 dropdownComponent
                     .addOptions({
@@ -57,8 +56,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
                     })
                     .setValue(String(this.plugin.settings.archiveHeadingDepth))
                     .onChange(async (value) => {
-                        this.plugin.settings.archiveHeadingDepth =
-                            Number(value);
+                        this.plugin.settings.archiveHeadingDepth = Number(value);
                         await this.plugin.saveSettings();
                     });
             });
@@ -76,22 +74,25 @@ export class ArchiverSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.archiveToSeparateFile = value;
                         await this.plugin.saveSettings();
+                        this.display();
                     });
             });
 
-        new Setting(containerEl)
-            .setName("Separate archive file name")
-            .setDesc(
-                "If archiving to a separate file is on, replace the '%' with the active file name and try to find a file with this base name"
-            )
-            .addText((textComponent) => {
-                textComponent
-                    .setValue(this.plugin.settings.defaultArchiveFileName)
-                    .onChange(async (value) => {
-                        this.plugin.settings.defaultArchiveFileName = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
+        if (this.plugin.settings.archiveToSeparateFile) {
+            new Setting(containerEl)
+                .setName("Separate archive file name")
+                .setDesc(
+                    "If archiving to a separate file is on, replace the '%' with the active file name and try to find a file with this base name"
+                )
+                .addText((textComponent) => {
+                    textComponent
+                        .setValue(this.plugin.settings.defaultArchiveFileName)
+                        .onChange(async (value) => {
+                            this.plugin.settings.defaultArchiveFileName = value;
+                            await this.plugin.saveSettings();
+                        });
+                });
+        }
 
         containerEl.createEl("h2", { text: "Date levels settings" });
 
@@ -104,46 +105,49 @@ export class ArchiverSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.useWeeks = value;
                         await this.plugin.saveSettings();
+                        this.display();
                     })
             );
 
-        new Setting(containerEl)
-            .setDisabled(!this.plugin.settings.useWeeks)
-            .setName("Weekly note pattern")
-            .then((setting) => {
-                setting.addMomentFormat((momentFormat) => {
-                    setting.descEl.appendChild(
-                        createFragment((fragment) => {
-                            fragment.appendText("For more syntax, refer to ");
-                            fragment.createEl(
-                                "a",
-                                {
-                                    text: "format reference",
-                                    href: "https://momentjs.com/docs/#/displaying/format/",
-                                },
-                                (a) => {
-                                    a.setAttr("target", "_blank");
-                                }
-                            );
-                            fragment.createEl("br");
-                            fragment.appendText(
-                                "Your current syntax looks like this: "
-                            );
-                            momentFormat.setSampleEl(fragment.createEl("b"));
-                            fragment.createEl("br");
-                        })
-                    );
+        if (this.plugin.settings.useWeeks) {
+            new Setting(containerEl)
+                .setDisabled(!this.plugin.settings.useWeeks)
+                .setName("Weekly note pattern")
+                .then((setting) => {
+                    setting.addMomentFormat((momentFormat) => {
+                        setting.descEl.appendChild(
+                            createFragment((fragment) => {
+                                fragment.appendText("For more syntax, refer to ");
+                                fragment.createEl(
+                                    "a",
+                                    {
+                                        text: "format reference",
+                                        href: "https://momentjs.com/docs/#/displaying/format/",
+                                    },
+                                    (a) => {
+                                        a.setAttr("target", "_blank");
+                                    }
+                                );
+                                fragment.createEl("br");
+                                fragment.appendText(
+                                    "Your current syntax looks like this: "
+                                );
+                                momentFormat.setSampleEl(fragment.createEl("b"));
+                                fragment.createEl("br");
+                            })
+                        );
 
-                    momentFormat
-                        .setDefaultFormat(this.plugin.settings.weeklyNoteFormat)
-                        .setPlaceholder(this.plugin.settings.weeklyNoteFormat)
-                        .setValue(this.plugin.settings.weeklyNoteFormat)
-                        .onChange(async (value) => {
-                            this.plugin.settings.weeklyNoteFormat = value;
-                            await this.plugin.saveSettings();
-                        });
+                        momentFormat
+                            .setDefaultFormat(this.plugin.settings.weeklyNoteFormat)
+                            .setPlaceholder(this.plugin.settings.weeklyNoteFormat)
+                            .setValue(this.plugin.settings.weeklyNoteFormat)
+                            .onChange(async (value) => {
+                                this.plugin.settings.weeklyNoteFormat = value;
+                                await this.plugin.saveSettings();
+                            });
+                    });
                 });
-            });
+        }
 
         new Setting(containerEl)
             .setName("Use days")
@@ -154,45 +158,48 @@ export class ArchiverSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.useDays = value;
                         await this.plugin.saveSettings();
+                        this.display();
                     })
             );
 
-        new Setting(containerEl)
-            .setDisabled(!this.plugin.settings.useDays)
-            .setName("Daily note pattern")
-            .then((setting) => {
-                setting.addMomentFormat((momentFormat) => {
-                    setting.descEl.appendChild(
-                        createFragment((fragment) => {
-                            fragment.appendText("For more syntax, refer to ");
-                            fragment.createEl(
-                                "a",
-                                {
-                                    text: "format reference",
-                                    href: "https://momentjs.com/docs/#/displaying/format/",
-                                },
-                                (a) => {
-                                    a.setAttr("target", "_blank");
-                                }
-                            );
-                            fragment.createEl("br");
-                            fragment.appendText(
-                                "Your current syntax looks like this: "
-                            );
-                            momentFormat.setSampleEl(fragment.createEl("b"));
-                            fragment.createEl("br");
-                        })
-                    );
+        if (this.plugin.settings.useDays) {
+            new Setting(containerEl)
+                .setDisabled(!this.plugin.settings.useDays)
+                .setName("Daily note pattern")
+                .then((setting) => {
+                    setting.addMomentFormat((momentFormat) => {
+                        setting.descEl.appendChild(
+                            createFragment((fragment) => {
+                                fragment.appendText("For more syntax, refer to ");
+                                fragment.createEl(
+                                    "a",
+                                    {
+                                        text: "format reference",
+                                        href: "https://momentjs.com/docs/#/displaying/format/",
+                                    },
+                                    (a) => {
+                                        a.setAttr("target", "_blank");
+                                    }
+                                );
+                                fragment.createEl("br");
+                                fragment.appendText(
+                                    "Your current syntax looks like this: "
+                                );
+                                momentFormat.setSampleEl(fragment.createEl("b"));
+                                fragment.createEl("br");
+                            })
+                        );
 
-                    momentFormat
-                        .setDefaultFormat(this.plugin.settings.dailyNoteFormat)
-                        .setPlaceholder(this.plugin.settings.dailyNoteFormat)
-                        .setValue(this.plugin.settings.dailyNoteFormat)
-                        .onChange(async (value) => {
-                            this.plugin.settings.dailyNoteFormat = value;
-                            await this.plugin.saveSettings();
-                        });
+                        momentFormat
+                            .setDefaultFormat(this.plugin.settings.dailyNoteFormat)
+                            .setPlaceholder(this.plugin.settings.dailyNoteFormat)
+                            .setValue(this.plugin.settings.dailyNoteFormat)
+                            .onChange(async (value) => {
+                                this.plugin.settings.dailyNoteFormat = value;
+                                await this.plugin.saveSettings();
+                            });
+                    });
                 });
-            });
+        }
     }
 }
