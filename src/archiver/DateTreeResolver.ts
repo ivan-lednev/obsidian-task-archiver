@@ -7,10 +7,8 @@ export class DateTreeResolver {
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly dateLevels: DateLevel[];
     private readonly indentation: string;
-    private readonly settings: ArchiverSettings;
 
-    constructor(settings: ArchiverSettings) {
-        this.settings = settings;
+    constructor(private readonly settings: ArchiverSettings) {
         this.dateLevels = [];
         if (settings.useWeeks) {
             this.dateLevels.push("weeks");

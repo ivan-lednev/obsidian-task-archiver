@@ -7,25 +7,15 @@ import { TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
 
 export class Archiver {
-    private readonly settings: ArchiverSettings;
     private readonly archiveHeadingPattern: RegExp;
-    private readonly parser: SectionParser;
-    private readonly workspace: Workspace;
-    private readonly vault: Vault;
-    private readonly dateTreeResolver: DateTreeResolver;
 
     constructor(
-        vault: Vault,
-        workspace: Workspace,
-        parser: SectionParser,
-        dateTreeResolver: DateTreeResolver,
-        settings: ArchiverSettings
+        private readonly vault: Vault,
+        private readonly workspace: Workspace,
+        private readonly parser: SectionParser,
+        private readonly dateTreeResolver: DateTreeResolver,
+        private readonly settings: ArchiverSettings
     ) {
-        this.vault = vault;
-        this.workspace = workspace;
-        this.parser = parser;
-        this.dateTreeResolver = dateTreeResolver;
-        this.settings = settings;
         this.archiveHeadingPattern = Archiver.buildArchiveHeadingPattern(
             settings.archiveHeading
         );
