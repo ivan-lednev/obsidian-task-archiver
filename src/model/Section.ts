@@ -1,5 +1,6 @@
 import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
+import { TreeFilter } from "./TreeFilter";
 
 export class Section extends MarkdownNode {
     children: Section[];
@@ -43,7 +44,3 @@ export class Section extends MarkdownNode {
     }
 }
 
-export interface TreeFilter {
-    sectionFilter?(section: Section): boolean;
-    blockFilter?(block: Block): boolean;
-}

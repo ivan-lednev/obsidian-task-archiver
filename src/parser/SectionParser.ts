@@ -10,18 +10,15 @@ export interface ParserSettings {
 
 export class SectionParser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
-    private readonly settings: ParserSettings;
 
-    constructor(settings: ParserSettings) {
-        this.settings = settings;
-    }
+    constructor(private readonly settings: ParserSettings) {}
 
     parse(lines: string[]) {
-        const rawSections = this.parseRawSections(lines);
-        const flatSections = this.parseBlocksInSections(rawSections);
+        const flatSectionsWithRawContent = this.parseRawSections(lines);
+        const flatSectionsWithParsedContent = this.parseBlocksInSections(flatSectionsWithRawContent);
 
-        const [root, children] = [flatSections[0], flatSections.slice(1)];
-        this.buildTree(root, children);
+        const [root, children] = [flatSectionsWithParsedContent[0], flatSectionsWithParsedContent.slice(1)];
+        SectionParser.buildTree(root, children);
 
         return root;
     }
@@ -56,7 +53,8 @@ export class SectionParser {
         });
     }
 
-    private buildTree(root: MarkdownNode, flatSections: Section[]) {
+    private static buildTree(root: MarkdownNode, flatSections: Section[]) {
+        // TODO: if the user jumps between section levels (# => ###), this will break
         let context = root;
         for (const section of flatSections) {
             const stepsUpToSection = context.level - section.level;
@@ -65,7 +63,7 @@ export class SectionParser {
                 context = context.getNthAncestor(stepsUpToParent);
             }
 
-            context.append(section);
+            context.appendChild(section);
             context = section;
         }
     }

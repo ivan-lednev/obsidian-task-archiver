@@ -4,13 +4,13 @@ export abstract class MarkdownNode {
     parent: MarkdownNode | null;
     level: number;
 
-    constructor(text: string, level: number) {
+    protected constructor(text: string, level: number) {
         this.text = text;
         this.level = level;
         this.children = [];
     }
 
-    append(node: MarkdownNode) {
+    appendChild(node: MarkdownNode) {
         node.parent = this;
         this.children.push(node);
     }

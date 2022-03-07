@@ -6,11 +6,8 @@ export class BlockParser {
     private readonly LIST_ITEM =
         /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.)\s/;
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
-    private readonly settings: ParserSettings;
 
-    constructor(settings: ParserSettings) {
-        this.settings = settings;
-    }
+    constructor(private readonly settings: ParserSettings) {}
 
     parse(lines: string[]): Block {
         const flatBlocks = this.parseFlatBlocks(lines);
@@ -34,14 +31,14 @@ export class BlockParser {
                     context = context.getNthAncestor(targetLevel);
                 }
 
-                context.append(block);
+                context.appendChild(block);
                 context = block;
             } else {
                 const isTopLine = block.level === 1;
                 if (isTopLine) {
                     context = root;
                 }
-                context.append(block);
+                context.appendChild(block);
             }
         }
     }

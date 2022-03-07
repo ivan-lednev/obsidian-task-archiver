@@ -26,7 +26,7 @@ export class Archiver {
         return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
     }
 
-    private static addNewlinesIfNeeded(section: Section) {
+    private static addNewlinesToSectionIfNeeded(section: Section) {
         let lastSection = section;
         const childrenLength = section.children.length;
         if (childrenLength > 0) {
@@ -38,7 +38,7 @@ export class Archiver {
             // TODO: another needless null check
             if (lastBlock.text && lastBlock.text.trim().length !== 0) {
                 // TODO: add an abstraction like appendText, appendListItem
-                lastSection.blockContent.append(new Block("", 1, "text"));
+                lastSection.blockContent.appendChild(new Block("", 1, "text"));
             }
         }
     }
@@ -53,36 +53,36 @@ export class Archiver {
         }
 
         if (this.settings.archiveToSeparateFile) {
-            const archiveFile = await this.getArchiveForFile(activeFile);
+            const archiveFile = await this.getArchiveFileFor(activeFile);
             const archiveTree = await this.parseFile(archiveFile);
 
-            this.archiveToRootSection(newlyCompletedTasks, archiveTree);
-            await this.writeToFile(archiveFile, archiveTree);
+            this.archiveToRoot(newlyCompletedTasks, archiveTree);
+            await this.writeTreeToFile(archiveFile, archiveTree);
         } else {
-            this.archiveToRootSection(newlyCompletedTasks, activeFileTree);
+            this.archiveToRoot(newlyCompletedTasks, activeFileTree);
         }
 
-        await this.writeToFile(activeFile, activeFileTree);
+        await this.writeTreeToFile(activeFile, activeFileTree);
         return `Archived ${newlyCompletedTasks.length} tasks`;
     }
 
-    private archiveToRootSection(newlyCompletedTasks: Block[], root: Section) {
-        const archiveSection = this.getArchiveSection(root);
-        this.archiveToSection(newlyCompletedTasks, archiveSection);
+    private archiveToRoot(newlyCompletedTasks: Block[], root: Section) {
+        const archiveSection = this.getArchiveSectionFromRoot(root);
+        this.archiveTasksToSection(newlyCompletedTasks, archiveSection);
     }
 
-    private getArchiveSection(section: Section) {
+    private getArchiveSectionFromRoot(section: Section) {
         let archiveSection = section.children.find((s) =>
             this.archiveHeadingPattern.test(s.text)
         );
         if (!archiveSection) {
             if (this.settings.addNewlinesAroundHeadings) {
-                Archiver.addNewlinesIfNeeded(section);
+                Archiver.addNewlinesToSectionIfNeeded(section);
             }
             const heading = this.buildArchiveHeading();
             const rootBlock = new Block(null, 0, "root");
             archiveSection = new Section(heading, 1, rootBlock);
-            section.append(archiveSection);
+            section.appendChild(archiveSection);
         }
         return archiveSection;
     }
@@ -97,47 +97,50 @@ export class Archiver {
 
     private extractNewlyCompletedTasks(tree: Section) {
         // TODO: the AST should not leak details about bullets or heading tokens
-        // TODO: duplicated regex
+        const completedTaskPattern = /^(?<listMarker>[-*]|\d+\.) \[x]/;
+        const isCompletedTask = (block: Block) =>
+            block.text !== null && completedTaskPattern.test(block.text);
+
+        const isSectionAnythingExceptArchive = (section: Section) =>
+            !this.archiveHeadingPattern.test(section.text);
+
         const filter = {
-            // TODO: another needless null test
-            blockFilter: (block: Block) =>
-                block.text !== null &&
-                /^(?<listMarker>[-*]|\d+\.) \[x]/.test(block.text),
-            sectionFilter: (section: Section) =>
-                !this.archiveHeadingPattern.test(section.text),
+            blockFilter: isCompletedTask,
+            sectionFilter: isSectionAnythingExceptArchive,
         };
         return tree.extractBlocksRecursively(filter);
     }
 
-    private async getArchiveForFile(activeFile: TFile) {
-        const archiveFileName =
-            this.settings.defaultArchiveFileName.replace("%", activeFile.basename) +
-            ".md";
+    private async getArchiveFileFor(activeFile: TFile) {
+        const archiveFileName = `${this.settings.defaultArchiveFileName.replace(
+            "%",
+            activeFile.basename
+        )}.md`;
 
-        let archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
-        if (!archiveFile) {
-            try {
-                archiveFile = await this.vault.create(archiveFileName, "");
-            } catch (error) {
-                throw new Error(
-                    `Unable to create an archive file with the name '${archiveFileName}'`
-                );
-            }
+        let archiveFile =
+            this.vault.getAbstractFileByPath(archiveFileName) ||
+            (await this.createFile(archiveFileName));
+
+        if (archiveFile instanceof TFile) {
+            return archiveFile;
         }
 
-        archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
-        if (!(archiveFile instanceof TFile)) {
-            throw new Error(`${archiveFileName} is not a valid markdown file`);
-        }
-
-        return archiveFile;
+        throw new Error(`${archiveFileName} is not a valid markdown file`);
     }
 
-    private async writeToFile(file: TFile, tree: Section) {
+    private async createFile(name: string) {
+        try {
+            return await this.vault.create(name, "");
+        } catch (error) {
+            throw new Error(`Unable to create file with name '${name}'`);
+        }
+    }
+
+    private async writeTreeToFile(file: TFile, tree: Section) {
         await this.vault.modify(file, tree.stringify().join("\n"));
     }
 
-    private archiveToSection(completedTasks: Block[], archiveSection: Section) {
+    private archiveTasksToSection(completedTasks: Block[], archiveSection: Section) {
         const archiveBlock = archiveSection.blockContent;
         // todo: no mutation?
         this.dateTreeResolver.mergeBlocksWithTree(archiveBlock, completedTasks);
@@ -154,7 +157,7 @@ export class Archiver {
         if (this.settings.addNewlinesAroundHeadings) {
             // TODO: leaking details about block types
             blockContent.appendFirst(new Block("", 1, "text"));
-            blockContent.append(new Block("", 1, "text"));
+            blockContent.appendChild(new Block("", 1, "text"));
         }
     }
 }

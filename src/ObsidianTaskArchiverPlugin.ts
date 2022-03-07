@@ -37,16 +37,16 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     async loadSettings() {
-        const getConfig = (key: string) => {
-            return (this.app.vault as any).getConfig(key);
-        };
-
         this.settings = Object.assign({}, DefaultSettings, await this.loadData(), {
             indentationSettings: {
-                useTab: getConfig("useTab"),
-                tabSize: getConfig("tabSize"),
+                useTab: this.getConfig("useTab"),
+                tabSize: this.getConfig("tabSize"),
             },
         });
+    }
+
+    private async getConfig(key: string) {
+        return (this.app.vault as any).getConfig(key);
     }
 
     async saveSettings() {

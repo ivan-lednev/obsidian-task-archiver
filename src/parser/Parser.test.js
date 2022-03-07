@@ -240,7 +240,7 @@ describe("Insertion", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.append(new Block("more text", 1, "text"));
+        parsed.blockContent.appendChild(new Block("more text", 1, "text"));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });

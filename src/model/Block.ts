@@ -12,7 +12,6 @@ export class Block extends MarkdownNode {
         this.type = type;
     }
 
-    // TODO: TreeWalker will replace this
     findRecursively(matcher: (node: Block) => boolean): Block | null {
         if (matcher(this)) {
             return this;

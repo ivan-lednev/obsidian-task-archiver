@@ -45,7 +45,7 @@ export class DateTreeResolver {
             } else {
                 // TODO, this will break once I stringify based on levels
                 const newBlock = new Block(indentedDateLine, 1, "list");
-                tree.append(newBlock);
+                tree.appendChild(newBlock);
                 parentBlock = newBlock;
             }
         }
@@ -61,7 +61,7 @@ export class DateTreeResolver {
 
         newBlocks.forEach((block) => {
             addIndentationRecursively(block);
-            parentBlock.append(block);
+            parentBlock.appendChild(block);
         });
     }
 
