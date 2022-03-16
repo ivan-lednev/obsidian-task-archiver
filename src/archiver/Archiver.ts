@@ -100,6 +100,7 @@ export class Archiver {
     private extractNewlyCompletedTasks(tree: Section) {
         // TODO: the AST should not leak details about bullets or heading tokens
         const completedTaskPattern = /^(?<listMarker>[-*]|\d+\.) \[x]/;
+        // TODO: kludge for null
         const isCompletedTask = (block: Block) =>
             block.text !== null && completedTaskPattern.test(block.text);
 
@@ -131,11 +132,7 @@ export class Archiver {
     }
 
     private async createFile(name: string) {
-        try {
-            return await this.vault.create(name, "");
-        } catch (error) {
-            throw new Error(`Unable to create file with name '${name}'`);
-        }
+        return await this.vault.create(name, "");
     }
 
     private async writeTreeToFile(file: TFile, tree: Section) {
@@ -144,7 +141,6 @@ export class Archiver {
 
     private archiveTasksToSection(completedTasks: Block[], archiveSection: Section) {
         const archiveBlock = archiveSection.blockContent;
-        // todo: no mutation?
         this.dateTreeResolver.mergeNewBlocksWithDateTree(archiveBlock, completedTasks);
         this.addNewLinesIfNeeded(archiveBlock);
     }
@@ -158,7 +154,7 @@ export class Archiver {
     private addNewLinesIfNeeded(blockContent: Block) {
         if (this.settings.addNewlinesAroundHeadings) {
             // TODO: leaking details about block types
-            blockContent.appendFirst(new TextBlock("", 1));
+            blockContent.prependChild(new TextBlock("", 1));
             blockContent.appendChild(new TextBlock("", 1));
         }
     }

@@ -32,14 +32,12 @@ export class Section extends MarkdownNode {
 
     stringify(): string[] {
         const lines = [];
-        // TODO: another null check
+        // TODO: kludge for null
         if (this.text) {
             lines.push(this.text);
         }
-        for (const tree of [this.blockContent.children, this.children]) {
-            for (const child of tree) {
-                lines.push(...child.stringify());
-            }
+        for (const child of [...this.blockContent.children, ...this.children]) {
+            lines.push(...child.stringify());
         }
         return lines;
     }

@@ -23,7 +23,7 @@ export class Block extends MarkdownNode {
 
     stringify(): string[] {
         const lines = [];
-        // TODO: this should not handle the root block
+        // TODO: kludge for null
         if (this.text !== null) {
             lines.push(this.text);
         }

@@ -250,19 +250,9 @@ describe("Insertion", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.appendFirst(new TextBlock("more text", 1));
+        parsed.blockContent.prependChild(new TextBlock("more text", 1));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["more text", "- list", "- text"]);
-    });
-
-    test("Append sibling", () => {
-        const lines = ["- list", "text"];
-
-        const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        const listItem = parsed.blockContent.children[0];
-        listItem.appendSibling(new TextBlock("list sibling", 0));
-        const stringified = parsed.stringify();
-        expect(stringified).toEqual(["- list", "list sibling", "text"]);
     });
 });
 

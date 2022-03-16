@@ -3,7 +3,7 @@ import { Block } from "../model/Block";
 import { MarkdownNode } from "src/model/MarkdownNode";
 import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
-import {RootBlock} from "../model/RootBlock";
+import { RootBlock } from "../model/RootBlock";
 
 export class BlockParser {
     private readonly LIST_ITEM =
@@ -14,40 +14,40 @@ export class BlockParser {
 
     parse(lines: string[]): Block {
         const flatBlocks = this.parseFlatBlocks(lines);
-
-        const [root, children] = [flatBlocks[0], flatBlocks.slice(1)];
-        BlockParser.buildTree(root, children);
-
+        const root = new RootBlock(null, 0);
+        BlockParser.buildTree(root, flatBlocks);
         return root;
     }
 
     private static buildTree(root: MarkdownNode, flatBlocks: Block[]) {
-        let context = root;
+        let contextBlock = root;
+
+        function moveContextUpIfBlockIsHigher(block: ListBlock) {
+            const indentationDifference = contextBlock.level - block.level;
+            if (indentationDifference >= 0) {
+                const newContextBlockLevel = indentationDifference + 1;
+                contextBlock = contextBlock.getNthAncestor(newContextBlockLevel);
+            }
+        }
 
         for (const block of flatBlocks) {
             // TODO: the logic for lists is idential to the logic for sections
             if (block instanceof ListBlock) {
-                const stepsUpToSection = context.level - block.level;
-
-                if (stepsUpToSection >= 0) {
-                    const targetLevel = stepsUpToSection + 1;
-                    context = context.getNthAncestor(targetLevel);
-                }
-
-                context.appendChild(block);
-                context = block;
+                moveContextUpIfBlockIsHigher(block);
+                contextBlock.appendChild(block);
+                contextBlock = block;
             } else {
                 const isTopLine = block.level === 1;
                 if (isTopLine) {
-                    context = root;
+                    contextBlock = root;
                 }
-                context.appendChild(block);
+                contextBlock.appendChild(block);
             }
         }
     }
 
     private parseFlatBlocks(lines: string[]) {
-        const flatBlocks: Block[] = [new RootBlock(null, 0)];
+        const flatBlocks: Block[] = [];
         for (const line of lines) {
             const listMatch = line.match(this.LIST_ITEM);
             const indentedLineMatch = line.match(this.INDENTED_LINE);
@@ -78,6 +78,7 @@ export class BlockParser {
         } else {
             levelsOfIndentation = Math.ceil(indentation.length / this.settings.tabSize);
         }
+        // TODO: kludge for null
         return levelsOfIndentation + 1;
     }
 }

@@ -10,28 +10,23 @@ export abstract class MarkdownNode {
         this.children = [];
     }
 
-    appendChild(node: MarkdownNode) {
-        node.parent = this;
-        this.children.push(node);
+    appendChild(child: MarkdownNode) {
+        child.parent = this;
+        this.children.push(child);
     }
 
-    appendFirst(child: MarkdownNode) {
+    prependChild(child: MarkdownNode) {
         this.children.unshift(child);
         child.parent = this;
     }
 
-    appendSibling(node: MarkdownNode) {
-        const indexOfThis = this.parent.children.findIndex((b) => b === this);
-        this.parent.children.splice(indexOfThis + 1, 0, node);
-    }
-
-    remove(child: MarkdownNode) {
+    removeChild(child: MarkdownNode) {
         child.parent = null;
         this.children.splice(this.children.indexOf(child), 1);
     }
 
     removeSelf() {
-        this.parent.remove(this);
+        this.parent.removeChild(this);
     }
 
     getNthAncestor(targetLevel: number) {

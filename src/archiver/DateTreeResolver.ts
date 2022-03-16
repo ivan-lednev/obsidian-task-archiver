@@ -49,6 +49,7 @@ export class DateTreeResolver {
 
         for (const [i, level] of this.dateLevels.entries()) {
             const indentedDateLine = this.buildDateLine(i, level);
+            // TODO: kludge for null
             const thisDateInArchive = tree.findRecursively(
                 (b) => b.text !== null && b.text === indentedDateLine
             );
@@ -66,6 +67,7 @@ export class DateTreeResolver {
     }
 
     private static isBlockNonEmpty(block: Block) {
+        // TODO: kludge for null
         return block.text !== null && block.text.trim().length > 0;
     }
 
