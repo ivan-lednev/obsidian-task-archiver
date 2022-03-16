@@ -7,7 +7,6 @@ type DateLevel = "years" | "months" | "weeks" | "days";
 export class DateTreeResolver {
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly dateLevels: DateLevel[];
-    private readonly indentation: string;
 
     constructor(private readonly settings: ArchiverSettings) {
         this.dateLevels = [];
@@ -18,21 +17,34 @@ export class DateTreeResolver {
             this.dateLevels.push("days");
         }
 
-        // todo: this.settings -> settings
         this.dateFormats = new Map([
-            ["days", this.settings.dailyNoteFormat],
-            ["weeks", this.settings.weeklyNoteFormat],
+            ["days", settings.dailyNoteFormat],
+            ["weeks", settings.weeklyNoteFormat],
         ]);
-
-        this.indentation = this.buildIndentation();
     }
 
-    mergeBlocksWithTree(tree: Block, newBlocks: Block[]) {
+    mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
+        const insertionPoint = this.getCurrentDateBlock(tree);
+        newBlocks.forEach((block) => {
+            this.addIndentationRecursively(block);
+            insertionPoint.appendChild(block);
+        });
+    }
+
+    // TODO: Don't add indentation manually. Do it based on level while stringifying things
+    private addIndentationRecursively(block: Block) {
+        block.text = this.indentFor(this.dateLevels.length) + block.text;
+        for (const child of block.children) {
+            this.addIndentationRecursively(child);
+        }
+    }
+
+    private getCurrentDateBlock(tree: Block) {
         let parentBlock = tree;
 
         // TODO: cludge for newlines
         parentBlock.children = parentBlock.children.filter(
-            (b) => b.text !== null && b.text.trim().length > 0
+            DateTreeResolver.isBlockNonEmpty
         );
 
         for (const [i, level] of this.dateLevels.entries()) {
@@ -41,7 +53,7 @@ export class DateTreeResolver {
                 (b) => b.text !== null && b.text === indentedDateLine
             );
 
-            if (thisDateInArchive !== null) {
+            if (thisDateInArchive) {
                 parentBlock = thisDateInArchive;
             } else {
                 // TODO, this will break once I stringify based on levels
@@ -50,32 +62,26 @@ export class DateTreeResolver {
                 parentBlock = newBlock;
             }
         }
-
-        // TODO: Don't add indentation manually. Do it based on level while stringifying things
-        const indentation = this.indentation.repeat(this.dateLevels.length);
-
-        // TODO: TreeWalker will make this obsolete
-        const addIndentationRecursively = (block: Block) => {
-            block.text = indentation + block.text;
-            block.children.forEach(addIndentationRecursively);
-        };
-
-        newBlocks.forEach((block) => {
-            addIndentationRecursively(block);
-            parentBlock.appendChild(block);
-        });
+        return parentBlock;
     }
 
-    private buildIndentation() {
+    private static isBlockNonEmpty(block: Block) {
+        return block.text !== null && block.text.trim().length > 0;
+    }
+
+    private indentFor(levels: number) {
         const settings = this.settings.indentationSettings;
-        return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
+        const oneLevelOfIndentation = settings.useTab
+            ? "\t"
+            : " ".repeat(settings.tabSize);
+        return oneLevelOfIndentation.repeat(levels);
     }
 
     private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {
-        const thisMoment = window.moment();
         const dateFormat = this.dateFormats.get(dateTreeLevel);
-        const date = thisMoment.format(dateFormat);
+        const date = window.moment().format(dateFormat);
         // TODO: hardcoded list token
-        return this.indentation.repeat(lineLevel) + `- [[${date}]]`;
+        // TODO: hardcoded link
+        return this.indentFor(lineLevel) + `- [[${date}]]`;
     }
 }

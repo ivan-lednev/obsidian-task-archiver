@@ -145,7 +145,7 @@ export class Archiver {
     private archiveTasksToSection(completedTasks: Block[], archiveSection: Section) {
         const archiveBlock = archiveSection.blockContent;
         // todo: no mutation?
-        this.dateTreeResolver.mergeBlocksWithTree(archiveBlock, completedTasks);
+        this.dateTreeResolver.mergeNewBlocksWithDateTree(archiveBlock, completedTasks);
         this.addNewLinesIfNeeded(archiveBlock);
     }
 
