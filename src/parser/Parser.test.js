@@ -1,5 +1,6 @@
 import { SectionParser } from "./SectionParser";
 import { Block } from "../model/Block";
+import { TextBlock } from "../model/TextBlock";
 
 const DEFAULT_SETTINGS = {
     useTab: true,
@@ -240,7 +241,7 @@ describe("Insertion", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.appendChild(new Block("more text", 1, "text"));
+        parsed.blockContent.appendChild(new TextBlock("more text", 1));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
@@ -249,7 +250,7 @@ describe("Insertion", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.appendFirst(new Block("more text", 1, "text"));
+        parsed.blockContent.appendFirst(new TextBlock("more text", 1));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["more text", "- list", "- text"]);
     });
@@ -259,7 +260,7 @@ describe("Insertion", () => {
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
         const listItem = parsed.blockContent.children[0];
-        listItem.appendSibling(new Block("list sibling", 0, "text"));
+        listItem.appendSibling(new TextBlock("list sibling", 0));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["- list", "list sibling", "text"]);
     });

@@ -32,6 +32,7 @@ export class Section extends MarkdownNode {
 
     stringify(): string[] {
         const lines = [];
+        // TODO: another null check
         if (this.text) {
             lines.push(this.text);
         }

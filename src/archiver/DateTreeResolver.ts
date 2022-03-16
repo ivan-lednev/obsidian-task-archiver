@@ -1,5 +1,6 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
+import { ListBlock } from "../model/ListBlock";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -44,7 +45,7 @@ export class DateTreeResolver {
                 parentBlock = thisDateInArchive;
             } else {
                 // TODO, this will break once I stringify based on levels
-                const newBlock = new Block(indentedDateLine, 1, "list");
+                const newBlock = new ListBlock(indentedDateLine, 1);
                 tree.appendChild(newBlock);
                 parentBlock = newBlock;
             }

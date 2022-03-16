@@ -1,6 +1,9 @@
 import { ParserSettings } from "./SectionParser";
 import { Block } from "../model/Block";
 import { MarkdownNode } from "src/model/MarkdownNode";
+import { ListBlock } from "../model/ListBlock";
+import { TextBlock } from "../model/TextBlock";
+import {RootBlock} from "../model/RootBlock";
 
 export class BlockParser {
     private readonly LIST_ITEM =
@@ -23,7 +26,7 @@ export class BlockParser {
 
         for (const block of flatBlocks) {
             // TODO: the logic for lists is idential to the logic for sections
-            if (block.type === "list") {
+            if (block instanceof ListBlock) {
                 const stepsUpToSection = context.level - block.level;
 
                 if (stepsUpToSection >= 0) {
@@ -44,7 +47,7 @@ export class BlockParser {
     }
 
     private parseFlatBlocks(lines: string[]) {
-        const flatBlocks: Block[] = [new Block(null, 0, "root")];
+        const flatBlocks: Block[] = [new RootBlock(null, 0)];
         for (const line of lines) {
             const listMatch = line.match(this.LIST_ITEM);
             const indentedLineMatch = line.match(this.INDENTED_LINE);
@@ -53,16 +56,16 @@ export class BlockParser {
                 const level = this.getLineLevelByIndentation(
                     listMatch.groups.indentation
                 );
-                const block = new Block(line, level, "list");
+                const block = new ListBlock(line, level);
                 flatBlocks.push(block);
             } else if (indentedLineMatch) {
                 const level = this.getLineLevelByIndentation(
                     indentedLineMatch.groups.indentation
                 );
-                const block = new Block(line, level, "text");
+                const block = new TextBlock(line, level);
                 flatBlocks.push(block);
             } else {
-                flatBlocks.push(new Block(line, 1, "text"));
+                flatBlocks.push(new TextBlock(line, 1));
             }
         }
         return flatBlocks;

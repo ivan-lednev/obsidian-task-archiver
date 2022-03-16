@@ -1,15 +1,11 @@
 import { MarkdownNode } from "./MarkdownNode";
 
-export type BlockType = "text" | "list" | "root";
-
 export class Block extends MarkdownNode {
     children: Block[] = [];
     parent: Block | null;
-    type: BlockType;
 
-    constructor(text: string, level: number, type: BlockType) {
+    constructor(text: string, level: number) {
         super(text, level);
-        this.type = type;
     }
 
     findRecursively(matcher: (node: Block) => boolean): Block | null {

@@ -5,6 +5,8 @@ import { Section } from "../model/Section";
 import { Block } from "../model/Block";
 import { TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
+import { TextBlock } from "../model/TextBlock";
+import { RootBlock } from "../model/RootBlock";
 
 export class Archiver {
     private readonly archiveHeadingPattern: RegExp;
@@ -38,7 +40,7 @@ export class Archiver {
             // TODO: another needless null check
             if (lastBlock.text && lastBlock.text.trim().length !== 0) {
                 // TODO: add an abstraction like appendText, appendListItem
-                lastSection.blockContent.appendChild(new Block("", 1, "text"));
+                lastSection.blockContent.appendChild(new TextBlock("", 1));
             }
         }
     }
@@ -80,7 +82,7 @@ export class Archiver {
                 Archiver.addNewlinesToSectionIfNeeded(section);
             }
             const heading = this.buildArchiveHeading();
-            const rootBlock = new Block(null, 0, "root");
+            const rootBlock = new RootBlock(null, 0);
             archiveSection = new Section(heading, 1, rootBlock);
             section.appendChild(archiveSection);
         }
@@ -156,8 +158,8 @@ export class Archiver {
     private addNewLinesIfNeeded(blockContent: Block) {
         if (this.settings.addNewlinesAroundHeadings) {
             // TODO: leaking details about block types
-            blockContent.appendFirst(new Block("", 1, "text"));
-            blockContent.appendChild(new Block("", 1, "text"));
+            blockContent.appendFirst(new TextBlock("", 1));
+            blockContent.appendChild(new TextBlock("", 1));
         }
     }
 }
