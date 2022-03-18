@@ -1,7 +1,5 @@
-import { Block } from "../model/Block";
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
-import { MarkdownNode } from "src/model/MarkdownNode";
 
 export interface ParserSettings {
     useTab: boolean;
@@ -15,9 +13,14 @@ export class SectionParser {
 
     parse(lines: string[]) {
         const flatSectionsWithRawContent = this.parseRawSections(lines);
-        const flatSectionsWithParsedContent = this.parseBlocksInSections(flatSectionsWithRawContent);
+        const flatSectionsWithParsedContent = this.parseBlocksInSections(
+            flatSectionsWithRawContent
+        );
 
-        const [root, children] = [flatSectionsWithParsedContent[0], flatSectionsWithParsedContent.slice(1)];
+        const [root, children] = [
+            flatSectionsWithParsedContent[0],
+            flatSectionsWithParsedContent.slice(1),
+        ];
         SectionParser.buildTree(root, children);
 
         return root;
@@ -53,18 +56,25 @@ export class SectionParser {
         });
     }
 
-    private static buildTree(root: MarkdownNode, flatSections: Section[]) {
-        // TODO: if the user jumps between section levels (# => ###), this will break
-        let context = root;
+    private static buildTree(root: Section, flatSections: Section[]) {
+        // TODO: duplicated
+        let contextStack = [root];
         for (const section of flatSections) {
-            const stepsUpToSection = context.level - section.level;
-            if (stepsUpToSection >= 0) {
-                const stepsUpToParent = stepsUpToSection + 1;
-                context = context.getNthAncestor(stepsUpToParent);
+            const stepsToGoUp = contextStack.length - section.level;
+            if (stepsToGoUp >= 0) {
+                for (let i = 0; i < stepsToGoUp; i++) {
+                    try {
+                        contextStack.pop();
+                    } catch {
+                        throw new Error(
+                            "No more context levels to pop. Looks like the user jumped multiple levels of indentation"
+                        );
+                    }
+                }
             }
 
-            context.appendChild(section);
-            context = section;
+            contextStack[contextStack.length - 1].appendChild(section);
+            contextStack.push(section);
         }
     }
 }

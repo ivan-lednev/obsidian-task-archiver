@@ -1,11 +1,11 @@
 import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
 import { TreeFilter } from "./TreeFilter";
+import { partition } from "lodash";
 
-export class Section extends MarkdownNode {
+export class Section extends MarkdownNode<Section> {
     children: Section[];
     blockContent: Block;
-    parent: Section;
 
     constructor(text: string, level: number, blockContent: Block) {
         super(text, level);
@@ -13,15 +13,14 @@ export class Section extends MarkdownNode {
     }
 
     extractBlocksRecursively(filter: TreeFilter): Block[] {
-        const extracted = [];
-        for (const block of this.blockContent.children) {
-            if (!filter.blockFilter || filter.blockFilter(block)) {
-                extracted.push(block);
-            }
-        }
-        for (const block of extracted) {
-            block.removeSelf();
-        }
+        const [extracted, theRest] = partition(
+            this.blockContent.children,
+            filter.blockFilter
+        );
+
+        // TODO: mutation
+        this.blockContent.children = theRest;
+
         for (const section of this.children) {
             if (!filter.sectionFilter || filter.sectionFilter(section)) {
                 extracted.push(...section.extractBlocksRecursively(filter));
@@ -42,4 +41,3 @@ export class Section extends MarkdownNode {
         return lines;
     }
 }
-

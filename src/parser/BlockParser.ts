@@ -20,28 +20,30 @@ export class BlockParser {
     }
 
     private static buildTree(root: MarkdownNode, flatBlocks: Block[]) {
-        let contextBlock = root;
-
-        function moveContextUpIfBlockIsHigher(block: ListBlock) {
-            const indentationDifference = contextBlock.level - block.level;
-            if (indentationDifference >= 0) {
-                const newContextBlockLevel = indentationDifference + 1;
-                contextBlock = contextBlock.getNthAncestor(newContextBlockLevel);
-            }
-        }
-
+        // TODO: duplicated
+        let contextStack = [root];
         for (const block of flatBlocks) {
-            // TODO: the logic for lists is idential to the logic for sections
             if (block instanceof ListBlock) {
-                moveContextUpIfBlockIsHigher(block);
-                contextBlock.appendChild(block);
-                contextBlock = block;
+                const stepsToGoUp = contextStack.length - block.level;
+                if (stepsToGoUp >= 0) {
+                    for (let i = 0; i < stepsToGoUp; i++) {
+                        try {
+                            contextStack.pop();
+                        } catch {
+                            throw new Error(
+                                "No more context levels to pop. Looks like the user jumped multiple levels of indentation"
+                            );
+                        }
+                    }
+                }
+                contextStack[contextStack.length - 1].appendChild(block);
+                contextStack.push(block);
             } else {
                 const isTopLine = block.level === 1;
                 if (isTopLine) {
-                    contextBlock = root;
+                    contextStack = [root];
                 }
-                contextBlock.appendChild(block);
+                contextStack[contextStack.length - 1].appendChild(block);
             }
         }
     }

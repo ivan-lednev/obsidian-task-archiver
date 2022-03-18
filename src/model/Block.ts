@@ -1,8 +1,7 @@
 import { MarkdownNode } from "./MarkdownNode";
 
-export class Block extends MarkdownNode {
+export class Block extends MarkdownNode<Block> {
     children: Block[] = [];
-    parent: Block | null;
 
     constructor(text: string, level: number) {
         super(text, level);

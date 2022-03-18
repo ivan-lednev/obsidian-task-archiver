@@ -1,7 +1,6 @@
-export abstract class MarkdownNode {
-    children: MarkdownNode[];
+export abstract class MarkdownNode<C extends MarkdownNode<C>> {
+    children: C[];
     text: string | null;
-    parent: MarkdownNode | null;
     level: number;
 
     protected constructor(text: string, level: number) {
@@ -10,33 +9,16 @@ export abstract class MarkdownNode {
         this.children = [];
     }
 
-    appendChild(child: MarkdownNode) {
-        child.parent = this;
+    appendChild(child: C) {
         this.children.push(child);
     }
 
-    prependChild(child: MarkdownNode) {
+    prependChild(child: C) {
         this.children.unshift(child);
-        child.parent = this;
     }
 
-    removeChild(child: MarkdownNode) {
-        child.parent = null;
+    removeChild(child: C) {
         this.children.splice(this.children.indexOf(child), 1);
-    }
-
-    removeSelf() {
-        this.parent.removeChild(this);
-    }
-
-    getNthAncestor(targetLevel: number) {
-        let pointer = this as MarkdownNode;
-
-        for (let level = 0; level < targetLevel; level++) {
-            pointer = pointer.parent;
-        }
-
-        return pointer;
     }
 
     abstract stringify(): string[];
