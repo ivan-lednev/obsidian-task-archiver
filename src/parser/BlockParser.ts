@@ -1,9 +1,9 @@
 import { ParserSettings } from "./SectionParser";
 import { Block } from "../model/Block";
-import { MarkdownNode } from "src/model/MarkdownNode";
 import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
+import { TreeBuilder } from "./TreeBuilder";
 
 export class BlockParser {
     private readonly LIST_ITEM =
@@ -15,39 +15,10 @@ export class BlockParser {
     parse(lines: string[]): Block {
         const flatBlocks = this.parseFlatBlocks(lines);
         const root = new RootBlock(null, 0);
-        BlockParser.buildTree(root, flatBlocks);
+        const treeBuilder = new TreeBuilder();
+        treeBuilder.buildTree(root, flatBlocks, (node) => node instanceof ListBlock);
         return root;
     }
-
-    private static buildTree(root: MarkdownNode, flatBlocks: Block[]) {
-        // TODO: duplicated
-        let contextStack = [root];
-        for (const block of flatBlocks) {
-            if (block instanceof ListBlock) {
-                const stepsToGoUp = contextStack.length - block.level;
-                if (stepsToGoUp >= 0) {
-                    for (let i = 0; i < stepsToGoUp; i++) {
-                        try {
-                            contextStack.pop();
-                        } catch {
-                            throw new Error(
-                                "No more context levels to pop. Looks like the user jumped multiple levels of indentation"
-                            );
-                        }
-                    }
-                }
-                contextStack[contextStack.length - 1].appendChild(block);
-                contextStack.push(block);
-            } else {
-                const isTopLine = block.level === 1;
-                if (isTopLine) {
-                    contextStack = [root];
-                }
-                contextStack[contextStack.length - 1].appendChild(block);
-            }
-        }
-    }
-
     private parseFlatBlocks(lines: string[]) {
         const flatBlocks: Block[] = [];
         for (const line of lines) {

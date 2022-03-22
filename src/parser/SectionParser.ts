@@ -1,5 +1,6 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
+import { TreeBuilder } from "./TreeBuilder";
 
 export interface ParserSettings {
     useTab: boolean;
@@ -21,12 +22,15 @@ export class SectionParser {
             flatSectionsWithParsedContent[0],
             flatSectionsWithParsedContent.slice(1),
         ];
-        SectionParser.buildTree(root, children);
+
+        const treeBuilder = new TreeBuilder();
+        treeBuilder.buildTree(root, children, () => true);
 
         return root;
     }
 
     private parseRawSections(lines: string[]) {
+        // TODO: kludge for null
         const sections: RawSection[] = [{ text: null, level: 0, lines: [] }];
 
         for (const line of lines) {
@@ -54,28 +58,6 @@ export class SectionParser {
                 new BlockParser(this.settings).parse(s.lines)
             );
         });
-    }
-
-    private static buildTree(root: Section, flatSections: Section[]) {
-        // TODO: duplicated
-        let contextStack = [root];
-        for (const section of flatSections) {
-            const stepsToGoUp = contextStack.length - section.level;
-            if (stepsToGoUp >= 0) {
-                for (let i = 0; i < stepsToGoUp; i++) {
-                    try {
-                        contextStack.pop();
-                    } catch {
-                        throw new Error(
-                            "No more context levels to pop. Looks like the user jumped multiple levels of indentation"
-                        );
-                    }
-                }
-            }
-
-            contextStack[contextStack.length - 1].appendChild(section);
-            contextStack.push(section);
-        }
     }
 }
 
