@@ -27,7 +27,7 @@ export class SectionParser {
 
         new TreeBuilder().buildTree(root, children);
 
-        return root;
+        return root.markdownNode;
     }
 
     private parseRawSections(lines: string[]) {
@@ -52,12 +52,16 @@ export class SectionParser {
     }
 
     private parseBlocksInSections(raw: RawSection[]) {
+        // TODO: don't create new parsers
         return raw.map((s) => {
-            return new Section(
-                s.text,
-                s.level,
-                new BlockParser(this.settings).parse(s.lines)
-            );
+            return {
+                markdownNode: new Section(
+                    s.text,
+                    new BlockParser(this.settings).parse(s.lines)
+                ),
+                level: s.level,
+                isContext: true,
+            };
         });
     }
 }

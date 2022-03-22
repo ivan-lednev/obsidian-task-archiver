@@ -1,12 +1,6 @@
 import { MarkdownNode } from "./MarkdownNode";
 
 export class Block extends MarkdownNode<Block> {
-    children: Block[] = [];
-
-    constructor(text: string, level: number) {
-        super(text, level);
-    }
-
     findRecursively(matcher: (node: Block) => boolean): Block | null {
         if (matcher(this)) {
             return this;

@@ -2,9 +2,8 @@ import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
-import { TreeBuilder } from "./TreeBuilder";
+import { FlatNode, TreeBuilder } from "./TreeBuilder";
 import { ParserSettings } from "./ParserSettings";
-import { settings } from "cluster";
 
 export class BlockParser {
     private readonly LIST_ITEM =
@@ -15,16 +14,18 @@ export class BlockParser {
 
     parse(lines: string[]): Block {
         const flatBlocks = this.parseFlatBlocks(lines);
-        const root = new RootBlock(null, 0);
-        new TreeBuilder().buildTree(
-            root,
-            flatBlocks
-        );
-        return root;
+        // TODO: remove the need for wrapper in root
+        const root = {
+            markdownNode: new RootBlock(null),
+            level: 0,
+            isContext: true,
+        };
+        new TreeBuilder().buildTree(root, flatBlocks);
+        return root.markdownNode;
     }
 
     private parseFlatBlocks(lines: string[]) {
-        const flatBlocks: Block[] = [];
+        const flatBlocks: FlatNode<Block>[] = [];
         for (const line of lines) {
             const listMatch = line.match(this.LIST_ITEM);
             const indentedLineMatch = line.match(this.INDENTED_LINE);
@@ -35,20 +36,26 @@ export class BlockParser {
                 );
                 const indentationLength = listMatch.groups.indentation.length;
                 const lineWithoutIndentation = line.substring(indentationLength);
-                const block = new ListBlock(
-                    lineWithoutIndentation,
-                    level,
-                    this.settings
-                );
-                flatBlocks.push(block);
+                flatBlocks.push({
+                    markdownNode: new ListBlock(lineWithoutIndentation, this.settings),
+                    level: level,
+                    isContext: true,
+                });
             } else if (indentedLineMatch) {
                 const level = this.getLineLevelByIndentation(
                     indentedLineMatch.groups.indentation
                 );
-                const block = new TextBlock(line, level);
-                flatBlocks.push(block);
+                flatBlocks.push({
+                    markdownNode: new TextBlock(line),
+                    level: level,
+                    isContext: false,
+                });
             } else {
-                flatBlocks.push(new TextBlock(line, 1));
+                flatBlocks.push({
+                    markdownNode: new TextBlock(line),
+                    level: 1,
+                    isContext: false,
+                });
             }
         }
         return flatBlocks;

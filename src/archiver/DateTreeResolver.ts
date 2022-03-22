@@ -38,7 +38,7 @@ export class DateTreeResolver {
             return block.text !== null && block.text.trim().length > 0;
         });
 
-        for (const [i, level] of this.dateLevels.entries()) {
+        for (const level of this.dateLevels) {
             const dateLine = this.buildDateLine(level);
             // TODO: kludge for null
             const thisDateInArchive = context.findRecursively(
@@ -49,7 +49,7 @@ export class DateTreeResolver {
                 context = thisDateInArchive;
             } else {
                 // TODO: remove hardcoded indentation options
-                const newBlock = new ListBlock(dateLine, i, {
+                const newBlock = new ListBlock(dateLine, {
                     useTab: true,
                     tabSize: 4,
                 });

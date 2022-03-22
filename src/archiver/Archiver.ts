@@ -40,7 +40,7 @@ export class Archiver {
             // TODO: another needless null check
             if (lastBlock.text && lastBlock.text.trim().length !== 0) {
                 // TODO: add an abstraction like appendText, appendListItem
-                lastSection.blockContent.appendChild(new TextBlock("", 1));
+                lastSection.blockContent.appendChild(new TextBlock(""));
             }
         }
     }
@@ -82,8 +82,8 @@ export class Archiver {
                 Archiver.addNewlinesToSectionIfNeeded(section);
             }
             const heading = this.buildArchiveHeading();
-            const rootBlock = new RootBlock(null, 0);
-            archiveSection = new Section(heading, 1, rootBlock);
+            const rootBlock = new RootBlock(null);
+            archiveSection = new Section(heading, rootBlock);
             section.appendChild(archiveSection);
         }
         return archiveSection;
@@ -154,8 +154,8 @@ export class Archiver {
     private addNewLinesIfNeeded(blockContent: Block) {
         if (this.settings.addNewlinesAroundHeadings) {
             // TODO: leaking details about block types
-            blockContent.prependChild(new TextBlock("", 1));
-            blockContent.appendChild(new TextBlock("", 1));
+            blockContent.prependChild(new TextBlock(""));
+            blockContent.appendChild(new TextBlock(""));
         }
     }
 }

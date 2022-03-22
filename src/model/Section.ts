@@ -7,8 +7,8 @@ export class Section extends MarkdownNode<Section> {
     children: Section[];
     blockContent: Block;
 
-    constructor(text: string, level: number, blockContent: Block) {
-        super(text, level);
+    constructor(text: string, blockContent: Block) {
+        super(text);
         this.blockContent = blockContent;
     }
 

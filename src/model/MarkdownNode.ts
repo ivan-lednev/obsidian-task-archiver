@@ -1,11 +1,9 @@
 export abstract class MarkdownNode<C extends MarkdownNode<C>> {
     children: C[];
     text: string | null;
-    level: number;
 
-    protected constructor(text: string, level: number) {
+    constructor(text: string) {
         this.text = text;
-        this.level = level;
         this.children = [];
     }
 

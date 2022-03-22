@@ -4,10 +4,9 @@ import { ParserSettings } from "../parser/ParserSettings";
 export class ListBlock extends Block {
     constructor(
         text: string,
-        level: number,
         private readonly settings: ParserSettings
     ) {
-        super(text, level);
+        super(text);
     }
 
     private indentFor(levels: number) {
