@@ -3,16 +3,16 @@ import { MarkdownNode } from "../model/MarkdownNode";
 export class TreeBuilder<C extends MarkdownNode<C>> {
     private readonly contextStack: C[] = [];
 
-    buildTree(root: C, flatSections: C[], contextPredicate: (node: C) => boolean) {
+    buildTree(root: C, nodes: C[], contextPredicate: (node: C) => boolean) {
         this.contextStack.push(root);
-        for (const section of flatSections) {
-            const stepsToGoUp = this.contextStack.length - section.level;
+        for (const node of nodes) {
+            const stepsToGoUp = this.contextStack.length - node.level;
             if (stepsToGoUp >= 0) {
                 this.clearStack(stepsToGoUp);
             }
-            this.appendChild(section);
-            if (contextPredicate(section)) {
-                this.contextStack.push(section);
+            this.appendChild(node);
+            if (contextPredicate(node)) {
+                this.contextStack.push(node);
             }
         }
         return root;

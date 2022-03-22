@@ -15,10 +15,14 @@ export class BlockParser {
     parse(lines: string[]): Block {
         const flatBlocks = this.parseFlatBlocks(lines);
         const root = new RootBlock(null, 0);
-        const treeBuilder = new TreeBuilder();
-        treeBuilder.buildTree(root, flatBlocks, (node) => node instanceof ListBlock);
+        new TreeBuilder().buildTree(
+            root,
+            flatBlocks,
+            (node) => node instanceof ListBlock
+        );
         return root;
     }
+
     private parseFlatBlocks(lines: string[]) {
         const flatBlocks: Block[] = [];
         for (const line of lines) {

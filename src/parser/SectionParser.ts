@@ -23,8 +23,7 @@ export class SectionParser {
             flatSectionsWithParsedContent.slice(1),
         ];
 
-        const treeBuilder = new TreeBuilder();
-        treeBuilder.buildTree(root, children, () => true);
+        new TreeBuilder().buildTree(root, children, () => true);
 
         return root;
     }
