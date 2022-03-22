@@ -209,8 +209,8 @@ describe("Stringification", () => {
                 "    - l2",
             ],
         ],
-    ])("Roundtripping doesn't mutate lines: %s", (lines) => {
-        const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
+    ])("Roundtripping respects indentation settings: %s", (lines) => {
+        const parsed = new SectionParser({ useTab: false, tabSize: 4 }).parse(lines);
         const stringified = parsed.stringify();
         expect(stringified).toEqual(lines);
     });
@@ -267,6 +267,6 @@ describe("Block search", () => {
                 b.text !== null && b.text.includes("text")
         );
 
-        expect(searchResult.stringify()[0]).toBe("\t- text");
+        expect(searchResult.stringify()[0]).toBe("- text");
     });
 });
