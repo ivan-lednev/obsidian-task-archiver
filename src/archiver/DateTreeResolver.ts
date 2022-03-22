@@ -25,9 +25,9 @@ export class DateTreeResolver {
 
     mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
         const insertionPoint = this.getCurrentDateBlock(tree);
-        newBlocks.forEach((block) => {
+        for (const block of newBlocks) {
             insertionPoint.appendChild(block);
-        });
+        }
     }
 
     private getCurrentDateBlock(tree: Block) {
@@ -39,7 +39,7 @@ export class DateTreeResolver {
         });
 
         for (const [i, level] of this.dateLevels.entries()) {
-            const dateLine = this.buildDateLine(i, level);
+            const dateLine = this.buildDateLine(level);
             // TODO: kludge for null
             const thisDateInArchive = context.findRecursively(
                 (b) => b.text !== null && b.text === dateLine
@@ -60,10 +60,9 @@ export class DateTreeResolver {
         return context;
     }
 
-    private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {
+    private buildDateLine(dateTreeLevel: DateLevel) {
         const dateFormat = this.dateFormats.get(dateTreeLevel);
         const date = window.moment().format(dateFormat);
-        // TODO: hardcoded list token
         // TODO: hardcoded link
         return `- [[${date}]]`;
     }
