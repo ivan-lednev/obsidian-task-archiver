@@ -7,7 +7,7 @@ import { TreeBuilder } from "./TreeBuilder";
 
 export class BlockParser {
     private readonly LIST_ITEM =
-        /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.)\s/;
+        /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.\s)/;
     private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
 
     constructor(private readonly settings: ParserSettings) {}
