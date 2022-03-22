@@ -1,9 +1,9 @@
-import { ParserSettings } from "./SectionParser";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { TreeBuilder } from "./TreeBuilder";
+import {ParserSettings} from "./ParserSettings";
 
 export class BlockParser {
     private readonly LIST_ITEM =

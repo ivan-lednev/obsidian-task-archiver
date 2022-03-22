@@ -1,10 +1,12 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
+import { ParserSettings } from "./ParserSettings";
 
-export interface ParserSettings {
-    useTab: boolean;
-    tabSize: number;
+interface RawSection {
+    text: string;
+    level: number;
+    lines: string[];
 }
 
 export class SectionParser {
@@ -58,11 +60,4 @@ export class SectionParser {
             );
         });
     }
-}
-
-// TODO: implement
-interface RawSection {
-    text: string;
-    level: number;
-    lines: string[];
 }
