@@ -26,12 +26,12 @@ export class DateTreeResolver {
     mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
         const insertionPoint = this.getCurrentDateBlock(tree);
         newBlocks.forEach((block) => {
+            // todo: manual indentation
             this.addIndentationRecursively(block);
             insertionPoint.appendChild(block);
         });
     }
 
-    // TODO: Don't add indentation manually. Do it based on level while stringifying things
     private addIndentationRecursively(block: Block) {
         block.text = this.indentFor(this.dateLevels.length) + block.text;
         for (const child of block.children) {
@@ -57,7 +57,7 @@ export class DateTreeResolver {
             if (thisDateInArchive) {
                 parentBlock = thisDateInArchive;
             } else {
-                // TODO, this will break once I stringify based on levels
+                // TODO: manual indentation?
                 const newBlock = new ListBlock(indentedDateLine, 1);
                 tree.appendChild(newBlock);
                 parentBlock = newBlock;
@@ -83,7 +83,8 @@ export class DateTreeResolver {
         const dateFormat = this.dateFormats.get(dateTreeLevel);
         const date = window.moment().format(dateFormat);
         // TODO: hardcoded list token
-        // TODO: hardcoded link
+        // todo: hardcoded link
+        // TODO: manual indentation
         return this.indentFor(lineLevel) + `- [[${date}]]`;
     }
 }

@@ -17,9 +17,5 @@ export abstract class MarkdownNode<C extends MarkdownNode<C>> {
         this.children.unshift(child);
     }
 
-    removeChild(child: C) {
-        this.children.splice(this.children.indexOf(child), 1);
-    }
-
     abstract stringify(): string[];
 }
