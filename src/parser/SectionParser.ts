@@ -25,7 +25,7 @@ export class SectionParser {
             flatSectionsWithParsedContent.slice(1),
         ];
 
-        new TreeBuilder().buildTree(root, children, () => true);
+        new TreeBuilder().buildTree(root, children);
 
         return root;
     }

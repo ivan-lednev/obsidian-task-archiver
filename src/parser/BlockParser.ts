@@ -18,8 +18,7 @@ export class BlockParser {
         const root = new RootBlock(null, 0);
         new TreeBuilder().buildTree(
             root,
-            flatBlocks,
-            (node) => node instanceof ListBlock
+            flatBlocks
         );
         return root;
     }

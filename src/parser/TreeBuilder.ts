@@ -1,25 +1,33 @@
 import { MarkdownNode } from "../model/MarkdownNode";
 
-export class TreeBuilder<C extends MarkdownNode<C>> {
-    private readonly contextStack: C[] = [];
+export interface FlatNode<T extends MarkdownNode<T>> {
+    markdownNode: T;
+    level: number;
+    isContext?: boolean;
+}
 
-    buildTree(root: C, nodes: C[], contextPredicate: (node: C) => boolean) {
+export class TreeBuilder<L extends MarkdownNode<L>> {
+    private readonly contextStack: FlatNode<L>[] = [];
+
+    buildTree(root: FlatNode<L>, nodes: FlatNode<L>[]) {
         this.contextStack.push(root);
         for (const node of nodes) {
             const stepsToGoUp = this.contextStack.length - node.level;
             if (stepsToGoUp >= 0) {
                 this.clearStack(stepsToGoUp);
             }
-            this.appendChild(node);
-            if (contextPredicate(node)) {
+            this.appendChild(node.markdownNode);
+            if (node.isContext) {
                 this.contextStack.push(node);
             }
         }
         return root;
     }
 
-    private appendChild(section: C) {
-        this.contextStack[this.contextStack.length - 1].appendChild(section);
+    private appendChild(section: L) {
+        this.contextStack[this.contextStack.length - 1].markdownNode.appendChild(
+            section
+        );
     }
 
     private clearStack(levels: number) {
