@@ -53,6 +53,7 @@ export class SectionParser {
 
     private parseBlocksInSections(raw: RawSection[]) {
         // TODO: don't create new parsers
+        // TODO: don't nest different objects
         return raw.map((s) => {
             return {
                 markdownNode: new Section(
