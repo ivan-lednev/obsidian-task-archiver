@@ -31,10 +31,12 @@ export class Section extends MarkdownNode<Section> {
 
     stringify(): string[] {
         const lines = [];
+
         // TODO: kludge for null
         if (this.text) {
             lines.push(this.text);
         }
+
         for (const child of [...this.blockContent.children, ...this.children]) {
             lines.push(...child.stringify());
         }

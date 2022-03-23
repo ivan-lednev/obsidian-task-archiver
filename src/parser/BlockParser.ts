@@ -31,6 +31,7 @@ export class BlockParser {
             const indentedLineMatch = line.match(this.INDENTED_LINE);
 
             if (listMatch) {
+                // TODO: duplication
                 const level = this.getLineLevelByIndentation(
                     listMatch.groups.indentation
                 );
@@ -45,8 +46,10 @@ export class BlockParser {
                 const level = this.getLineLevelByIndentation(
                     indentedLineMatch.groups.indentation
                 );
+                const indentationLength = indentedLineMatch.groups.indentation.length;
+                const lineWithoutIndentation = line.substring(indentationLength);
                 flatBlocks.push({
-                    markdownNode: new TextBlock(line),
+                    markdownNode: new TextBlock(lineWithoutIndentation),
                     level: level,
                     isContext: false,
                 });

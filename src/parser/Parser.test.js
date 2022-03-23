@@ -1,5 +1,4 @@
 import { SectionParser } from "./SectionParser";
-import { Block } from "../model/Block";
 import { TextBlock } from "../model/TextBlock";
 
 const DEFAULT_SETTINGS = {
@@ -182,7 +181,7 @@ describe("Mixing headings and lists", () => {
     });
 
     test("Multiple list levels", () => {
-        const lines = ["# h", "- l", "    - l2", "# h1"];
+        const lines = ["# h", "- l", "\t- l2", "# h1"];
         const doc = new SectionParser(DEFAULT_SETTINGS).parse(lines);
         expect(doc.children.length).toBe(2);
         const h1 = doc.children[0];
@@ -241,7 +240,7 @@ describe("Insertion", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.appendChild(new TextBlock("more text", 1));
+        parsed.blockContent.appendChild(new TextBlock("more text"));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
@@ -250,9 +249,17 @@ describe("Insertion", () => {
         const lines = ["- list", "- text"];
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
-        parsed.blockContent.prependChild(new TextBlock("more text", 1));
+        parsed.blockContent.prependChild(new TextBlock("more text"));
         const stringified = parsed.stringify();
         expect(stringified).toEqual(["more text", "- list", "- text"]);
+    });
+
+    test("Automatically adds indentation to a text block after a list item", () => {
+        const lines = ["- list"];
+
+        const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
+        parsed.blockContent.children[0].appendChild(new TextBlock("indented text"));
+        expect(parsed.stringify()).toEqual(["- list", "  indented text"]);
     });
 });
 
@@ -263,7 +270,7 @@ describe("Block search", () => {
 
         const searchResult = parsed.blockContent.findRecursively(
             (b) =>
-                // TODO: Another problem with null as a sentinel
+                // TODO: kludge for null
                 b.text !== null && b.text.includes("text")
         );
 
