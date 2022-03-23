@@ -14,17 +14,7 @@ export class Block extends MarkdownNode<Block> {
         return null;
     }
 
-    stringify(indentationLevel: number = 0): string[] {
-        const lines = [];
-
-        // TODO: kludge for null
-        if (this.text !== null) {
-            lines.push(this.text);
-        }
-
-        for (const block of this.children) {
-            lines.push(...block.stringify(indentationLevel));
-        }
-        return lines;
+    stringify(): string[] {
+        return [this.text];
     }
 }

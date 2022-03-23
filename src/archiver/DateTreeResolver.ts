@@ -1,12 +1,14 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
+import { IndentationSettings } from "../parser/ParserSettings";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
 export class DateTreeResolver {
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly dateLevels: DateLevel[];
+    private readonly indentationSettings: IndentationSettings;
 
     constructor(private readonly settings: ArchiverSettings) {
         this.dateLevels = [];
@@ -21,6 +23,7 @@ export class DateTreeResolver {
             ["days", settings.dailyNoteFormat],
             ["weeks", settings.weeklyNoteFormat],
         ]);
+        this.indentationSettings = settings.indentationSettings;
     }
 
     mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
@@ -48,11 +51,7 @@ export class DateTreeResolver {
             if (thisDateInArchive) {
                 context = thisDateInArchive;
             } else {
-                // TODO: remove hardcoded indentation options
-                const newBlock = new ListBlock(dateLine, {
-                    useTab: true,
-                    tabSize: 4,
-                });
+                const newBlock = new ListBlock(dateLine, this.indentationSettings);
                 context.appendChild(newBlock);
                 context = newBlock;
             }

@@ -1,7 +1,7 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
-import { ParserSettings } from "./ParserSettings";
+import { IndentationSettings } from "./ParserSettings";
 
 interface RawSection {
     text: string;
@@ -12,7 +12,7 @@ interface RawSection {
 export class SectionParser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
 
-    constructor(private readonly settings: ParserSettings) {}
+    constructor(private readonly settings: IndentationSettings) {}
 
     parse(lines: string[]) {
         const flatSectionsWithRawContent = this.parseRawSections(lines);

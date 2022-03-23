@@ -1,4 +1,4 @@
-export interface ParserSettings {
+export interface IndentationSettings {
     useTab: boolean;
     tabSize: number;
 }
