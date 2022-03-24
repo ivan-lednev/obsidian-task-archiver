@@ -1,7 +1,7 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
-import { IndentationSettings } from "../parser/IndentationSettings";
+import { IndentationSettings } from "./IndentationSettings";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
