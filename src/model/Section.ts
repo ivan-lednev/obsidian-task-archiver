@@ -1,7 +1,7 @@
 import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
 import { TreeFilter } from "./TreeFilter";
-import { partition } from "lodash";
+import { flatMap, partition } from "lodash";
 
 export class Section extends MarkdownNode<Section> {
     children: Section[];
@@ -35,9 +35,10 @@ export class Section extends MarkdownNode<Section> {
             lines.push(this.text);
         }
 
-        for (const child of [...this.blockContent.children, ...this.children]) {
-            lines.push(...child.stringify(indentation));
-        }
-        return lines;
+        const children = [...this.blockContent.children, ...this.children];
+        return [
+            ...lines,
+            ...flatMap(children, (child) => child.stringify(indentation)),
+        ];
     }
 }

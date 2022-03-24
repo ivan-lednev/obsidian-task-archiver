@@ -1,20 +1,20 @@
 import { Block } from "./Block";
+import { flatMap } from "lodash";
 
 export class ListBlock extends Block {
     stringify(indentation: string): string[] {
-        const lines = super.stringify(indentation);
-        for (const block of this.children) {
-            if (block instanceof ListBlock) {
-                lines.push(...block.stringify(indentation).map((b) => indentation + b));
-            } else {
-                const extraIndentationForChildTextBlocks = "  ";
-                lines.push(
-                    ...block
-                        .stringify(indentation)
-                        .map((b) => extraIndentationForChildTextBlocks + b)
-                );
-            }
-        }
-        return lines;
+        const extraIndentationForChildTextBlocks = "  ";
+        return [
+            ...super.stringify(indentation),
+            ...flatMap(this.children, (child) => {
+                const extraIndentationForChildren =
+                    child instanceof ListBlock
+                        ? indentation
+                        : extraIndentationForChildTextBlocks;
+                return child
+                    .stringify(indentation)
+                    .map((text) => extraIndentationForChildren + text);
+            }),
+        ];
     }
 }
