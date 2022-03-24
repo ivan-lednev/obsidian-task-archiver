@@ -1,6 +1,6 @@
 import { SectionParser } from "./SectionParser";
 import { TextBlock } from "../model/TextBlock";
-import { buildIndentation } from "../util";
+import { buildIndentation, findBlockRecursively } from "../util";
 import { BlockParser } from "./BlockParser";
 
 const DEFAULT_SETTINGS = {
@@ -284,6 +284,7 @@ describe("Insertion", () => {
     });
 });
 
+// TODO: doesn't belong here
 describe("Block search", () => {
     test("Find a block matching a matcher", () => {
         const lines = ["- list", "\t- text"];
@@ -291,7 +292,8 @@ describe("Block search", () => {
             lines
         );
 
-        const searchResult = parsed.blockContent.findRecursively(
+        const searchResult = findBlockRecursively(
+            parsed.blockContent.children,
             (b) =>
                 // TODO: kludge for null
                 b.text !== null && b.text.includes("text")

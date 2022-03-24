@@ -2,6 +2,7 @@ import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { IndentationSettings } from "./IndentationSettings";
+import { findBlockRecursively } from "../util";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -36,15 +37,16 @@ export class DateTreeResolver {
     private getCurrentDateBlock(tree: Block) {
         let context = tree;
 
-        context.children = context.children.filter((block: Block) => {
-            // TODO: kludge for null
-            return block.text !== null && block.text.trim().length > 0;
-        });
+        // TODO: why is this here? Without this filter I get an extra space after the heading text
+        context.children = context.children.filter(
+            (block: Block) => block.text.trim().length > 0
+        );
 
         for (const level of this.dateLevels) {
             const dateLine = this.buildDateLine(level);
             // TODO: kludge for null
-            const thisDateInArchive = context.findRecursively(
+            const thisDateInArchive = findBlockRecursively(
+                context.children,
                 (b) => b.text !== null && b.text === dateLine
             );
 
