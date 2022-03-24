@@ -3,7 +3,7 @@ import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { FlatNode, TreeBuilder } from "./TreeBuilder";
-import { IndentationSettings } from "./ParserSettings";
+import { IndentationSettings } from "../archiver/IndentationSettings";
 
 export class BlockParser {
     private readonly LIST_ITEM =
@@ -38,7 +38,7 @@ export class BlockParser {
                 const indentationLength = listMatch.groups.indentation.length;
                 const lineWithoutIndentation = line.substring(indentationLength);
                 flatBlocks.push({
-                    markdownNode: new ListBlock(lineWithoutIndentation, this.settings),
+                    markdownNode: new ListBlock(lineWithoutIndentation),
                     level: level,
                     isContext: true,
                 });

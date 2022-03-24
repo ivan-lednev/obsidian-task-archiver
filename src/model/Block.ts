@@ -14,7 +14,7 @@ export class Block extends MarkdownNode<Block> {
         return null;
     }
 
-    stringify(): string[] {
+    stringify(indentation: string): string[] {
         return [this.text];
     }
 }

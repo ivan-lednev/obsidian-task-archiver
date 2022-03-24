@@ -29,7 +29,7 @@ export class Section extends MarkdownNode<Section> {
         return extracted;
     }
 
-    stringify(): string[] {
+    stringify(indentation: string): string[] {
         const lines = [];
 
         // TODO: kludge for null
@@ -38,7 +38,7 @@ export class Section extends MarkdownNode<Section> {
         }
 
         for (const child of [...this.blockContent.children, ...this.children]) {
-            lines.push(...child.stringify());
+            lines.push(...child.stringify(indentation));
         }
         return lines;
     }

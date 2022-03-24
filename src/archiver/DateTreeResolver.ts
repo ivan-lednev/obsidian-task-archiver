@@ -1,7 +1,7 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
-import { IndentationSettings } from "../parser/ParserSettings";
+import { IndentationSettings } from "../parser/IndentationSettings";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -51,7 +51,7 @@ export class DateTreeResolver {
             if (thisDateInArchive) {
                 context = thisDateInArchive;
             } else {
-                const newBlock = new ListBlock(dateLine, this.indentationSettings);
+                const newBlock = new ListBlock(dateLine);
                 context.appendChild(newBlock);
                 context = newBlock;
             }

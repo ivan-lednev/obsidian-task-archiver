@@ -1,27 +1,16 @@
 import { Block } from "./Block";
-import { IndentationSettings } from "../parser/ParserSettings";
 
 export class ListBlock extends Block {
-    private readonly indentation: string;
-
-    constructor(text: string, private readonly settings: IndentationSettings) {
-        super(text);
-        // TODO: push indentation out of this class
-        this.indentation = this.settings.useTab
-            ? "\t"
-            : " ".repeat(this.settings.tabSize);
-    }
-
-    stringify(): string[] {
-        const lines = super.stringify();
+    stringify(indentation: string): string[] {
+        const lines = super.stringify(indentation);
         for (const block of this.children) {
             if (block instanceof ListBlock) {
-                lines.push(...block.stringify().map((b) => this.indentation + b));
+                lines.push(...block.stringify(indentation).map((b) => indentation + b));
             } else {
                 const extraIndentationForChildTextBlocks = "  ";
                 lines.push(
                     ...block
-                        .stringify()
+                        .stringify(indentation)
                         .map((b) => extraIndentationForChildTextBlocks + b)
                 );
             }

@@ -1,7 +1,8 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
-import { IndentationSettings } from "./ParserSettings";
+import { IndentationSettings } from "../archiver/IndentationSettings";
+import { Block } from "../model/Block";
 
 interface RawSection {
     text: string;
@@ -12,7 +13,7 @@ interface RawSection {
 export class SectionParser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
 
-    constructor(private readonly settings: IndentationSettings) {}
+    constructor(private readonly indentationSettings: IndentationSettings) {}
 
     parse(lines: string[]) {
         const flatSectionsWithRawContent = this.parseRawSections(lines);
@@ -52,14 +53,11 @@ export class SectionParser {
     }
 
     private parseBlocksInSections(raw: RawSection[]) {
-        // TODO: don't create new parsers
-        // TODO: don't nest different objects
+        // TODO: don't nest different objects in one go: split Section creation from parsing blocks?
+        const blockParser = new BlockParser(this.indentationSettings);
         return raw.map((s) => {
             return {
-                markdownNode: new Section(
-                    s.text,
-                    new BlockParser(this.settings).parse(s.lines)
-                ),
+                markdownNode: new Section(s.text, blockParser.parse(s.lines)),
                 level: s.level,
                 isContext: true,
             };

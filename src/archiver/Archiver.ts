@@ -7,6 +7,7 @@ import { TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
+import { buildIndentation } from "../util";
 
 export class Archiver {
     private readonly archiveHeadingPattern: RegExp;
@@ -136,7 +137,9 @@ export class Archiver {
     }
 
     private async writeTreeToFile(file: TFile, tree: Section) {
-        await this.vault.modify(file, tree.stringify().join("\n"));
+        const indentation = buildIndentation(this.settings.indentationSettings);
+        const treeLines = tree.stringify(indentation).join("\n");
+        await this.vault.modify(file, treeLines);
     }
 
     private archiveTasksToSection(completedTasks: Block[], archiveSection: Section) {

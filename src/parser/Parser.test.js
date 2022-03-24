@@ -1,10 +1,12 @@
 import { SectionParser } from "./SectionParser";
 import { TextBlock } from "../model/TextBlock";
+import { buildIndentation } from "../util";
 
 const DEFAULT_SETTINGS = {
     useTab: true,
     tabSize: 2,
 };
+const DEFAULT_INDENTATION = buildIndentation(DEFAULT_SETTINGS);
 
 test("Builds a flat structure with non-hierarchical text", () => {
     const lines = [
@@ -209,8 +211,9 @@ describe("Stringification", () => {
             ],
         ],
     ])("Roundtripping respects indentation settings: %s", (lines) => {
-        const parsed = new SectionParser({ useTab: false, tabSize: 4 }).parse(lines);
-        const stringified = parsed.stringify();
+        const settings = { useTab: false, tabSize: 4 };
+        const parsed = new SectionParser(settings).parse(lines);
+        const stringified = parsed.stringify(buildIndentation(settings));
         expect(stringified).toEqual(lines);
     });
 });
@@ -229,9 +232,9 @@ describe("Extraction", () => {
                 blockFilter: (block) =>
                     block.text !== null && block.text === "Extract me",
             })
-            .map((b) => b.stringify());
+            .map((b) => b.stringify(DEFAULT_INDENTATION));
         expect(actual).toEqual(extracted);
-        expect(parsed.stringify()).toEqual(theRest);
+        expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual(theRest);
     });
 });
 
@@ -241,7 +244,7 @@ describe("Insertion", () => {
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
         parsed.blockContent.appendChild(new TextBlock("more text"));
-        const stringified = parsed.stringify();
+        const stringified = parsed.stringify(DEFAULT_INDENTATION);
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
 
@@ -250,7 +253,7 @@ describe("Insertion", () => {
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
         parsed.blockContent.prependChild(new TextBlock("more text"));
-        const stringified = parsed.stringify();
+        const stringified = parsed.stringify(DEFAULT_INDENTATION);
         expect(stringified).toEqual(["more text", "- list", "- text"]);
     });
 
@@ -259,7 +262,10 @@ describe("Insertion", () => {
 
         const parsed = new SectionParser(DEFAULT_SETTINGS).parse(lines);
         parsed.blockContent.children[0].appendChild(new TextBlock("indented text"));
-        expect(parsed.stringify()).toEqual(["- list", "  indented text"]);
+        expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual([
+            "- list",
+            "  indented text",
+        ]);
     });
 });
 
@@ -274,6 +280,6 @@ describe("Block search", () => {
                 b.text !== null && b.text.includes("text")
         );
 
-        expect(searchResult.stringify()[0]).toBe("- text");
+        expect(searchResult.stringify(DEFAULT_INDENTATION)[0]).toBe("- text");
     });
 });
