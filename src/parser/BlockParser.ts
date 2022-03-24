@@ -2,49 +2,46 @@ import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
-import { FlatNode, TreeBuilder } from "./TreeBuilder";
+import { TreeBuilder } from "./TreeBuilder";
 import { IndentationSettings } from "../archiver/IndentationSettings";
 
 export class BlockParser {
     private readonly LIST_MARKER = /^[-*]|\d+\.\s/;
-    private readonly INDENTATION = /^(?: {2}|\t)+/;
+    private readonly INDENTATION = /^(?: {2}|\t)*/;
 
     constructor(private readonly settings: IndentationSettings) {}
 
     parse(lines: string[]): Block {
-        const flatBlocks = this.parseFlatBlocks(lines);
-        // TODO: remove the need for wrapper in root
+        const flatBlocks = lines.map((line) => this.parseFlatBlock(line));
+
+        // TODO: remove the need for wrapper in root?
+        const rootBlock = new RootBlock();
         const root = {
-            markdownNode: new RootBlock(),
+            markdownNode: rootBlock,
             level: 0,
         };
+
         new TreeBuilder().buildTree(root, flatBlocks);
-        return root.markdownNode;
+        return rootBlock;
     }
 
-    private parseFlatBlocks(lines: string[]) {
-        return lines.map((line) => {
-            const { level, lineWithoutIndentation } = this.splitOnIndentation(line);
-            const markdownNode = lineWithoutIndentation.match(this.LIST_MARKER)
-                ? new ListBlock(lineWithoutIndentation)
-                : new TextBlock(lineWithoutIndentation);
-            return {
-                markdownNode,
-                level,
-            };
-        });
+    private parseFlatBlock(line: string) {
+        const [indentation, text] = this.splitOnIndentation(line);
+        const level = this.getIndentationLevel(indentation);
+        const markdownNode = text.match(this.LIST_MARKER)
+            ? new ListBlock(text)
+            : new TextBlock(text);
+        return {
+            level,
+            markdownNode,
+        };
     }
 
     private splitOnIndentation(line: string) {
         const indentationMatch = line.match(this.INDENTATION);
-        if (indentationMatch) {
-            const indentationChars = indentationMatch[0];
-            return {
-                level: this.getIndentationLevel(indentationChars),
-                lineWithoutIndentation: line.substring(indentationChars.length),
-            };
-        }
-        return { level: 1, lineWithoutIndentation: line };
+        const indentation = indentationMatch[0];
+        const text = line.substring(indentation.length);
+        return [indentation, text];
     }
 
     private getIndentationLevel(indentation: string) {
