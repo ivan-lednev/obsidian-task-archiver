@@ -13,7 +13,7 @@ interface RawSection {
 export class SectionParser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
 
-    constructor(private readonly indentationSettings: IndentationSettings) {}
+    constructor(private readonly blockParser: BlockParser) {}
 
     parse(lines: string[]) {
         const flatSectionsWithRawContent = this.parseRawSections(lines);
@@ -54,10 +54,9 @@ export class SectionParser {
 
     private parseBlocksInSections(raw: RawSection[]) {
         // TODO: don't nest different objects in one go: split Section creation from parsing blocks?
-        const blockParser = new BlockParser(this.indentationSettings);
         return raw.map((s) => {
             return {
-                markdownNode: new Section(s.text, blockParser.parse(s.lines)),
+                markdownNode: new Section(s.text, this.blockParser.parse(s.lines)),
                 level: s.level,
                 isContext: true,
             };

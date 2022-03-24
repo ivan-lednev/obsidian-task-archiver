@@ -5,6 +5,7 @@ import { ArchiverSettingTab } from "./ArchiverSettingTab";
 import { DefaultSettings } from "./defaultSettings";
 import { SectionParser } from "./parser/SectionParser";
 import { DateTreeResolver } from "./archiver/DateTreeResolver";
+import {BlockParser} from "./parser/BlockParser";
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;
@@ -23,7 +24,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         const archiver = new Archiver(
             this.app.vault,
             this.app.workspace,
-            new SectionParser(this.settings.indentationSettings),
+            new SectionParser(new BlockParser(this.settings.indentationSettings)),
             new DateTreeResolver(this.settings),
             this.settings
         );

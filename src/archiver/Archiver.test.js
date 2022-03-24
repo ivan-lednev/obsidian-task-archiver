@@ -2,6 +2,7 @@ import moment from "moment";
 import { Archiver } from "./Archiver";
 import { SectionParser } from "../parser/SectionParser";
 import { DateTreeResolver } from "./DateTreeResolver";
+import { BlockParser } from "../parser/BlockParser";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -61,7 +62,7 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
     const archiver = new Archiver(
         vault,
         workspace,
-        new SectionParser(settings.indentationSettings),
+        new SectionParser(new BlockParser(settings.indentationSettings)),
         new DateTreeResolver(settings),
         settings
     );
