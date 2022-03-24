@@ -6,9 +6,8 @@ import { FlatNode, TreeBuilder } from "./TreeBuilder";
 import { IndentationSettings } from "../archiver/IndentationSettings";
 
 export class BlockParser {
-    private readonly LIST_ITEM =
-        /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.\s)/;
-    private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
+    private readonly LIST_MARKER = /^[-*]|\d+\.\s/;
+    private readonly INDENTATION = /^(?: {2}|\t)+/;
 
     constructor(private readonly settings: IndentationSettings) {}
 
@@ -27,36 +26,22 @@ export class BlockParser {
     private parseFlatBlocks(lines: string[]) {
         const flatBlocks: FlatNode<Block>[] = [];
         for (const line of lines) {
-            const listMatch = line.match(this.LIST_ITEM);
-            const indentedLineMatch = line.match(this.INDENTED_LINE);
+            const indentationMatch = line.match(this.INDENTATION);
 
-            if (listMatch) {
-                // TODO: duplication
-                const level = this.getLineLevelByIndentation(
-                    listMatch.groups.indentation
-                );
-                const indentationLength = listMatch.groups.indentation.length;
-                const lineWithoutIndentation = line.substring(indentationLength);
+            let { indentationLevel, lineWithoutIndentation } =
+                this.getIndentationFromLine(line);
+
+            const listMarker = lineWithoutIndentation.match(this.LIST_MARKER);
+            if (listMarker) {
                 flatBlocks.push({
                     markdownNode: new ListBlock(lineWithoutIndentation),
-                    level: level,
+                    level: indentationLevel,
                     isContext: true,
-                });
-            } else if (indentedLineMatch) {
-                const level = this.getLineLevelByIndentation(
-                    indentedLineMatch.groups.indentation
-                );
-                const indentationLength = indentedLineMatch.groups.indentation.length;
-                const lineWithoutIndentation = line.substring(indentationLength);
-                flatBlocks.push({
-                    markdownNode: new TextBlock(lineWithoutIndentation),
-                    level: level,
-                    isContext: false,
                 });
             } else {
                 flatBlocks.push({
-                    markdownNode: new TextBlock(line),
-                    level: 1,
+                    markdownNode: new TextBlock(lineWithoutIndentation),
+                    level: indentationLevel,
                     isContext: false,
                 });
             }
@@ -64,7 +49,19 @@ export class BlockParser {
         return flatBlocks;
     }
 
-    private getLineLevelByIndentation(indentation: string) {
+    private getIndentationFromLine(line: string) {
+        const indentationMatch = line.match(this.INDENTATION);
+        if (indentationMatch) {
+            const indentationChars = indentationMatch[0];
+            return {
+                indentationLevel: this.getIndentationLevel(indentationChars),
+                lineWithoutIndentation: line.substring(indentationChars.length),
+            };
+        }
+        return { indentationLevel: 1, lineWithoutIndentation: line };
+    }
+
+    private getIndentationLevel(indentation: string) {
         // TODO: kludge for null; this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
         let levelsOfIndentation = 1;
         if (this.settings.useTab) {
