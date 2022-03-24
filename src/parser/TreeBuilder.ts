@@ -1,9 +1,10 @@
 import { MarkdownNode } from "../model/MarkdownNode";
+import { ListBlock } from "../model/ListBlock";
+import { Section } from "../model/Section";
 
 export interface FlatNode<T extends MarkdownNode<T>> {
     markdownNode: T;
     level: number;
-    isContext?: boolean;
 }
 
 export class TreeBuilder<L extends MarkdownNode<L>> {
@@ -17,7 +18,10 @@ export class TreeBuilder<L extends MarkdownNode<L>> {
                 this.clearStack(stepsToGoUp);
             }
             this.appendChild(node.markdownNode);
-            if (node.isContext) {
+            if (
+                node.markdownNode instanceof ListBlock ||
+                node.markdownNode instanceof Section
+            ) {
                 this.contextStack.push(node);
             }
         }

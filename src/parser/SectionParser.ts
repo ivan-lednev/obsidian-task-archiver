@@ -56,7 +56,6 @@ export class SectionParser {
             return {
                 markdownNode: new Section(s.text, this.blockParser.parse(s.lines)),
                 level: s.level,
-                isContext: true,
             };
         });
     }

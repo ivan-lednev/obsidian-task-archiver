@@ -17,48 +17,34 @@ export class BlockParser {
         const root = {
             markdownNode: new RootBlock(),
             level: 0,
-            isContext: true,
         };
         new TreeBuilder().buildTree(root, flatBlocks);
         return root.markdownNode;
     }
 
     private parseFlatBlocks(lines: string[]) {
-        const flatBlocks: FlatNode<Block>[] = [];
-        for (const line of lines) {
-            const indentationMatch = line.match(this.INDENTATION);
-
-            let { indentationLevel, lineWithoutIndentation } =
-                this.getIndentationFromLine(line);
-
-            const listMarker = lineWithoutIndentation.match(this.LIST_MARKER);
-            if (listMarker) {
-                flatBlocks.push({
-                    markdownNode: new ListBlock(lineWithoutIndentation),
-                    level: indentationLevel,
-                    isContext: true,
-                });
-            } else {
-                flatBlocks.push({
-                    markdownNode: new TextBlock(lineWithoutIndentation),
-                    level: indentationLevel,
-                    isContext: false,
-                });
-            }
-        }
-        return flatBlocks;
+        return lines.map((line) => {
+            const { level, lineWithoutIndentation } = this.splitOnIndentation(line);
+            const markdownNode = lineWithoutIndentation.match(this.LIST_MARKER)
+                ? new ListBlock(lineWithoutIndentation)
+                : new TextBlock(lineWithoutIndentation);
+            return {
+                markdownNode,
+                level,
+            };
+        });
     }
 
-    private getIndentationFromLine(line: string) {
+    private splitOnIndentation(line: string) {
         const indentationMatch = line.match(this.INDENTATION);
         if (indentationMatch) {
             const indentationChars = indentationMatch[0];
             return {
-                indentationLevel: this.getIndentationLevel(indentationChars),
+                level: this.getIndentationLevel(indentationChars),
                 lineWithoutIndentation: line.substring(indentationChars.length),
             };
         }
-        return { indentationLevel: 1, lineWithoutIndentation: line };
+        return { level: 1, lineWithoutIndentation: line };
     }
 
     private getIndentationLevel(indentation: string) {
