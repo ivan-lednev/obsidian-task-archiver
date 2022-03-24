@@ -83,7 +83,7 @@ export class Archiver {
                 Archiver.addNewlinesToSectionIfNeeded(section);
             }
             const heading = this.buildArchiveHeading();
-            const rootBlock = new RootBlock(null);
+            const rootBlock = new RootBlock();
             archiveSection = new Section(heading, rootBlock);
             section.appendChild(archiveSection);
         }

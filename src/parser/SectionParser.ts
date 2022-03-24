@@ -1,8 +1,6 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
-import { IndentationSettings } from "../archiver/IndentationSettings";
-import { Block } from "../model/Block";
 
 interface RawSection {
     text: string;

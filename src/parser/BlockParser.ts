@@ -16,7 +16,7 @@ export class BlockParser {
         const flatBlocks = this.parseFlatBlocks(lines);
         // TODO: remove the need for wrapper in root
         const root = {
-            markdownNode: new RootBlock(null),
+            markdownNode: new RootBlock(),
             level: 0,
             isContext: true,
         };
@@ -65,13 +65,13 @@ export class BlockParser {
     }
 
     private getLineLevelByIndentation(indentation: string) {
-        let levelsOfIndentation;
+        // TODO: kludge for null; this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
+        let levelsOfIndentation = 1;
         if (this.settings.useTab) {
-            levelsOfIndentation = indentation.length;
-        } else {
-            levelsOfIndentation = Math.ceil(indentation.length / this.settings.tabSize);
+            return levelsOfIndentation + indentation.length;
         }
-        // TODO: kludge for null
-        return levelsOfIndentation + 1;
+        return (
+            levelsOfIndentation + Math.ceil(indentation.length / this.settings.tabSize)
+        );
     }
 }

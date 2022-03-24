@@ -5,11 +5,9 @@ import { partition } from "lodash";
 
 export class Section extends MarkdownNode<Section> {
     children: Section[];
-    blockContent: Block;
 
-    constructor(text: string, blockContent: Block) {
+    constructor(text: string, public blockContent: Block) {
         super(text);
-        this.blockContent = blockContent;
     }
 
     extractBlocksRecursively(filter: TreeFilter): Block[] {
