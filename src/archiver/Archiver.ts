@@ -71,7 +71,10 @@ export class Archiver {
 
     private archiveToRoot(newlyCompletedTasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
-        this.archiveTasksToSection(newlyCompletedTasks, archiveSection);
+        this.dateTreeResolver.mergeNewBlocksWithDateTree(
+            archiveSection.blockContent,
+            newlyCompletedTasks
+        );
     }
 
     private getArchiveSectionFromRoot(section: Section) {
@@ -142,23 +145,9 @@ export class Archiver {
         await this.vault.modify(file, treeLines);
     }
 
-    private archiveTasksToSection(completedTasks: Block[], archiveSection: Section) {
-        const archiveBlock = archiveSection.blockContent;
-        this.dateTreeResolver.mergeNewBlocksWithDateTree(archiveBlock, completedTasks);
-        this.addNewLinesIfNeeded(archiveBlock);
-    }
-
     private buildArchiveHeading() {
         // TODO: if there is no archive heading, I should build an ast, not a manual thing
         const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
         return `${headingToken} ${this.settings.archiveHeading}`;
-    }
-
-    private addNewLinesIfNeeded(blockContent: Block) {
-        if (this.settings.addNewlinesAroundHeadings) {
-            // TODO: leaking details about block types
-            blockContent.prependChild(new TextBlock(""));
-            blockContent.appendChild(new TextBlock(""));
-        }
     }
 }

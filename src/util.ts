@@ -6,14 +6,27 @@ export function buildIndentation(settings: IndentationSettings) {
 }
 
 export function findBlockRecursively(
-    blocks: Block[],
+    blocksOrBlock: Block[] | Block,
     matcher: (node: Block) => boolean
 ): Block | null {
+    if (blocksOrBlock instanceof Block) {
+        if (matcher(blocksOrBlock)) {
+            return blocksOrBlock;
+        }
+        return findBlockRecursivelyInCollection(blocksOrBlock.children, matcher);
+    }
+    return findBlockRecursivelyInCollection(blocksOrBlock, matcher);
+}
+
+function findBlockRecursivelyInCollection(
+    blocks: Block[],
+    matcher: (node: Block) => boolean
+) {
     for (const block of blocks) {
         if (matcher(block)) {
             return block;
         }
-        const found = findBlockRecursively(block.children, matcher);
+        const found = findBlockRecursively(block, matcher);
         if (found !== null) {
             return found;
         }

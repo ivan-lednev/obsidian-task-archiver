@@ -3,6 +3,8 @@ import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { IndentationSettings } from "./IndentationSettings";
 import { findBlockRecursively } from "../util";
+import { chain, dropWhile } from "lodash";
+import { TextBlock } from "../model/TextBlock";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -28,20 +30,26 @@ export class DateTreeResolver {
     }
 
     mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
+        tree.children = DateTreeResolver.stripSurroundingNewlines(tree.children);
         const insertionPoint = this.getCurrentDateBlock(tree);
-        for (const block of newBlocks) {
-            insertionPoint.appendChild(block);
+        insertionPoint.children = [...insertionPoint.children, ...newBlocks];
+        if (this.settings.addNewlinesAroundHeadings) {
+            tree.children = DateTreeResolver.addSurroundingNewlines(tree.children);
         }
+    }
+
+    private static stripSurroundingNewlines(blocks: Block[]) {
+        const isEmpty = (block: Block) => block.text.trim().length === 0;
+        return chain(blocks).dropWhile(isEmpty).dropRightWhile(isEmpty).value();
+    }
+
+    private static addSurroundingNewlines(blocks: Block[]) {
+        const empty = new TextBlock("");
+        return [empty, ...blocks, empty];
     }
 
     private getCurrentDateBlock(tree: Block) {
         let context = tree;
-
-        // TODO: why is this here? Without this filter I get an extra space after the heading text
-        context.children = context.children.filter(
-            (block: Block) => block.text.trim().length > 0
-        );
-
         for (const level of this.dateLevels) {
             const dateLine = this.buildDateLine(level);
             // TODO: kludge for null
