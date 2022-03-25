@@ -5,7 +5,7 @@ import { ArchiverSettingTab } from "./ArchiverSettingTab";
 import { DefaultSettings } from "./defaultSettings";
 import { SectionParser } from "./parser/SectionParser";
 import { DateTreeResolver } from "./archiver/DateTreeResolver";
-import {BlockParser} from "./parser/BlockParser";
+import { BlockParser } from "./parser/BlockParser";
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;

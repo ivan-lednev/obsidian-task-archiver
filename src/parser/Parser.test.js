@@ -292,11 +292,8 @@ describe("Block search", () => {
             lines
         );
 
-        const searchResult = findBlockRecursively(
-            parsed.blockContent.children,
-            (b) =>
-                // TODO: kludge for null
-                b.text !== null && b.text.includes("text")
+        const searchResult = findBlockRecursively(parsed.blockContent.children, (b) =>
+            b.text.includes("text")
         );
 
         expect(searchResult.stringify(DEFAULT_INDENTATION)[0]).toBe("- text");

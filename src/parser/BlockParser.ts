@@ -16,12 +16,12 @@ export class BlockParser {
 
         // TODO: remove the need for wrapper in root?
         const rootBlock = new RootBlock();
-        const root = {
+        const rootFlatBlock = {
             markdownNode: rootBlock,
             level: 0,
         };
 
-        new TreeBuilder().buildTree(root, flatBlocks);
+        new TreeBuilder().buildTree(rootFlatBlock, flatBlocks);
         return rootBlock;
     }
 

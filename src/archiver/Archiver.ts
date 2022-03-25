@@ -8,6 +8,7 @@ import { DateTreeResolver } from "./DateTreeResolver";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { buildIndentation } from "../util";
+import { ListBlock } from "../model/ListBlock";
 
 export class Archiver {
     private readonly archiveHeadingPattern: RegExp;
@@ -38,9 +39,7 @@ export class Archiver {
         const blocksLength = lastSection.blockContent.children.length;
         if (blocksLength > 0) {
             const lastBlock = lastSection.blockContent.children[blocksLength - 1];
-            // TODO: another needless null check
-            if (lastBlock.text && lastBlock.text.trim().length !== 0) {
-                // TODO: add an abstraction like appendText, appendListItem
+            if (lastBlock.text.trim().length !== 0) {
                 lastSection.blockContent.appendChild(new TextBlock(""));
             }
         }
@@ -103,10 +102,9 @@ export class Archiver {
 
     private extractNewlyCompletedTasks(tree: Section) {
         // TODO: the AST should not leak details about bullets or heading tokens
-        const completedTaskPattern = /^(?<listMarker>[-*]|\d+\.) \[x]/;
-        // TODO: kludge for null
+        const completedTaskPattern = /^(?:[-*]|\d+\.) \[x]/;
         const isCompletedTask = (block: Block) =>
-            block.text !== null && completedTaskPattern.test(block.text);
+            block instanceof ListBlock && completedTaskPattern.test(block.text);
 
         const isSectionAnythingExceptArchive = (section: Section) =>
             !this.archiveHeadingPattern.test(section.text);
@@ -146,7 +144,6 @@ export class Archiver {
     }
 
     private buildArchiveHeading() {
-        // TODO: if there is no archive heading, I should build an ast, not a manual thing
         const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
         return `${headingToken} ${this.settings.archiveHeading}`;
     }

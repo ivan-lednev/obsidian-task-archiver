@@ -3,7 +3,7 @@ import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { IndentationSettings } from "./IndentationSettings";
 import { findBlockRecursively } from "../util";
-import { chain, dropWhile } from "lodash";
+import { chain } from "lodash";
 import { TextBlock } from "../model/TextBlock";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
@@ -49,13 +49,13 @@ export class DateTreeResolver {
     }
 
     private getCurrentDateBlock(tree: Block) {
+        const dateLines = this.dateLevels.map((l) => this.buildDateLine(l));
+
         let context = tree;
-        for (const level of this.dateLevels) {
-            const dateLine = this.buildDateLine(level);
-            // TODO: kludge for null
+        for (const dateLine of dateLines) {
             const thisDateInArchive = findBlockRecursively(
                 context.children,
-                (b) => b.text !== null && b.text === dateLine
+                (b) => b.text === dateLine
             );
 
             if (thisDateInArchive) {
