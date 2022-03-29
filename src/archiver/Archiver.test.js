@@ -27,70 +27,69 @@ const DEFAULT_SETTINGS = {
     defaultArchiveFileName: "<filename> (archive)",
 };
 
+const fileContents = new Map();
+const activeFile = {
+    extension: "md",
+};
+const TFileMock = jest.requireMock("obsidian").TFile;
+const archive = Object.assign(Object.create(TFileMock.prototype), {
+    extension: "md",
+});
+
+const vault = {
+    read: (file) => fileContents.get(file).join("\n"),
+    modify: (file, contents) => fileContents.set(file, contents.split("\n")),
+    getAbstractFileByPath: () => archive,
+};
+
+const workspace = {
+    getActiveFile: () => activeFile,
+};
+
+beforeEach(() => {
+    fileContents.clear();
+});
+
 async function assertActiveFileModified(
     input,
     expectedOutput,
     settings = DEFAULT_SETTINGS
 ) {
-    const { vault } = await archiveCompletedTasks(input, settings);
-    expect(vault.modify).toHaveBeenCalledWith(
-        expect.anything(),
-        expectedOutput.join("\n")
-    );
+    await archiveCompletedTasks(input, settings);
+    expect(fileContents.get(activeFile)).toEqual(expectedOutput);
 }
 
 async function archiveCompletedTasks(input, settings = DEFAULT_SETTINGS) {
-    const { vault, archiver } = buildArchiver(input, settings);
-    const message = await archiver.archiveTasksInActiveFile();
-    return { vault, message };
+    const archiver = buildArchiver(input, settings);
+    return await archiver.archiveTasksInActiveFile();
 }
 
 function buildArchiver(input, settings) {
-    const TFileMock = jest.requireMock("obsidian").TFile;
-    // We need this for instanceof checks to work
-    const archiveFile = Object.assign(Object.create(TFileMock.prototype), {
-        extension: "md",
-    });
-    const vault = {
-        read: jest
-            .fn()
-            .mockImplementationOnce(() => input.join("\n"))
-            .mockImplementationOnce(() => ""),
-        modify: jest.fn(),
-        getAbstractFileByPath: jest.fn(() => archiveFile),
-    };
-    const workspace = {
-        getActiveFile: () => ({
-            extension: "md",
-        }),
-    };
+    // TODO: this is out of place
+    fileContents.set(activeFile, input);
+    fileContents.set(archive, [""]);
 
-    const archiver = new Archiver(
+    return new Archiver(
         vault,
         workspace,
         new SectionParser(new BlockParser(settings.indentationSettings)),
         new DateTreeResolver(settings),
         settings
     );
-    return {
-        vault,
-        archiver,
-    };
 }
 
 async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
-    const { vault, archiver } = buildArchiver(input, settings);
-    const message = await archiver.deleteTasksInActiveFile();
-    return { vault, message };
+    const archiver = buildArchiver(input, settings);
+    return await archiver.deleteTasksInActiveFile();
 }
 
 describe("Moving top-level tasks to the archive", () => {
     test("No-op for files without completed tasks", async () => {
         const input = ["foo", "bar", "# Archived"];
 
-        const { vault } = await archiveCompletedTasks(input);
+        await archiveCompletedTasks(input);
 
-        expect(vault.modify).not.toBeCalled();
+        expect(fileContents.get(activeFile)).toEqual(input);
     });
 
     test("Moves a single task to an empty archive", async () => {
@@ -163,7 +162,7 @@ describe("Moving top-level tasks to the archive", () => {
     ])(
         "Reports the number of top-level archived tasks: %s -> %s",
         async (input, expected) => {
-            const { message } = await archiveCompletedTasks(input);
+            const message = await archiveCompletedTasks(input);
             expect(message).toBe(expected);
         }
     );
@@ -265,9 +264,9 @@ describe("Deleting completed tasks", () => {
     test("Deletes completed tasks", async () => {
         const input = ["- [x] foo", "- [ ] bar"];
 
-        const { vault } = await deleteCompletedTasks(input);
-        expect(vault.modify).toHaveBeenCalledTimes(1);
-        expect(vault.modify).toHaveBeenCalledWith(expect.anything(), "- [ ] bar");
+        await deleteCompletedTasks(input);
+
+        expect(fileContents.get(activeFile)).toEqual(["- [ ] bar"]);
     });
 });
 
@@ -275,18 +274,19 @@ describe("Separate files", () => {
     test("Creates a new archive in a separate file", async () => {
         const input = ["- [x] foo", "- [ ] bar"];
 
-        const { vault } = await archiveCompletedTasks(input, {
+        await archiveCompletedTasks(input, {
             ...DEFAULT_SETTINGS,
             archiveToSeparateFile: true,
         });
 
-        expect(vault.modify).toHaveBeenNthCalledWith(
-            1,
-            expect.anything(),
-            "\n# Archived\n\n- [x] foo\n"
-        );
-
-        expect(vault.modify).toHaveBeenNthCalledWith(2, expect.anything(), "- [ ] bar");
+        expect(fileContents.get(activeFile)).toEqual(["- [ ] bar"]);
+        expect(fileContents.get(archive)).toEqual([
+            "",
+            "# Archived",
+            "",
+            "- [x] foo",
+            "",
+        ]);
     });
 });
 
