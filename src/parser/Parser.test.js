@@ -69,6 +69,14 @@ describe("Headings", () => {
         const secondH1 = doc.children[1];
         expect(secondH1.blockContent.children.length).toBe(1);
     });
+
+    test("Doesn't break when the user jumps over a level", () => {
+        const lines = ["# H1", "#### H4", "Text", "## H2"];
+
+        const doc = new SectionParser(new BlockParser(DEFAULT_SETTINGS)).parse(lines);
+        expect(doc.children.length).toBe(1);
+        expect(doc.children[0].children.length).toBe(2);
+    });
 });
 
 describe("List items", () => {
