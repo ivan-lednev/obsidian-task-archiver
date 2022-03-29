@@ -1,6 +1,7 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
+import { last } from "lodash";
 
 interface RawSection {
     text: string;
@@ -42,8 +43,7 @@ export class SectionParser {
                     lines: [],
                 });
             } else {
-                const lastSection = sections[sections.length - 1];
-                lastSection.lines.push(line);
+                last(sections).lines.push(line);
             }
         }
 

@@ -1,6 +1,7 @@
 import { MarkdownNode } from "../model/MarkdownNode";
 import { ListBlock } from "../model/ListBlock";
 import { Section } from "../model/Section";
+import { last } from "lodash";
 
 export interface FlatNode<T extends MarkdownNode<T>> {
     markdownNode: T;
@@ -30,9 +31,7 @@ export class TreeBuilder<L extends MarkdownNode<L>> {
     }
 
     private appendChild(section: L) {
-        this.contextStack[this.contextStack.length - 1].markdownNode.appendChild(
-            section
-        );
+        last(this.contextStack).markdownNode.appendChild(section);
     }
 
     private clearStack(levels: number) {

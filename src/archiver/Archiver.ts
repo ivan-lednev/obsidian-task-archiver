@@ -9,6 +9,7 @@ import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { buildIndentation } from "../util";
 import { ListBlock } from "../model/ListBlock";
+import { last } from "lodash";
 
 export class Archiver {
     private readonly archiveHeadingPattern: RegExp;
@@ -34,11 +35,11 @@ export class Archiver {
         let lastSection = section;
         const childrenLength = section.children.length;
         if (childrenLength > 0) {
-            lastSection = section.children[childrenLength - 1];
+            lastSection = last(section.children);
         }
         const blocksLength = lastSection.blockContent.children.length;
         if (blocksLength > 0) {
-            const lastBlock = lastSection.blockContent.children[blocksLength - 1];
+            const lastBlock = last(lastSection.blockContent.children);
             if (lastBlock.text.trim().length !== 0) {
                 lastSection.blockContent.appendChild(new TextBlock(""));
             }
