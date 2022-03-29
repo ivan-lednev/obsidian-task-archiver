@@ -68,6 +68,20 @@ export class Archiver {
         return `Archived ${newlyCompletedTasks.length} tasks`;
     }
 
+    async deleteTasksInActiveFile() {
+        // TODO: remove duplication
+        const activeFile = this.workspace.getActiveFile();
+        const activeFileTree = await this.parseFile(activeFile);
+        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
+
+        if (newlyCompletedTasks.length === 0) {
+            return "No tasks to delete";
+        }
+
+        await this.writeTreeToFile(activeFile, activeFileTree);
+        return `Deleted ${newlyCompletedTasks.length} tasks`;
+    }
+
     private archiveToRoot(newlyCompletedTasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
         this.dateTreeResolver.mergeNewBlocksWithDateTree(

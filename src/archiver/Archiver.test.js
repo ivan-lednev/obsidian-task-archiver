@@ -7,8 +7,7 @@ import { BlockParser } from "../parser/BlockParser";
 window.moment = moment;
 const WEEK = "2021-01-W-1";
 const DAY = "2021-01-01";
-const mockDate = jest.fn(() => new Date(DAY).valueOf());
-Date.now = mockDate;
+Date.now = jest.fn(() => new Date(DAY).valueOf());
 
 jest.mock("obsidian");
 
@@ -28,35 +27,42 @@ const DEFAULT_SETTINGS = {
     defaultArchiveFileName: "<filename> (archive)",
 };
 
-async function checkVaultModifyOutput(
+async function assertActiveFileModified(
     input,
     expectedOutput,
     settings = DEFAULT_SETTINGS
 ) {
-    const { vault } = await runArchiverWithMocks(input, settings);
+    const { vault } = await archiveCompletedTasks(input, settings);
     expect(vault.modify).toHaveBeenCalledWith(
         expect.anything(),
         expectedOutput.join("\n")
     );
 }
 
-async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
-    const read = jest
-        .fn()
-        .mockImplementationOnce(() => input.join("\n"))
-        .mockImplementationOnce(() => "");
-    const modify = jest.fn();
+async function archiveCompletedTasks(input, settings = DEFAULT_SETTINGS) {
+    const { vault, archiver } = buildArchiver(input, settings);
+    const message = await archiver.archiveTasksInActiveFile();
+    return { vault, message };
+}
+
+function buildArchiver(input, settings) {
     const TFileMock = jest.requireMock("obsidian").TFile;
+    // We need this for instanceof checks to work
     const archiveFile = Object.assign(Object.create(TFileMock.prototype), {
         extension: "md",
     });
-    const getAbstractFileByPath = jest.fn(() => archiveFile);
-    const vault = { read, modify, getAbstractFileByPath };
-    const currentFile = {
-        extension: "md",
+    const vault = {
+        read: jest
+            .fn()
+            .mockImplementationOnce(() => input.join("\n"))
+            .mockImplementationOnce(() => ""),
+        modify: jest.fn(),
+        getAbstractFileByPath: jest.fn(() => archiveFile),
     };
     const workspace = {
-        getActiveFile: () => currentFile,
+        getActiveFile: () => ({
+            extension: "md",
+        }),
     };
 
     const archiver = new Archiver(
@@ -66,35 +72,43 @@ async function runArchiverWithMocks(input, settings = DEFAULT_SETTINGS) {
         new DateTreeResolver(settings),
         settings
     );
-    const archiverMessage = await archiver.archiveTasksInActiveFile();
-    return { vault, archiverMessage };
+    return {
+        vault,
+        archiver,
+    };
+}
+
+async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
+    const { vault, archiver } = buildArchiver(input, settings);
+    const message = await archiver.deleteTasksInActiveFile();
+    return { vault, message };
 }
 
 describe("Moving top-level tasks to the archive", () => {
     test("No-op for files without completed tasks", async () => {
         const input = ["foo", "bar", "# Archived"];
 
-        const { vault } = await runArchiverWithMocks(input);
+        const { vault } = await archiveCompletedTasks(input);
 
         expect(vault.modify).not.toBeCalled();
     });
 
     test("Moves a single task to an empty archive", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["- [x] foo", "- [ ] bar", "# Archived"],
             ["- [ ] bar", "# Archived", "", "- [x] foo", ""]
         );
     });
 
     test("Moves a single task to an h2 archive", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["- [x] foo", "- [ ] bar", "## Archived"],
             ["- [ ] bar", "## Archived", "", "- [x] foo", ""]
         );
     });
 
     test("Handles multiple levels of indentation", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             [
                 "- [x] root",
                 "\t- child 1",
@@ -117,7 +131,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Moves multiple tasks to the end of a populated archive", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             [
                 "- [x] foo",
                 "- [x] foo #2",
@@ -148,14 +162,14 @@ describe("Moving top-level tasks to the archive", () => {
         [["- [ ] foo"], "No tasks to archive"],
     ])(
         "Reports the number of top-level archived tasks: %s -> %s",
-        async (input, message) => {
-            const { archiverMessage } = await runArchiverWithMocks(input);
-            expect(archiverMessage).toBe(message);
+        async (input, expected) => {
+            const { message } = await archiveCompletedTasks(input);
+            expect(message).toBe(expected);
         }
     );
 
     test("Moves sub-items with top-level items after the archive heading, indented with tabs", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             [
                 "- [ ] bar",
                 "# Archived",
@@ -184,7 +198,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Works only with top-level tasks", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["- [ ] bar", "\t- [x] completed sub-task", "- [x] foo", "# Archived"],
             [
                 "- [ ] bar",
@@ -198,14 +212,14 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Supports numbered tasks", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["1. [x] foo", "# Archived"],
             ["# Archived", "", "1. [x] foo", ""]
         );
     });
 
     test("Escapes regex characters in the archive heading value", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
             ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""],
             {
@@ -217,14 +231,14 @@ describe("Moving top-level tasks to the archive", () => {
 
     describe("Creating a new archive", () => {
         test("Appends an archive heading to the end of file with a newline if there isn't any", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- Text", "1. [x] foo"],
                 ["- Text", "", "# Archived", "", "1. [x] foo", ""]
             );
         });
 
         test("Doesn't add newlines around the archive heading if configured so", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- [x] foo", "Some text"],
                 ["Some text", "# Archived", "- [x] foo"],
                 {
@@ -235,7 +249,7 @@ describe("Moving top-level tasks to the archive", () => {
         });
 
         test("Pulls heading depth from the config", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- [x] foo"],
                 ["### Archived", "", "- [x] foo", ""],
                 {
@@ -247,11 +261,21 @@ describe("Moving top-level tasks to the archive", () => {
     });
 });
 
+describe("Deleting completed tasks", () => {
+    test("Deletes completed tasks", async () => {
+        const input = ["- [x] foo", "- [ ] bar"];
+
+        const { vault } = await deleteCompletedTasks(input);
+        expect(vault.modify).toHaveBeenCalledTimes(1);
+        expect(vault.modify).toHaveBeenCalledWith(expect.anything(), "- [ ] bar");
+    });
+});
+
 describe("Separate files", () => {
     test("Creates a new archive in a separate file", async () => {
         const input = ["- [x] foo", "- [ ] bar"];
 
-        const { vault } = await runArchiverWithMocks(input, {
+        const { vault } = await archiveCompletedTasks(input, {
             ...DEFAULT_SETTINGS,
             archiveToSeparateFile: true,
         });
@@ -268,7 +292,7 @@ describe("Separate files", () => {
 
 describe("Date tree", () => {
     test("Archives tasks under a bullet with the current week", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["- [x] foo", "- [ ] bar", "# Archived"],
             ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""],
             {
@@ -279,7 +303,7 @@ describe("Date tree", () => {
     });
 
     test("Uses indentation values from settings", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             ["- [x] foo", "# Archived"],
             ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""],
             {
@@ -294,7 +318,7 @@ describe("Date tree", () => {
     });
 
     test("Appends tasks under the current week bullet if it exists", async () => {
-        await checkVaultModifyOutput(
+        await assertActiveFileModified(
             [
                 "- [x] foo",
                 "# Archived",
@@ -322,7 +346,7 @@ describe("Date tree", () => {
 
     describe("Days", () => {
         test("Archives tasks under a bullet with the current day", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 ["- [ ] bar", "# Archived", "", `- [[${DAY}]]`, "\t- [x] foo", ""],
                 {
@@ -335,7 +359,7 @@ describe("Date tree", () => {
 
     describe("Combining dates", () => {
         test("Creates & indents weekly & daily blocks", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 [
                     "- [ ] bar",
@@ -355,7 +379,7 @@ describe("Date tree", () => {
         });
 
         test("The week is already in the tree", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${WEEK}]]`],
                 [
                     "- [ ] bar",
@@ -375,7 +399,7 @@ describe("Date tree", () => {
         });
 
         test("The week and the day are already in the tree", async () => {
-            checkVaultModifyOutput(
+            assertActiveFileModified(
                 [
                     "- [x] foo",
                     "- [ ] bar",
@@ -402,7 +426,7 @@ describe("Date tree", () => {
         });
 
         test("The day is there, but the week is not (the user has changed the configuration)", async () => {
-            await checkVaultModifyOutput(
+            await assertActiveFileModified(
                 ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${DAY}]]`],
                 [
                     "- [ ] bar",

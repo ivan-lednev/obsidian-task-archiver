@@ -8,7 +8,8 @@ import { DateTreeResolver } from "./archiver/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
 
 export default class ObsidianTaskArchiver extends Plugin {
-    settings: ArchiverSettings;
+    private settings: ArchiverSettings;
+    private archiver: Archiver;
 
     async onload() {
         this.addCommand({
@@ -16,12 +17,13 @@ export default class ObsidianTaskArchiver extends Plugin {
             name: "Archive tasks in this file",
             callback: () => this.archiveTaskInActiveFile(),
         });
-        await this.loadSettings();
-        this.addSettingTab(new ArchiverSettingTab(this.app, this));
-    }
+        this.addCommand({
+            id: "delete-tasks",
+            name: "Delete completed top-level tasks in this file",
+            callback: () => this.deleteTasksInActiveFile(),
+        });
 
-    private async archiveTaskInActiveFile() {
-        const archiver = new Archiver(
+        this.archiver = new Archiver(
             this.app.vault,
             this.app.workspace,
             new SectionParser(new BlockParser(this.settings.indentationSettings)),
@@ -29,8 +31,23 @@ export default class ObsidianTaskArchiver extends Plugin {
             this.settings
         );
 
+        await this.loadSettings();
+        this.addSettingTab(new ArchiverSettingTab(this.app, this));
+    }
+
+    private async archiveTaskInActiveFile() {
         try {
-            const message = await archiver.archiveTasksInActiveFile();
+            const message = await this.archiver.archiveTasksInActiveFile();
+            new Notice(message);
+        } catch (e) {
+            new Notice(e);
+        }
+    }
+
+    private async deleteTasksInActiveFile() {
+        // TODO: remove duplication in try-catch
+        try {
+            const message = await this.archiver.deleteTasksInActiveFile();
             new Notice(message);
         } catch (e) {
             new Notice(e);
