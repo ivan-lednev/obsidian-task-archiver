@@ -46,6 +46,11 @@ const workspace = {
     getActiveFile: () => activeFile,
 };
 
+const editor = {
+    getValue: () => fileContents.get(activeFile).join("\n"),
+    setValue: (value) => fileContents.set(activeFile, value.split("\n")),
+};
+
 beforeEach(() => {
     fileContents.clear();
 });
@@ -61,7 +66,7 @@ async function assertActiveFileModified(
 
 async function archiveCompletedTasks(input, settings = DEFAULT_SETTINGS) {
     const archiver = buildArchiver(input, settings);
-    return await archiver.archiveTasksInActiveFile();
+    return await archiver.archiveTasksInActiveFile(editor);
 }
 
 function buildArchiver(input, settings) {
@@ -80,7 +85,7 @@ function buildArchiver(input, settings) {
 
 async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
     const archiver = buildArchiver(input, settings);
-    return await archiver.deleteTasksInActiveFile();
+    return await archiver.deleteTasksInActiveFile(editor);
 }
 
 describe("Moving top-level tasks to the archive", () => {

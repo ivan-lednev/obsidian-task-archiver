@@ -3,13 +3,11 @@ import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
-import { TFile, Vault, Workspace } from "obsidian";
+import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
-import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { addNewlinesToSection, buildIndentation } from "../util";
 import { ListBlock } from "../model/ListBlock";
-import { last } from "lodash";
 
 export class Archiver {
     private readonly archiveHeadingPattern: RegExp;
@@ -31,18 +29,19 @@ export class Archiver {
         return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
     }
 
-    async archiveTasksInActiveFile() {
-        const tasks = await this.extractTasksFromActiveFile();
+    async archiveTasksInActiveFile(editor: Editor) {
+        const tasks = this.extractTasksFromActiveFile(editor);
         await this.archiveTasks(tasks);
         return tasks.length === 0
             ? "No tasks to archive"
             : `Archived ${tasks.length} tasks`;
     }
 
-    private async extractTasksFromActiveFile() {
-        const activeFileTree = await this.parseFile(this.getActiveFile());
+    private extractTasksFromActiveFile(editor: Editor) {
+        const fileContents = editor.getValue();
+        const activeFileTree = this.parser.parse(fileContents.split("\n"));
         const tasks = this.extractTasksFromTree(activeFileTree);
-        await this.writeTreeToFile(this.getActiveFile(), activeFileTree);
+        editor.setValue(this.stringifyTree(activeFileTree));
         return tasks;
     }
 
@@ -59,8 +58,8 @@ export class Archiver {
         return this.workspace.getActiveFile();
     }
 
-    async deleteTasksInActiveFile() {
-        const tasks = await this.extractTasksFromActiveFile();
+    deleteTasksInActiveFile(editor: Editor) {
+        const tasks = this.extractTasksFromActiveFile(editor);
         return tasks.length === 0
             ? "No tasks to delete"
             : `Deleted ${tasks.length} tasks`;
@@ -136,9 +135,13 @@ export class Archiver {
     }
 
     private async writeTreeToFile(file: TFile, tree: Section) {
-        const indentation = buildIndentation(this.settings.indentationSettings);
-        const treeLines = tree.stringify(indentation).join("\n");
+        const treeLines = this.stringifyTree(tree);
         await this.vault.modify(file, treeLines);
+    }
+
+    private stringifyTree(tree: Section) {
+        const indentation = buildIndentation(this.settings.indentationSettings);
+        return tree.stringify(indentation).join("\n");
     }
 
     private buildArchiveHeading() {

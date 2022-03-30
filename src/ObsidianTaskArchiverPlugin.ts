@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Editor, Notice, Plugin } from "obsidian";
 import { Archiver } from "src/archiver/Archiver";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
@@ -18,12 +18,12 @@ export default class ObsidianTaskArchiver extends Plugin {
         this.addCommand({
             id: "archive-tasks",
             name: "Archive tasks in this file",
-            callback: () => this.archiveTasksInActiveFile(),
+            editorCallback: (editor) => this.archiveTasksInActiveFile(editor),
         });
         this.addCommand({
             id: "delete-tasks",
             name: "Delete tasks in this file",
-            callback: () => this.deleteTasksInActiveFile(),
+            editorCallback: (editor) => this.deleteTasksInActiveFile(editor),
         });
 
         this.archiver = new Archiver(
@@ -35,12 +35,12 @@ export default class ObsidianTaskArchiver extends Plugin {
         );
     }
 
-    private async archiveTasksInActiveFile() {
-        await withNotice(() => this.archiver.archiveTasksInActiveFile());
+    private async archiveTasksInActiveFile(editor: Editor) {
+        await withNotice(() => this.archiver.archiveTasksInActiveFile(editor));
     }
 
-    private async deleteTasksInActiveFile() {
-        await withNotice(() => this.archiver.deleteTasksInActiveFile());
+    private async deleteTasksInActiveFile(editor: Editor) {
+        await withNotice(() => this.archiver.deleteTasksInActiveFile(editor));
     }
 
     async loadSettings() {
