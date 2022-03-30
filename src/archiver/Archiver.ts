@@ -47,26 +47,26 @@ export class Archiver {
     }
 
     async archiveTasksInActiveFile() {
-        const newlyCompletedTasks = await this.extractTasks();
-        await this.archiveTasks(newlyCompletedTasks);
-        return newlyCompletedTasks.length === 0
+        const tasks = await this.extractTasksFromActiveFile();
+        await this.archiveTasks(tasks);
+        return tasks.length === 0
             ? "No tasks to archive"
-            : `Archived ${newlyCompletedTasks.length} tasks`;
+            : `Archived ${tasks.length} tasks`;
     }
 
-    private async extractTasks() {
+    private async extractTasksFromActiveFile() {
         const activeFileTree = await this.parseFile(this.getActiveFile());
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
+        const tasks = this.extractTasksFromTree(activeFileTree);
         await this.writeTreeToFile(this.getActiveFile(), activeFileTree);
-        return newlyCompletedTasks;
+        return tasks;
     }
 
-    private async archiveTasks(newlyCompletedTasks: Block[]) {
+    private async archiveTasks(tasks: Block[]) {
         const archiveFile = this.settings.archiveToSeparateFile
             ? await this.getArchiveFile()
             : this.getActiveFile();
         const archiveTree = await this.parseFile(archiveFile);
-        this.archiveToRoot(newlyCompletedTasks, archiveTree);
+        this.archiveToRoot(tasks, archiveTree);
         await this.writeTreeToFile(archiveFile, archiveTree);
     }
 
@@ -75,17 +75,17 @@ export class Archiver {
     }
 
     async deleteTasksInActiveFile() {
-        const newlyCompletedTasks = await this.extractTasks();
-        return newlyCompletedTasks.length === 0
+        const tasks = await this.extractTasksFromActiveFile();
+        return tasks.length === 0
             ? "No tasks to delete"
-            : `Deleted ${newlyCompletedTasks.length} tasks`;
+            : `Deleted ${tasks.length} tasks`;
     }
 
-    private archiveToRoot(newlyCompletedTasks: Block[], root: Section) {
+    private archiveToRoot(tasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
         this.dateTreeResolver.mergeNewBlocksWithDateTree(
             archiveSection.blockContent,
-            newlyCompletedTasks
+            tasks
         );
     }
 
@@ -113,7 +113,7 @@ export class Archiver {
         return this.parser.parse(fileContents.split("\n"));
     }
 
-    private extractNewlyCompletedTasks(tree: Section) {
+    private extractTasksFromTree(tree: Section) {
         // TODO: the AST should not leak details about bullets or heading tokens
         const completedTaskPattern = /^(?:[-*]|\d+\.) \[x]/;
         const isCompletedTask = (block: Block) =>
