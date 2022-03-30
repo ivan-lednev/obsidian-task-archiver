@@ -1,6 +1,6 @@
-The plugin adds a sindgle command that moves completed tasks in the active file either under a pre-configured heading in the same file or to a separate file.
+The plugin adds commands that either delete or move completed tasks in the active file either under a pre-configured heading in the same file or to a separate file.
 
-This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still go back to them.
+This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still go back to them when needed.
 
 ## Here is what it looks like
 
@@ -37,11 +37,14 @@ Each checked date tree option (weeks, days) will create an additional level in t
 
 ## Usage
 
-Just open the command palette and run: `Archive tasks in this file`.
+Open the command palette and run one of the archiver commands:
+- `Archive tasks in this file`
+- `Delete tasks in this file`
 
 ## Roadmap
 
 - [x] Move completed tasks to a separate archive file
+- [x] Delete completed tasks
 - [ ] Per-file configuration through front-matter
 - [ ] More options for the date tree
   - [x] Days

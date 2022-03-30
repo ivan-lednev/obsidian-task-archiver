@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 import { Archiver } from "src/archiver/Archiver";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
@@ -12,18 +12,17 @@ export default class ObsidianTaskArchiver extends Plugin {
     private archiver: Archiver;
 
     async onload() {
-        // TODO: why did I break plugin initialization?
         await this.loadSettings();
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
 
         this.addCommand({
             id: "archive-tasks",
             name: "Archive tasks in this file",
-            callback: () => this.archiveTaskInActiveFile(),
+            callback: () => this.archiveTasksInActiveFile(),
         });
         this.addCommand({
             id: "delete-tasks",
-            name: "Delete completed top-level tasks in this file",
+            name: "Delete tasks in this file",
             callback: () => this.deleteTasksInActiveFile(),
         });
 
@@ -36,23 +35,12 @@ export default class ObsidianTaskArchiver extends Plugin {
         );
     }
 
-    private async archiveTaskInActiveFile() {
-        try {
-            const message = await this.archiver.archiveTasksInActiveFile();
-            new Notice(message);
-        } catch (e) {
-            new Notice(e);
-        }
+    private async archiveTasksInActiveFile() {
+        await withNotice(() => this.archiver.archiveTasksInActiveFile());
     }
 
     private async deleteTasksInActiveFile() {
-        // TODO: remove duplication in try-catch
-        try {
-            const message = await this.archiver.deleteTasksInActiveFile();
-            new Notice(message);
-        } catch (e) {
-            new Notice(e);
-        }
+        await withNotice(() => this.archiver.deleteTasksInActiveFile());
     }
 
     async loadSettings() {
@@ -70,5 +58,14 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+}
+
+async function withNotice(cb: () => Promise<string>) {
+    try {
+        const message = await cb();
+        new Notice(message);
+    } catch (e) {
+        new Notice(e);
     }
 }
