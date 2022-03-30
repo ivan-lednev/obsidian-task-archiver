@@ -9,60 +9,65 @@ import { RootBlock } from "../model/RootBlock";
 import { addNewlinesToSection, buildIndentation } from "../util";
 import { ListBlock } from "../model/ListBlock";
 
-export class Archiver {
-    private readonly archiveHeadingPattern: RegExp;
+type TreeEditor = (tree: Section) => void;
 
+export class Archiver {
     constructor(
         private readonly vault: Vault,
         private readonly workspace: Workspace,
         private readonly parser: SectionParser,
         private readonly dateTreeResolver: DateTreeResolver,
-        private readonly settings: ArchiverSettings
-    ) {
-        this.archiveHeadingPattern = Archiver.buildArchiveHeadingPattern(
+        private readonly settings: ArchiverSettings,
+        private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
-        );
-    }
-
-    private static buildArchiveHeadingPattern(archiveHeading: string) {
-        const escapedArchiveHeading = escapeStringRegexp(archiveHeading);
-        return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
-    }
+        )
+    ) {}
 
     async archiveTasksInActiveFile(editor: Editor) {
         const tasks = this.extractTasksFromActiveFile(editor);
-        await this.archiveTasks(tasks);
+        await this.archiveTasks(editor, tasks);
         return tasks.length === 0
             ? "No tasks to archive"
             : `Archived ${tasks.length} tasks`;
     }
 
     private extractTasksFromActiveFile(editor: Editor) {
-        const fileContents = editor.getValue();
-        const activeFileTree = this.parser.parse(fileContents.split("\n"));
-        const tasks = this.extractTasksFromTree(activeFileTree);
-        editor.setValue(this.stringifyTree(activeFileTree));
+        let tasks: Block[] = [];
+        this.editActiveFileTree(editor, (tree) => {
+            tasks = this.extractTasksFromTree(tree);
+        });
         return tasks;
     }
 
-    private async archiveTasks(tasks: Block[]) {
-        const archiveFile = this.settings.archiveToSeparateFile
-            ? await this.getArchiveFile()
-            : this.getActiveFile();
-        const archiveTree = await this.parseFile(archiveFile);
-        this.archiveToRoot(tasks, archiveTree);
-        await this.writeTreeToFile(archiveFile, archiveTree);
+    private editActiveFileTree(editor: Editor, treeEditor: TreeEditor) {
+        const activeFileTree = this.parseActiveFile(editor);
+        treeEditor(activeFileTree);
+        editor.setValue(this.stringifyTree(activeFileTree));
     }
 
-    private getActiveFile() {
-        return this.workspace.getActiveFile();
+    private parseActiveFile(editor: Editor) {
+        const fileContents = editor.getValue();
+        return this.parser.parse(fileContents.split("\n"));
+    }
+
+    private async editFileTree(file: TFile, treeEditor: TreeEditor) {
+        const tree = await this.parseFile(file);
+        treeEditor(tree);
+        await this.vault.modify(file, this.stringifyTree(tree));
+    }
+
+    private async archiveTasks(editor: Editor, tasks: Block[]) {
+        const archiveCallback = (tree: Section) => this.archiveToRoot(tasks, tree);
+        this.settings.archiveToSeparateFile
+            ? this.editFileTree(await this.getArchiveFile(), archiveCallback)
+            : this.editActiveFileTree(editor, archiveCallback);
     }
 
     deleteTasksInActiveFile(editor: Editor) {
         const tasks = this.extractTasksFromActiveFile(editor);
-        return tasks.length === 0
-            ? "No tasks to delete"
-            : `Deleted ${tasks.length} tasks`;
+        return Promise.resolve(
+            tasks.length === 0 ? "No tasks to delete" : `Deleted ${tasks.length} tasks`
+        );
     }
 
     private archiveToRoot(tasks: Block[], root: Section) {
@@ -116,27 +121,18 @@ export class Archiver {
     private async getArchiveFile() {
         const archiveFileName = `${this.settings.defaultArchiveFileName.replace(
             "%",
-            this.getActiveFile().basename
+            this.workspace.getActiveFile().basename
         )}.md`;
 
         let archiveFile =
             this.vault.getAbstractFileByPath(archiveFileName) ||
-            (await this.createFile(archiveFileName));
+            (await this.vault.create(archiveFileName, ""));
 
         if (archiveFile instanceof TFile) {
             return archiveFile;
         }
 
         throw new Error(`${archiveFileName} is not a valid markdown file`);
-    }
-
-    private async createFile(name: string) {
-        return await this.vault.create(name, "");
-    }
-
-    private async writeTreeToFile(file: TFile, tree: Section) {
-        const treeLines = this.stringifyTree(tree);
-        await this.vault.modify(file, treeLines);
     }
 
     private stringifyTree(tree: Section) {
@@ -148,4 +144,9 @@ export class Archiver {
         const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
         return `${headingToken} ${this.settings.archiveHeading}`;
     }
+}
+
+function buildHeadingPattern(heading: string) {
+    const escapedArchiveHeading = escapeStringRegexp(heading);
+    return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
 }
