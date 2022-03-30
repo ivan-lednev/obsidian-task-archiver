@@ -8,10 +8,14 @@ import { DateTreeResolver } from "./archiver/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
 
 export default class ObsidianTaskArchiver extends Plugin {
-    private settings: ArchiverSettings;
+    settings: ArchiverSettings;
     private archiver: Archiver;
 
     async onload() {
+        // TODO: why did I break plugin initialization?
+        await this.loadSettings();
+        this.addSettingTab(new ArchiverSettingTab(this.app, this));
+
         this.addCommand({
             id: "archive-tasks",
             name: "Archive tasks in this file",
@@ -30,9 +34,6 @@ export default class ObsidianTaskArchiver extends Plugin {
             new DateTreeResolver(this.settings),
             this.settings
         );
-
-        await this.loadSettings();
-        this.addSettingTab(new ArchiverSettingTab(this.app, this));
     }
 
     private async archiveTaskInActiveFile() {
