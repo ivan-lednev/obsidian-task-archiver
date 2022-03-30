@@ -1,5 +1,8 @@
 import { IndentationSettings } from "./archiver/IndentationSettings";
 import { Block } from "./model/Block";
+import { Section } from "./model/Section";
+import { last } from "lodash";
+import { TextBlock } from "./model/TextBlock";
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
@@ -32,4 +35,19 @@ function findBlockRecursivelyInCollection(
         }
     }
     return null;
+}
+
+export function addNewlinesToSection(section: Section) {
+    let lastSection = section;
+    const childrenLength = section.children.length;
+    if (childrenLength > 0) {
+        lastSection = last(section.children);
+    }
+    const blocksLength = lastSection.blockContent.children.length;
+    if (blocksLength > 0) {
+        const lastBlock = last(lastSection.blockContent.children);
+        if (lastBlock.text.trim().length !== 0) {
+            lastSection.blockContent.appendChild(new TextBlock(""));
+        }
+    }
 }

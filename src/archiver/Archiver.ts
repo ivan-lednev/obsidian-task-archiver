@@ -7,7 +7,7 @@ import { TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
-import { buildIndentation } from "../util";
+import { addNewlinesToSection, buildIndentation } from "../util";
 import { ListBlock } from "../model/ListBlock";
 import { last } from "lodash";
 
@@ -29,21 +29,6 @@ export class Archiver {
     private static buildArchiveHeadingPattern(archiveHeading: string) {
         const escapedArchiveHeading = escapeStringRegexp(archiveHeading);
         return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
-    }
-
-    private static addNewlinesToSectionIfNeeded(section: Section) {
-        let lastSection = section;
-        const childrenLength = section.children.length;
-        if (childrenLength > 0) {
-            lastSection = last(section.children);
-        }
-        const blocksLength = lastSection.blockContent.children.length;
-        if (blocksLength > 0) {
-            const lastBlock = last(lastSection.blockContent.children);
-            if (lastBlock.text.trim().length !== 0) {
-                lastSection.blockContent.appendChild(new TextBlock(""));
-            }
-        }
     }
 
     async archiveTasksInActiveFile() {
@@ -95,7 +80,7 @@ export class Archiver {
         );
         if (!archiveSection) {
             if (this.settings.addNewlinesAroundHeadings) {
-                Archiver.addNewlinesToSectionIfNeeded(section);
+                addNewlinesToSection(section);
             }
             const heading = this.buildArchiveHeading();
             const rootBlock = new RootBlock();
