@@ -47,40 +47,38 @@ export class Archiver {
     }
 
     async archiveTasksInActiveFile() {
-        const activeFile = this.workspace.getActiveFile();
-        const activeFileTree = await this.parseFile(activeFile);
+        const newlyCompletedTasks = await this.extractTasks();
+        await this.archiveTasks(newlyCompletedTasks);
+        return newlyCompletedTasks.length === 0
+            ? "No tasks to archive"
+            : `Archived ${newlyCompletedTasks.length} tasks`;
+    }
+
+    private async extractTasks() {
+        const activeFileTree = await this.parseFile(this.getActiveFile());
         const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
+        await this.writeTreeToFile(this.getActiveFile(), activeFileTree);
+        return newlyCompletedTasks;
+    }
 
-        if (newlyCompletedTasks.length === 0) {
-            return "No tasks to archive";
-        }
+    private async archiveTasks(newlyCompletedTasks: Block[]) {
+        const archiveFile = this.settings.archiveToSeparateFile
+            ? await this.getArchiveFile()
+            : this.getActiveFile();
+        const archiveTree = await this.parseFile(archiveFile);
+        this.archiveToRoot(newlyCompletedTasks, archiveTree);
+        await this.writeTreeToFile(archiveFile, archiveTree);
+    }
 
-        if (this.settings.archiveToSeparateFile) {
-            const archiveFile = await this.getArchiveFileFor(activeFile);
-            const archiveTree = await this.parseFile(archiveFile);
-
-            this.archiveToRoot(newlyCompletedTasks, archiveTree);
-            await this.writeTreeToFile(archiveFile, archiveTree);
-        } else {
-            this.archiveToRoot(newlyCompletedTasks, activeFileTree);
-        }
-
-        await this.writeTreeToFile(activeFile, activeFileTree);
-        return `Archived ${newlyCompletedTasks.length} tasks`;
+    private getActiveFile() {
+        return this.workspace.getActiveFile();
     }
 
     async deleteTasksInActiveFile() {
-        // TODO: remove duplication
-        const activeFile = this.workspace.getActiveFile();
-        const activeFileTree = await this.parseFile(activeFile);
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
-
-        if (newlyCompletedTasks.length === 0) {
-            return "No tasks to delete";
-        }
-
-        await this.writeTreeToFile(activeFile, activeFileTree);
-        return `Deleted ${newlyCompletedTasks.length} tasks`;
+        const newlyCompletedTasks = await this.extractTasks();
+        return newlyCompletedTasks.length === 0
+            ? "No tasks to delete"
+            : `Deleted ${newlyCompletedTasks.length} tasks`;
     }
 
     private archiveToRoot(newlyCompletedTasks: Block[], root: Section) {
@@ -131,10 +129,10 @@ export class Archiver {
         return tree.extractBlocksRecursively(filter);
     }
 
-    private async getArchiveFileFor(activeFile: TFile) {
+    private async getArchiveFile() {
         const archiveFileName = `${this.settings.defaultArchiveFileName.replace(
             "%",
-            activeFile.basename
+            this.getActiveFile().basename
         )}.md`;
 
         let archiveFile =

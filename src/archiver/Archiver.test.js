@@ -84,12 +84,12 @@ async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
 }
 
 describe("Moving top-level tasks to the archive", () => {
-    test("No-op for files without completed tasks", async () => {
-        const input = ["foo", "bar", "# Archived"];
-
-        await archiveCompletedTasks(input);
-
-        expect(fileContents.get(activeFile)).toEqual(input);
+    test("Only normalizes whitespace when there are no completed tasks", async () => {
+        // TODO: no need for these newlines
+        await assertActiveFileModified(
+            ["foo", "bar", "# Archived"],
+            ["foo", "bar", "# Archived", "", ""]
+        );
     });
 
     test("Moves a single task to an empty archive", async () => {
@@ -248,9 +248,10 @@ describe("Moving top-level tasks to the archive", () => {
         });
 
         test("Pulls heading depth from the config", async () => {
+            // TODO: this extra newline in the result is a bit clunky
             await assertActiveFileModified(
                 ["- [x] foo"],
-                ["### Archived", "", "- [x] foo", ""],
+                ["", "### Archived", "", "- [x] foo", ""],
                 {
                     ...DEFAULT_SETTINGS,
                     archiveHeadingDepth: 3,
