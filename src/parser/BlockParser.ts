@@ -1,83 +1,57 @@
-import { ParserSettings } from "./SectionParser";
 import { Block } from "../model/Block";
-import { MarkdownNode } from "src/model/MarkdownNode";
+import { ListBlock } from "../model/ListBlock";
+import { TextBlock } from "../model/TextBlock";
+import { RootBlock } from "../model/RootBlock";
+import { TreeBuilder } from "./TreeBuilder";
+import { IndentationSettings } from "../archiver/IndentationSettings";
 
 export class BlockParser {
-    private readonly LIST_ITEM =
-        /^(?<indentation>(?: {2}|\t)*)(?<listMarker>[-*]|\d+\.)\s/;
-    private readonly INDENTED_LINE = /^(?<indentation>(?: {2}|\t)+)[^-]/;
-    private readonly settings: ParserSettings;
+    private readonly LIST_MARKER = /^[-*]|\d+\.\s/;
+    private readonly INDENTATION = /^(?: {2}|\t)*/;
 
-    constructor(settings: ParserSettings) {
-        this.settings = settings;
-    }
+    constructor(private readonly settings: IndentationSettings) {}
 
     parse(lines: string[]): Block {
-        const flatBlocks = this.parseFlatBlocks(lines);
+        const flatBlocks = lines.map((line) => this.parseFlatBlock(line));
 
-        const [root, children] = [flatBlocks[0], flatBlocks.slice(1)];
-        BlockParser.buildTree(root, children);
+        // TODO: remove the need for wrapper in root?
+        const rootBlock = new RootBlock();
+        const rootFlatBlock = {
+            markdownNode: rootBlock,
+            level: 0,
+        };
 
-        return root;
+        new TreeBuilder().buildTree(rootFlatBlock, flatBlocks);
+        return rootBlock;
     }
 
-    private static buildTree(root: MarkdownNode, flatBlocks: Block[]) {
-        let context = root;
-
-        for (const block of flatBlocks) {
-            // TODO: the logic for lists is idential to the logic for sections
-            if (block.type === "list") {
-                const stepsUpToSection = context.level - block.level;
-
-                if (stepsUpToSection >= 0) {
-                    const targetLevel = stepsUpToSection + 1;
-                    context = context.getNthAncestor(targetLevel);
-                }
-
-                context.append(block);
-                context = block;
-            } else {
-                const isTopLine = block.level === 1;
-                if (isTopLine) {
-                    context = root;
-                }
-                context.append(block);
-            }
-        }
+    private parseFlatBlock(line: string) {
+        const [indentation, text] = this.splitOnIndentation(line);
+        const level = this.getIndentationLevel(indentation);
+        const markdownNode = text.match(this.LIST_MARKER)
+            ? new ListBlock(text)
+            : new TextBlock(text);
+        return {
+            level,
+            markdownNode,
+        };
     }
 
-    private parseFlatBlocks(lines: string[]) {
-        const flatBlocks: Block[] = [new Block(null, 0, "root")];
-        for (const line of lines) {
-            const listMatch = line.match(this.LIST_ITEM);
-            const indentedLineMatch = line.match(this.INDENTED_LINE);
-
-            if (listMatch) {
-                const level = this.getLineLevelByIndentation(
-                    listMatch.groups.indentation
-                );
-                const block = new Block(line, level, "list");
-                flatBlocks.push(block);
-            } else if (indentedLineMatch) {
-                const level = this.getLineLevelByIndentation(
-                    indentedLineMatch.groups.indentation
-                );
-                const block = new Block(line, level, "text");
-                flatBlocks.push(block);
-            } else {
-                flatBlocks.push(new Block(line, 1, "text"));
-            }
-        }
-        return flatBlocks;
+    private splitOnIndentation(line: string) {
+        const indentationMatch = line.match(this.INDENTATION);
+        const indentation = indentationMatch[0];
+        const text = line.substring(indentation.length);
+        return [indentation, text];
     }
 
-    private getLineLevelByIndentation(indentation: string) {
-        let levelsOfIndentation;
+    private getIndentationLevel(indentation: string) {
+        // TODO: kludge for null; this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
+        let levelsOfIndentation = 1;
         if (this.settings.useTab) {
-            levelsOfIndentation = indentation.length;
-        } else {
-            levelsOfIndentation = Math.ceil(indentation.length / this.settings.tabSize);
+            return levelsOfIndentation + indentation.length;
         }
-        return levelsOfIndentation + 1;
+        return (
+            levelsOfIndentation + Math.ceil(indentation.length / this.settings.tabSize)
+        );
     }
 }

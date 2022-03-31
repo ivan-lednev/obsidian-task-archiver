@@ -1,32 +1,37 @@
-import { Block } from "../model/Block";
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
-import { MarkdownNode } from "src/model/MarkdownNode";
+import { TreeBuilder } from "./TreeBuilder";
+import { last } from "lodash";
 
-export interface ParserSettings {
-    useTab: boolean;
-    tabSize: number;
+interface RawSection {
+    text: string;
+    level: number;
+    lines: string[];
 }
 
 export class SectionParser {
     private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
-    private readonly settings: ParserSettings;
 
-    constructor(settings: ParserSettings) {
-        this.settings = settings;
-    }
+    constructor(private readonly blockParser: BlockParser) {}
 
     parse(lines: string[]) {
-        const rawSections = this.parseRawSections(lines);
-        const flatSections = this.parseBlocksInSections(rawSections);
+        const flatSectionsWithRawContent = this.parseRawSections(lines);
+        const flatSectionsWithParsedContent = this.parseBlocksInSections(
+            flatSectionsWithRawContent
+        );
 
-        const [root, children] = [flatSections[0], flatSections.slice(1)];
-        this.buildTree(root, children);
+        const [root, children] = [
+            flatSectionsWithParsedContent[0],
+            flatSectionsWithParsedContent.slice(1),
+        ];
 
-        return root;
+        new TreeBuilder().buildTree(root, children);
+
+        return root.markdownNode;
     }
 
     private parseRawSections(lines: string[]) {
+        // TODO: kludge for null
         const sections: RawSection[] = [{ text: null, level: 0, lines: [] }];
 
         for (const line of lines) {
@@ -38,8 +43,7 @@ export class SectionParser {
                     lines: [],
                 });
             } else {
-                const lastSection = sections[sections.length - 1];
-                lastSection.lines.push(line);
+                last(sections).lines.push(line);
             }
         }
 
@@ -47,33 +51,12 @@ export class SectionParser {
     }
 
     private parseBlocksInSections(raw: RawSection[]) {
+        // TODO: don't nest different objects in one go: split Section creation from parsing blocks?
         return raw.map((s) => {
-            return new Section(
-                s.text,
-                s.level,
-                new BlockParser(this.settings).parse(s.lines)
-            );
+            return {
+                markdownNode: new Section(s.text, this.blockParser.parse(s.lines)),
+                level: s.level,
+            };
         });
     }
-
-    private buildTree(root: MarkdownNode, flatSections: Section[]) {
-        let context = root;
-        for (const section of flatSections) {
-            const stepsUpToSection = context.level - section.level;
-            if (stepsUpToSection >= 0) {
-                const stepsUpToParent = stepsUpToSection + 1;
-                context = context.getNthAncestor(stepsUpToParent);
-            }
-
-            context.append(section);
-            context = section;
-        }
-    }
-}
-
-// TODO: implement
-interface RawSection {
-    text: string;
-    level: number;
-    lines: string[];
 }

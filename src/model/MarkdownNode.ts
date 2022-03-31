@@ -1,48 +1,19 @@
-export abstract class MarkdownNode {
-    children: MarkdownNode[];
+export abstract class MarkdownNode<C extends MarkdownNode<C>> {
+    children: C[];
     text: string | null;
-    parent: MarkdownNode | null;
-    level: number;
 
-    constructor(text: string, level: number) {
+    constructor(text: string) {
         this.text = text;
-        this.level = level;
         this.children = [];
     }
 
-    append(node: MarkdownNode) {
-        node.parent = this;
-        this.children.push(node);
+    appendChild(child: C) {
+        this.children.push(child);
     }
 
-    appendFirst(child: MarkdownNode) {
+    prependChild(child: C) {
         this.children.unshift(child);
-        child.parent = this;
     }
 
-    appendSibling(node: MarkdownNode) {
-        const indexOfThis = this.parent.children.findIndex((b) => b === this);
-        this.parent.children.splice(indexOfThis + 1, 0, node);
-    }
-
-    remove(child: MarkdownNode) {
-        child.parent = null;
-        this.children.splice(this.children.indexOf(child), 1);
-    }
-
-    removeSelf() {
-        this.parent.remove(this);
-    }
-
-    getNthAncestor(targetLevel: number) {
-        let pointer = this as MarkdownNode;
-
-        for (let level = 0; level < targetLevel; level++) {
-            pointer = pointer.parent;
-        }
-
-        return pointer;
-    }
-
-    abstract stringify(): string[];
+    abstract stringify(indentation: string): string[];
 }

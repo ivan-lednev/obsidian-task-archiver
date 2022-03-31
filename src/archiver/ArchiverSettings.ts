@@ -1,3 +1,5 @@
+import { IndentationSettings } from "./IndentationSettings";
+
 export interface ArchiverSettings {
     archiveHeading: string;
     archiveHeadingDepth: number;
@@ -9,9 +11,4 @@ export interface ArchiverSettings {
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
     defaultArchiveFileName: string;
-}
-
-interface IndentationSettings {
-    useTab: boolean;
-    tabSize: number;
 }

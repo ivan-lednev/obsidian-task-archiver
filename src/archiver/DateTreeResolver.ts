@@ -1,16 +1,19 @@
 import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
+import { ListBlock } from "../model/ListBlock";
+import { IndentationSettings } from "./IndentationSettings";
+import { findBlockRecursively } from "../util";
+import { chain } from "lodash";
+import { TextBlock } from "../model/TextBlock";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
 export class DateTreeResolver {
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly dateLevels: DateLevel[];
-    private readonly indentation: string;
-    private readonly settings: ArchiverSettings;
+    private readonly indentationSettings: IndentationSettings;
 
-    constructor(settings: ArchiverSettings) {
-        this.settings = settings;
+    constructor(private readonly settings: ArchiverSettings) {
         this.dateLevels = [];
         if (settings.useWeeks) {
             this.dateLevels.push("weeks");
@@ -19,64 +22,57 @@ export class DateTreeResolver {
             this.dateLevels.push("days");
         }
 
-        // todo: this.settings -> settings
         this.dateFormats = new Map([
-            ["days", this.settings.dailyNoteFormat],
-            ["weeks", this.settings.weeklyNoteFormat],
+            ["days", settings.dailyNoteFormat],
+            ["weeks", settings.weeklyNoteFormat],
         ]);
-
-        this.indentation = this.buildIndentation();
+        this.indentationSettings = settings.indentationSettings;
     }
 
-    mergeBlocksWithTree(tree: Block, newBlocks: Block[]) {
-        let parentBlock = tree;
+    mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
+        tree.children = DateTreeResolver.stripSurroundingNewlines(tree.children);
+        const insertionPoint = this.getCurrentDateBlock(tree);
+        insertionPoint.children = [...insertionPoint.children, ...newBlocks];
+        if (this.settings.addNewlinesAroundHeadings) {
+            tree.children = DateTreeResolver.addSurroundingNewlines(tree.children);
+        }
+    }
 
-        // TODO: cludge for newlines
-        parentBlock.children = parentBlock.children.filter(
-            (b) => b.text !== null && b.text.trim().length > 0
-        );
+    private static stripSurroundingNewlines(blocks: Block[]) {
+        const isEmpty = (block: Block) => block.text.trim().length === 0;
+        return chain(blocks).dropWhile(isEmpty).dropRightWhile(isEmpty).value();
+    }
 
-        for (const [i, level] of this.dateLevels.entries()) {
-            const indentedDateLine = this.buildDateLine(i, level);
-            const thisDateInArchive = tree.findRecursively(
-                (b) => b.text !== null && b.text === indentedDateLine
+    private static addSurroundingNewlines(blocks: Block[]) {
+        const empty = new TextBlock("");
+        return [empty, ...blocks, empty];
+    }
+
+    private getCurrentDateBlock(tree: Block) {
+        const dateLines = this.dateLevels.map((l) => this.buildDateLine(l));
+
+        let context = tree;
+        for (const dateLine of dateLines) {
+            const thisDateInArchive = findBlockRecursively(
+                context.children,
+                (b) => b.text === dateLine
             );
 
-            if (thisDateInArchive !== null) {
-                parentBlock = thisDateInArchive;
+            if (thisDateInArchive) {
+                context = thisDateInArchive;
             } else {
-                // TODO, this will break once I stringify based on levels
-                const newBlock = new Block(indentedDateLine, 1, "list");
-                tree.append(newBlock);
-                parentBlock = newBlock;
+                const newBlock = new ListBlock(dateLine);
+                context.appendChild(newBlock);
+                context = newBlock;
             }
         }
-
-        // TODO: Don't add indentation manually. Do it based on level while stringifying things
-        const indentation = this.indentation.repeat(this.dateLevels.length);
-
-        // TODO: TreeWalker will make this obsolete
-        const addIndentationRecursively = (block: Block) => {
-            block.text = indentation + block.text;
-            block.children.forEach(addIndentationRecursively);
-        };
-
-        newBlocks.forEach((block) => {
-            addIndentationRecursively(block);
-            parentBlock.append(block);
-        });
+        return context;
     }
 
-    private buildIndentation() {
-        const settings = this.settings.indentationSettings;
-        return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
-    }
-
-    private buildDateLine(lineLevel: number, dateTreeLevel: DateLevel) {
-        const thisMoment = window.moment();
+    private buildDateLine(dateTreeLevel: DateLevel) {
         const dateFormat = this.dateFormats.get(dateTreeLevel);
-        const date = thisMoment.format(dateFormat);
-        // TODO: hardcoded list token
-        return this.indentation.repeat(lineLevel) + `- [[${date}]]`;
+        const date = window.moment().format(dateFormat);
+        // TODO: hardcoded link
+        return `- [[${date}]]`;
     }
 }

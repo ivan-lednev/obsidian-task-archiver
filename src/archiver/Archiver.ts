@@ -3,92 +3,93 @@ import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
-import { TFile, Vault, Workspace } from "obsidian";
+import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
+import { RootBlock } from "../model/RootBlock";
+import { addNewlinesToSection, buildIndentation } from "../util";
+import { ListBlock } from "../model/ListBlock";
+
+type TreeEditor = (tree: Section) => void;
 
 export class Archiver {
-    private readonly settings: ArchiverSettings;
-    private readonly archiveHeadingPattern: RegExp;
-    private readonly parser: SectionParser;
-    private readonly workspace: Workspace;
-    private readonly vault: Vault;
-    private readonly dateTreeResolver: DateTreeResolver;
-
-    constructor(vault: Vault, workspace: Workspace, settings: ArchiverSettings) {
-        this.vault = vault;
-        this.workspace = workspace;
-        // todo: push the deps outwards
-        this.parser = new SectionParser(settings.indentationSettings);
-        this.dateTreeResolver = new DateTreeResolver(settings);
-
-        this.settings = settings;
-        this.archiveHeadingPattern = Archiver.buildArchiveHeadingPattern(
+    constructor(
+        private readonly vault: Vault,
+        private readonly workspace: Workspace,
+        private readonly parser: SectionParser,
+        private readonly dateTreeResolver: DateTreeResolver,
+        private readonly settings: ArchiverSettings,
+        private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
+        )
+    ) {}
+
+    async archiveTasksInActiveFile(editor: Editor) {
+        const tasks = this.extractTasksFromActiveFile(editor);
+        await this.archiveTasks(editor, tasks);
+        return tasks.length === 0
+            ? "No tasks to archive"
+            : `Archived ${tasks.length} tasks`;
+    }
+
+    private extractTasksFromActiveFile(editor: Editor) {
+        let tasks: Block[] = [];
+        this.editActiveFileTree(editor, (tree) => {
+            tasks = this.extractTasksFromTree(tree);
+        });
+        return tasks;
+    }
+
+    private editActiveFileTree(editor: Editor, treeEditor: TreeEditor) {
+        const activeFileTree = this.parseActiveFile(editor);
+        treeEditor(activeFileTree);
+        editor.setValue(this.stringifyTree(activeFileTree));
+    }
+
+    private parseActiveFile(editor: Editor) {
+        const fileContents = editor.getValue();
+        return this.parser.parse(fileContents.split("\n"));
+    }
+
+    private async editFileTree(file: TFile, treeEditor: TreeEditor) {
+        const tree = await this.parseFile(file);
+        treeEditor(tree);
+        await this.vault.modify(file, this.stringifyTree(tree));
+    }
+
+    private async archiveTasks(editor: Editor, tasks: Block[]) {
+        const archiveCallback = (tree: Section) => this.archiveToRoot(tasks, tree);
+        this.settings.archiveToSeparateFile
+            ? this.editFileTree(await this.getArchiveFile(), archiveCallback)
+            : this.editActiveFileTree(editor, archiveCallback);
+    }
+
+    deleteTasksInActiveFile(editor: Editor) {
+        const tasks = this.extractTasksFromActiveFile(editor);
+        return Promise.resolve(
+            tasks.length === 0 ? "No tasks to delete" : `Deleted ${tasks.length} tasks`
         );
     }
 
-    private static buildArchiveHeadingPattern(archiveHeading: string) {
-        const escapedArchiveHeading = escapeStringRegexp(archiveHeading);
-        return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
+    private archiveToRoot(tasks: Block[], root: Section) {
+        const archiveSection = this.getArchiveSectionFromRoot(root);
+        this.dateTreeResolver.mergeNewBlocksWithDateTree(
+            archiveSection.blockContent,
+            tasks
+        );
     }
 
-    private static addNewlinesIfNeeded(section: Section) {
-        let lastSection = section;
-        const childrenLength = section.children.length;
-        if (childrenLength > 0) {
-            lastSection = section.children[childrenLength - 1];
-        }
-        const blocksLength = lastSection.blockContent.children.length;
-        if (blocksLength > 0) {
-            const lastBlock = lastSection.blockContent.children[blocksLength - 1];
-            // TODO: another needless null check
-            if (lastBlock.text && lastBlock.text.trim().length !== 0) {
-                // TODO: add an abstraction like appendText, appendListItem
-                lastSection.blockContent.append(new Block("", 1, "text"));
-            }
-        }
-    }
-
-    async archiveTasksInActiveFile() {
-        const activeFile = this.workspace.getActiveFile();
-        const activeFileTree = await this.parseFile(activeFile);
-        const newlyCompletedTasks = this.extractNewlyCompletedTasks(activeFileTree);
-
-        if (newlyCompletedTasks.length === 0) {
-            return "No tasks to archive";
-        }
-
-        if (this.settings.archiveToSeparateFile) {
-            const archiveFile = await this.getArchiveForFile(activeFile);
-            const archiveTree = await this.parseFile(archiveFile);
-
-            this.archiveToRootSection(newlyCompletedTasks, archiveTree);
-            await this.writeToFile(archiveFile, archiveTree.stringify());
-        } else {
-            this.archiveToRootSection(newlyCompletedTasks, activeFileTree);
-        }
-
-        await this.writeToFile(activeFile, activeFileTree.stringify());
-        return `Archived ${newlyCompletedTasks.length} tasks`;
-    }
-
-    private archiveToRootSection(newlyCompletedTasks: Block[], root: Section) {
-        const archiveSection = this.getArchiveSection(root);
-        this.archiveToSection(newlyCompletedTasks, archiveSection);
-    }
-
-    private getArchiveSection(section: Section) {
+    private getArchiveSectionFromRoot(section: Section) {
         let archiveSection = section.children.find((s) =>
             this.archiveHeadingPattern.test(s.text)
         );
         if (!archiveSection) {
             if (this.settings.addNewlinesAroundHeadings) {
-                Archiver.addNewlinesIfNeeded(section);
+                addNewlinesToSection(section);
             }
             const heading = this.buildArchiveHeading();
-            const rootBlock = new Block(null, 0, "root");
-            archiveSection = new Section(heading, 1, rootBlock);
-            section.append(archiveSection);
+            const rootBlock = new RootBlock();
+            archiveSection = new Section(heading, rootBlock);
+            section.appendChild(archiveSection);
         }
         return archiveSection;
     }
@@ -101,66 +102,51 @@ export class Archiver {
         return this.parser.parse(fileContents.split("\n"));
     }
 
-    private extractNewlyCompletedTasks(tree: Section) {
+    private extractTasksFromTree(tree: Section) {
         // TODO: the AST should not leak details about bullets or heading tokens
-        // TODO: duplicated regex
+        const completedTaskPattern = /^(?:[-*]|\d+\.) \[x]/;
+        const isCompletedTask = (block: Block) =>
+            block instanceof ListBlock && completedTaskPattern.test(block.text);
+
+        const isSectionAnythingExceptArchive = (section: Section) =>
+            !this.archiveHeadingPattern.test(section.text);
+
         const filter = {
-            // TODO: another needless null test
-            blockFilter: (block: Block) =>
-                block.text !== null &&
-                /^(?<listMarker>[-*]|\d+\.) \[x]/.test(block.text),
-            sectionFilter: (section: Section) =>
-                !this.archiveHeadingPattern.test(section.text),
+            blockFilter: isCompletedTask,
+            sectionFilter: isSectionAnythingExceptArchive,
         };
         return tree.extractBlocksRecursively(filter);
     }
 
-    private async getArchiveForFile(activeFile: TFile) {
-        const archiveFileName =
-            this.settings.defaultArchiveFileName.replace("%", activeFile.basename) +
-            ".md";
+    private async getArchiveFile() {
+        const archiveFileName = `${this.settings.defaultArchiveFileName.replace(
+            "%",
+            this.workspace.getActiveFile().basename
+        )}.md`;
 
-        let archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
-        if (!archiveFile) {
-            try {
-                archiveFile = await this.vault.create(archiveFileName, "");
-            } catch (error) {
-                throw new Error(
-                    `Unable to create an archive file with the name '${archiveFileName}'`
-                );
-            }
+        let archiveFile =
+            this.vault.getAbstractFileByPath(archiveFileName) ||
+            (await this.vault.create(archiveFileName, ""));
+
+        if (archiveFile instanceof TFile) {
+            return archiveFile;
         }
 
-        archiveFile = this.vault.getAbstractFileByPath(archiveFileName);
-        if (!(archiveFile instanceof TFile)) {
-            throw new Error(`${archiveFileName} is not a valid markdown file`);
-        }
-
-        return archiveFile;
+        throw new Error(`${archiveFileName} is not a valid markdown file`);
     }
 
-    private async writeToFile(file: TFile, lines: string[]) {
-        await this.vault.modify(file, lines.join("\n"));
-    }
-
-    private archiveToSection(completedTasks: Block[], archiveSection: Section) {
-        const archiveBlock = archiveSection.blockContent;
-        // todo: no mutation?
-        this.dateTreeResolver.mergeBlocksWithTree(archiveBlock, completedTasks);
-        this.addNewLinesIfNeeded(archiveBlock);
+    private stringifyTree(tree: Section) {
+        const indentation = buildIndentation(this.settings.indentationSettings);
+        return tree.stringify(indentation).join("\n");
     }
 
     private buildArchiveHeading() {
-        // TODO: if there is no archive heading, I should build an ast, not a manual thing
         const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
         return `${headingToken} ${this.settings.archiveHeading}`;
     }
+}
 
-    private addNewLinesIfNeeded(blockContent: Block) {
-        if (this.settings.addNewlinesAroundHeadings) {
-            // TODO: leaking details about block types
-            blockContent.appendFirst(new Block("", 1, "text"));
-            blockContent.append(new Block("", 1, "text"));
-        }
-    }
+function buildHeadingPattern(heading: string) {
+    const escapedArchiveHeading = escapeStringRegexp(heading);
+    return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
 }
