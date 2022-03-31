@@ -156,7 +156,7 @@ describe("List items", () => {
         ["*", ["* l", "\t* l2", "\t\ttext"]],
         ["Numbers", ["1. l", "\t11. l2", "\t\ttext"]],
         ["Mixed", ["1. l", "\t* l2", "\t\ttext"]],
-    ])("Different types of list markers: %s", (_, lines) => {
+    ])("Different types of list markers: %s", (message, lines) => {
         const doc = new SectionParser(new BlockParser(DEFAULT_SETTINGS)).parse(lines);
         expect(doc.blockContent.children.length).toBe(1);
         const listItem = doc.blockContent.children[0];
@@ -175,7 +175,52 @@ describe("List items", () => {
                 tabSize: 4,
             })
         ).parse(lines);
-        expect(doc.blockContent.children.length).toBe(1);
+
+        expect(doc).toMatchObject({
+            blockContent: {
+                children: [
+                    {
+                        text: "- l",
+                        children: [
+                            {
+                                text: "- text",
+                            },
+                        ],
+                    },
+                ],
+            },
+        });
+    });
+
+    test("Handles indentation detection when tabs get mixed with spaces (the number of spaces matches the config)", () => {
+        const lines = ["- 1", "\t- 1.1", "\t\t- 1.1.1", "    - 1.2"];
+
+        const doc = new SectionParser(
+            new BlockParser({ ...DEFAULT_SETTINGS, tabSize: 4 })
+        ).parse(lines);
+
+        expect(doc).toMatchObject({
+            blockContent: {
+                children: [
+                    {
+                        text: "- 1",
+                        children: [
+                            {
+                                text: "- 1.1",
+                                children: [
+                                    {
+                                        text: "- 1.1.1",
+                                    },
+                                ],
+                            },
+                            {
+                                text: "- 1.2",
+                            },
+                        ],
+                    },
+                ],
+            },
+        });
     });
 });
 

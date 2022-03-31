@@ -8,8 +8,13 @@ import { IndentationSettings } from "../archiver/IndentationSettings";
 export class BlockParser {
     private readonly LIST_MARKER = /^[-*]|\d+\.\s/;
     private readonly INDENTATION = /^(?: {2}|\t)*/;
+    // TODO: kludge for null; this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
+    private readonly BASE_LEVEL_OF_INDENTATION = 1;
 
-    constructor(private readonly settings: IndentationSettings) {}
+    constructor(
+        private readonly settings: IndentationSettings,
+        private readonly indentationFromSettings: string = " ".repeat(settings.tabSize)
+    ) {}
 
     parse(lines: string[]): Block {
         const flatBlocks = lines.map((line) => this.parseFlatBlock(line));
@@ -45,13 +50,10 @@ export class BlockParser {
     }
 
     private getIndentationLevel(indentation: string) {
-        // TODO: kludge for null; this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
-        let levelsOfIndentation = 1;
-        if (this.settings.useTab) {
-            return levelsOfIndentation + indentation.length;
-        }
-        return (
-            levelsOfIndentation + Math.ceil(indentation.length / this.settings.tabSize)
+        const normalizedIndentation = indentation.replace(
+            this.indentationFromSettings,
+            "\t"
         );
+        return this.BASE_LEVEL_OF_INDENTATION + normalizedIndentation.length;
     }
 }
