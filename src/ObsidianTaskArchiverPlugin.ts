@@ -1,11 +1,12 @@
-import { Editor, Notice, Plugin } from "obsidian";
-import { Archiver } from "src/archiver/Archiver";
+import { MarkdownView, Notice, Plugin } from "obsidian";
+import { Archiver} from "src/archiver/Archiver";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
 import { DefaultSettings } from "./defaultSettings";
 import { SectionParser } from "./parser/SectionParser";
 import { DateTreeResolver } from "./archiver/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
+import {ActiveFile, DiskFile, EditorFile} from "./archiver/ActiveFile";
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;
@@ -18,12 +19,16 @@ export default class ObsidianTaskArchiver extends Plugin {
         this.addCommand({
             id: "archive-tasks",
             name: "Archive tasks in this file",
-            editorCallback: (editor) => this.archiveTasksInActiveFile(editor),
+            checkCallback: this.createCheckCallback((file) =>
+                this.archiver.archiveTasksInActiveFile(file)
+            ),
         });
         this.addCommand({
             id: "delete-tasks",
             name: "Delete tasks in this file",
-            editorCallback: (editor) => this.deleteTasksInActiveFile(editor),
+            checkCallback: this.createCheckCallback((file) =>
+                this.archiver.deleteTasksInActiveFile(file)
+            ),
         });
 
         this.archiver = new Archiver(
@@ -35,12 +40,25 @@ export default class ObsidianTaskArchiver extends Plugin {
         );
     }
 
-    private async archiveTasksInActiveFile(editor: Editor) {
-        await withNotice(() => this.archiver.archiveTasksInActiveFile(editor));
-    }
-
-    private async deleteTasksInActiveFile(editor: Editor) {
-        await withNotice(() => this.archiver.deleteTasksInActiveFile(editor));
+    private createCheckCallback(callback: (activeFile: ActiveFile) => Promise<string>) {
+        return (checking: boolean) => {
+            const activeMarkdownView =
+                this.app.workspace.getActiveViewOfType(MarkdownView);
+            if (activeMarkdownView) {
+                if (!checking) {
+                    const file =
+                        activeMarkdownView.getMode() === "preview"
+                            ? new DiskFile(
+                                  this.app.workspace.getActiveFile(),
+                                  this.app.vault
+                              )
+                            : new EditorFile(activeMarkdownView.editor);
+                    // noinspection JSIgnoredPromiseFromCall
+                    withNotice(() => callback(file));
+                }
+                return true;
+            }
+        };
     }
 
     async loadSettings() {

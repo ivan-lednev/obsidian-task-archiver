@@ -3,6 +3,7 @@ import { Archiver } from "./Archiver";
 import { SectionParser } from "../parser/SectionParser";
 import { DateTreeResolver } from "./DateTreeResolver";
 import { BlockParser } from "../parser/BlockParser";
+import { EditorFile } from "./ActiveFile";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -66,7 +67,7 @@ async function assertActiveFileModified(
 
 async function archiveCompletedTasks(input, settings = DEFAULT_SETTINGS) {
     const archiver = buildArchiver(input, settings);
-    return await archiver.archiveTasksInActiveFile(editor);
+    return await archiver.archiveTasksInActiveFile(new EditorFile(editor));
 }
 
 function buildArchiver(input, settings) {
@@ -85,7 +86,7 @@ function buildArchiver(input, settings) {
 
 async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
     const archiver = buildArchiver(input, settings);
-    return await archiver.deleteTasksInActiveFile(editor);
+    return await archiver.deleteTasksInActiveFile(new EditorFile(editor));
 }
 
 describe("Moving top-level tasks to the archive", () => {
