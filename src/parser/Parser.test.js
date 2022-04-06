@@ -307,3 +307,14 @@ describe("Block search", () => {
         expect(searchResult.stringify(DEFAULT_INDENTATION)[0]).toBe("- text");
     });
 });
+
+test("recalculateTokenLevels", () => {
+    const parser = new SectionParser(new BlockParser(DEFAULT_SETTINGS));
+    const root = parser.parse(["# h1"]).children[0];
+    const child = parser.parse(["# h2"]).children[0];
+
+    root.appendChild(child);
+    root.recalculateTokenLevels();
+
+    expect(root.stringify(DEFAULT_INDENTATION)).toEqual(["# h1", "## h2"]);
+});

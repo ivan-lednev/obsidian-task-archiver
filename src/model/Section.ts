@@ -5,9 +5,11 @@ import { flatMap, partition } from "lodash";
 
 export class Section extends MarkdownNode<Section> {
     children: Section[];
+    tokenLevel: number;
 
-    constructor(text: string, public blockContent: Block) {
+    constructor(text: string, tokenLevel: number, public blockContent: Block) {
         super(text);
+        this.tokenLevel = tokenLevel;
     }
 
     extractBlocksRecursively(filter: TreeFilter): Block[] {
@@ -27,12 +29,19 @@ export class Section extends MarkdownNode<Section> {
         return extracted;
     }
 
+    recalculateTokenLevels(newLevel: number = this.tokenLevel) {
+        this.tokenLevel = newLevel;
+        for (const child of this.children) {
+            child.recalculateTokenLevels(newLevel + 1);
+        }
+    }
+
     stringify(indentation: string): string[] {
         const lines = [];
 
         // TODO: kludge for null
         if (this.text) {
-            lines.push(this.text);
+            lines.push("#".repeat(this.tokenLevel) + this.text);
         }
 
         const children = [...this.blockContent.children, ...this.children];

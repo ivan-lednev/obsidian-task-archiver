@@ -78,9 +78,11 @@ export class Archiver {
             if (this.settings.addNewlinesAroundHeadings) {
                 addNewlinesToSection(section);
             }
-            const heading = this.buildArchiveHeading();
-            const rootBlock = new RootBlock();
-            archiveSection = new Section(heading, rootBlock);
+            archiveSection = new Section(
+                ` ${this.settings.archiveHeading}`,
+                this.settings.archiveHeadingDepth,
+                new RootBlock()
+            );
             section.appendChild(archiveSection);
         }
         return archiveSection;
@@ -116,14 +118,9 @@ export class Archiver {
         const indentation = buildIndentation(this.settings.indentationSettings);
         return tree.stringify(indentation);
     }
-
-    private buildArchiveHeading() {
-        const headingToken = "#".repeat(this.settings.archiveHeadingDepth);
-        return `${headingToken} ${this.settings.archiveHeading}`;
-    }
 }
 
 function buildHeadingPattern(heading: string) {
     const escapedArchiveHeading = escapeStringRegexp(heading);
-    return new RegExp(`^#{1,6}\\s+${escapedArchiveHeading}`);
+    return new RegExp(`\\s+${escapedArchiveHeading}$`);
 }

@@ -10,7 +10,7 @@ interface RawSection {
 }
 
 export class SectionParser {
-    private readonly HEADING = /^(?<headingToken>#+)\s.*$/;
+    private readonly HEADING = /^(#+)(\s.*)$/;
 
     constructor(private readonly blockParser: BlockParser) {}
 
@@ -37,9 +37,10 @@ export class SectionParser {
         for (const line of lines) {
             const match = line.match(this.HEADING);
             if (match) {
+                const [, headingToken, text] = match;
                 sections.push({
-                    text: match[0],
-                    level: match.groups.headingToken.length,
+                    text,
+                    level: headingToken.length,
                     lines: [],
                 });
             } else {
@@ -54,7 +55,11 @@ export class SectionParser {
         // TODO: don't nest different objects in one go: split Section creation from parsing blocks?
         return raw.map((s) => {
             return {
-                markdownNode: new Section(s.text, this.blockParser.parse(s.lines)),
+                markdownNode: new Section(
+                    s.text,
+                    s.level,
+                    this.blockParser.parse(s.lines)
+                ),
                 level: s.level,
             };
         });
