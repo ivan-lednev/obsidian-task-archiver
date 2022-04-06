@@ -267,17 +267,6 @@ describe("Insertion", () => {
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
 
-    test("Append a block to the start", () => {
-        const lines = ["- list", "- text"];
-
-        const parsed = new SectionParser(new BlockParser(DEFAULT_SETTINGS)).parse(
-            lines
-        );
-        parsed.blockContent.prependChild(new TextBlock("more text"));
-        const stringified = parsed.stringify(DEFAULT_INDENTATION);
-        expect(stringified).toEqual(["more text", "- list", "- text"]);
-    });
-
     test("Automatically adds indentation to a text block after a list item", () => {
         const lines = ["- list"];
 

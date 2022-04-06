@@ -3,12 +3,16 @@ import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
-import { TFile, Vault, Workspace } from "obsidian";
+import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
 import { RootBlock } from "../model/RootBlock";
-import { addNewlinesToSection, buildIndentation } from "../util";
+import {
+    addNewlinesToSection,
+    buildIndentation,
+    deleteHeadingUnderCursor,
+} from "../util";
 import { ListBlock } from "../model/ListBlock";
-import { ActiveFile, DiskFile } from "./ActiveFile";
+import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 
 const completedTaskPattern = /^(?:[-*]|\d+\.) \[x]/;
 
@@ -28,9 +32,7 @@ export class Archiver {
 
     async archiveTasksInActiveFile(file: ActiveFile) {
         const tasks = await this.extractTasksFromActiveFile(file);
-        const archiveFile = this.settings.archiveToSeparateFile
-            ? new DiskFile(await this.getArchiveFile(), this.vault)
-            : file;
+        const archiveFile = await this.getArchiveFile(file);
 
         await this.editFileTree(archiveFile, (tree: Section) =>
             this.archiveToRoot(tasks, tree)
@@ -46,6 +48,29 @@ export class Archiver {
         return tasks.length === 0
             ? "No tasks to delete"
             : `Deleted ${tasks.length} tasks`;
+    }
+
+    async archiveHeadingUnderCursor(editor: Editor) {
+        const thisHeadingLines = deleteHeadingUnderCursor(editor);
+        if (thisHeadingLines === null) {
+            return;
+        }
+        const parsedHeadingRoot = this.parser.parse(thisHeadingLines);
+        const parsedHeading = parsedHeadingRoot.children[0];
+
+        const archiveFile = await this.getArchiveFile(new EditorFile(editor));
+        await this.editFileTree(archiveFile, (tree) => {
+            const archiveSection = this.getArchiveSectionFromRoot(tree);
+            const archiveHeadingLevel = archiveSection.tokenLevel;
+            parsedHeading.recalculateTokenLevels(archiveHeadingLevel + 1);
+            archiveSection.appendChild(parsedHeading);
+        });
+    }
+
+    private async getArchiveFile(activeFile: ActiveFile) {
+        return this.settings.archiveToSeparateFile
+            ? new DiskFile(await this.getOrCreateArchiveFileOnDisk(), this.vault)
+            : activeFile;
     }
 
     private async editFileTree(file: ActiveFile, cb: TreeEditorCallback) {
@@ -97,7 +122,7 @@ export class Archiver {
         });
     }
 
-    private async getArchiveFile() {
+    private async getOrCreateArchiveFileOnDisk() {
         const archiveFileName = `${this.settings.defaultArchiveFileName.replace(
             "%",
             this.workspace.getActiveFile().basename
@@ -122,5 +147,5 @@ export class Archiver {
 
 function buildHeadingPattern(heading: string) {
     const escapedArchiveHeading = escapeStringRegexp(heading);
-    return new RegExp(`\\s+${escapedArchiveHeading}$`);
+    return new RegExp(`\\s*${escapedArchiveHeading}$`);
 }

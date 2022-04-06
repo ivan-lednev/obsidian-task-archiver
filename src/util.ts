@@ -3,6 +3,9 @@ import { Block } from "./model/Block";
 import { Section } from "./model/Section";
 import { last } from "lodash";
 import { TextBlock } from "./model/TextBlock";
+import { Editor, EditorPosition } from "obsidian";
+
+const headingPattern = /^(#+)\s/;
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
@@ -50,4 +53,62 @@ export function addNewlinesToSection(section: Section) {
             lastSection.blockContent.appendChild(new TextBlock(""));
         }
     }
+}
+
+export function deleteHeadingUnderCursor(editor: Editor) {
+    let thisHeadingStartLineNumber = null;
+    let thisHeadingLevel = null;
+
+    for (
+        let lookingAtLineNumber = editor.getCursor().line;
+        lookingAtLineNumber >= 0;
+        lookingAtLineNumber--
+    ) {
+        const lookingAtLine = editor.getLine(lookingAtLineNumber);
+        const headingMatch = lookingAtLine.match(headingPattern);
+        if (headingMatch) {
+            thisHeadingStartLineNumber = lookingAtLineNumber;
+            const [, headingToken] = headingMatch;
+            thisHeadingLevel = headingToken.length;
+            break;
+        }
+    }
+
+    if (thisHeadingStartLineNumber === null) {
+        return null;
+    }
+
+    const higherOrEqualHeadingPattern = new RegExp(`^#{1,${thisHeadingLevel}}\\s`);
+    const lineBelowHeadingStart = thisHeadingStartLineNumber + 1;
+    let thisHeadingLastLineNumber = thisHeadingStartLineNumber;
+
+    for (
+        let lookingAtLineNumber = lineBelowHeadingStart;
+        lookingAtLineNumber <= editor.lastLine();
+        lookingAtLineNumber++
+    ) {
+        const lookingAtLine = editor.getLine(lookingAtLineNumber);
+        const isLineHigherOrEqualHeading =
+            higherOrEqualHeadingPattern.test(lookingAtLine);
+        if (isLineHigherOrEqualHeading) {
+            break;
+        }
+        thisHeadingLastLineNumber = lookingAtLineNumber;
+    }
+
+    if (thisHeadingLastLineNumber === null) {
+        return null;
+    }
+
+    const thisHeadingRange: [EditorPosition, EditorPosition] = [
+        { line: thisHeadingStartLineNumber, ch: 0 },
+        {
+            line: thisHeadingLastLineNumber,
+            ch: editor.getLine(thisHeadingLastLineNumber).length,
+        },
+    ];
+
+    const thisHeadingLines = editor.getRange(...thisHeadingRange).split("\n");
+    editor.replaceRange("", ...thisHeadingRange);
+    return thisHeadingLines;
 }

@@ -47,16 +47,35 @@ const workspace = {
     getActiveFile: () => activeFile,
 };
 
+// todo: too much fileContents.get(activeFile)
 const editor = {
     getValue: () => fileContents.get(activeFile).join("\n"),
     setValue: (value) => fileContents.set(activeFile, value.split("\n")),
+    getCursor: () => {
+        return {
+            line: 0,
+            ch: 0,
+        };
+    },
+    getLine: (n) => fileContents.get(activeFile)[n],
+    lastLine: () => fileContents.get(activeFile).length - 1,
+    getRange: (from, to) =>
+        fileContents
+            .get(activeFile)
+            .slice(from.line, to.line + 1)
+            .join("\n"),
+    replaceRange: (replacement, from, to) => {
+        fileContents
+            .get(activeFile)
+            .splice(from.line, to.line - from.line + 1, replacement.split("\n"));
+    },
 };
 
 beforeEach(() => {
     fileContents.clear();
 });
 
-async function assertActiveFileModified(
+async function archiveTasksAndCheckActiveFile(
     input,
     expectedOutput,
     settings = DEFAULT_SETTINGS
@@ -92,28 +111,28 @@ async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
 describe("Moving top-level tasks to the archive", () => {
     test("Only normalizes whitespace when there are no completed tasks", async () => {
         // TODO: no need for these newlines
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["foo", "bar", "# Archived"],
             ["foo", "bar", "# Archived", "", ""]
         );
     });
 
     test("Moves a single task to an empty archive", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "- [ ] bar", "# Archived"],
             ["- [ ] bar", "# Archived", "", "- [x] foo", ""]
         );
     });
 
     test("Moves a single task to an h2 archive", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "- [ ] bar", "## Archived"],
             ["- [ ] bar", "## Archived", "", "- [x] foo", ""]
         );
     });
 
     test("Handles multiple levels of indentation", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             [
                 "- [x] root",
                 "\t- child 1",
@@ -136,7 +155,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Moves multiple tasks to the end of a populated archive", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             [
                 "- [x] foo",
                 "- [x] foo #2",
@@ -174,7 +193,7 @@ describe("Moving top-level tasks to the archive", () => {
     );
 
     test("Moves sub-items with top-level items after the archive heading, indented with tabs", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             [
                 "- [ ] bar",
                 "# Archived",
@@ -203,7 +222,7 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Works only with top-level tasks", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["- [ ] bar", "\t- [x] completed sub-task", "- [x] foo", "# Archived"],
             [
                 "- [ ] bar",
@@ -217,14 +236,14 @@ describe("Moving top-level tasks to the archive", () => {
     });
 
     test("Supports numbered tasks", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["1. [x] foo", "# Archived"],
             ["# Archived", "", "1. [x] foo", ""]
         );
     });
 
     test("Escapes regex characters in the archive heading value", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
             ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""],
             {
@@ -236,14 +255,14 @@ describe("Moving top-level tasks to the archive", () => {
 
     describe("Creating a new archive", () => {
         test("Appends an archive heading to the end of file with a newline if there isn't any", async () => {
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- Text", "1. [x] foo"],
                 ["- Text", "", "# Archived", "", "1. [x] foo", ""]
             );
         });
 
         test("Doesn't add newlines around the archive heading if configured so", async () => {
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- [x] foo", "Some text"],
                 ["Some text", "# Archived", "- [x] foo"],
                 {
@@ -255,7 +274,7 @@ describe("Moving top-level tasks to the archive", () => {
 
         test("Pulls heading depth from the config", async () => {
             // TODO: this extra newline in the result is a bit clunky
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- [x] foo"],
                 ["", "### Archived", "", "- [x] foo", ""],
                 {
@@ -299,7 +318,7 @@ describe("Separate files", () => {
 
 describe("Date tree", () => {
     test("Archives tasks under a bullet with the current week", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "- [ ] bar", "# Archived"],
             ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""],
             {
@@ -310,7 +329,7 @@ describe("Date tree", () => {
     });
 
     test("Uses indentation values from settings", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "# Archived"],
             ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""],
             {
@@ -325,7 +344,7 @@ describe("Date tree", () => {
     });
 
     test("Appends tasks under the current week bullet if it exists", async () => {
-        await assertActiveFileModified(
+        await archiveTasksAndCheckActiveFile(
             [
                 "- [x] foo",
                 "# Archived",
@@ -353,7 +372,7 @@ describe("Date tree", () => {
 
     describe("Days", () => {
         test("Archives tasks under a bullet with the current day", async () => {
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 ["- [ ] bar", "# Archived", "", `- [[${DAY}]]`, "\t- [x] foo", ""],
                 {
@@ -366,7 +385,7 @@ describe("Date tree", () => {
 
     describe("Combining dates", () => {
         test("Creates & indents weekly & daily blocks", async () => {
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 [
                     "- [ ] bar",
@@ -386,7 +405,7 @@ describe("Date tree", () => {
         });
 
         test("The week is already in the tree", async () => {
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${WEEK}]]`],
                 [
                     "- [ ] bar",
@@ -406,7 +425,7 @@ describe("Date tree", () => {
         });
 
         test("The week and the day are already in the tree", async () => {
-            assertActiveFileModified(
+            archiveTasksAndCheckActiveFile(
                 [
                     "- [x] foo",
                     "- [ ] bar",
@@ -433,7 +452,7 @@ describe("Date tree", () => {
         });
 
         test("The day is there, but the week is not (the user has changed the configuration)", async () => {
-            await assertActiveFileModified(
+            await archiveTasksAndCheckActiveFile(
                 ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${DAY}]]`],
                 [
                     "- [ ] bar",
@@ -452,5 +471,72 @@ describe("Date tree", () => {
                 }
             );
         });
+    });
+});
+
+async function archiveHeadingAndCheckActiveFile(
+    input,
+    expectedOutput,
+    settings = DEFAULT_SETTINGS
+) {
+    await archiveHeading(input, settings);
+
+    expect(fileContents.get(activeFile)).toEqual(expectedOutput);
+}
+
+async function archiveHeading(input, settings) {
+    const archiver = buildArchiver(input, settings);
+    await archiver.archiveHeadingUnderCursor(editor);
+}
+
+describe("Archive heading under cursor", () => {
+    test("Base case", async () => {
+        await archiveHeadingAndCheckActiveFile(
+            ["# h1", "", "# Archived", ""],
+            ["", "# Archived", "", "## h1", ""]
+        );
+    });
+
+    test("Single line heading", async () => {
+        await archiveHeadingAndCheckActiveFile(
+            ["# h1", "# Archived", ""],
+            ["", "# Archived", "", "## h1"]
+        );
+    });
+
+    test("Nested heading", async () => {
+        const lines = ["# h1", "## h2", "text", "# Archived", ""];
+
+        const archiver = buildArchiver(lines, DEFAULT_SETTINGS);
+
+        await archiver.archiveHeadingUnderCursor({
+            ...editor,
+            getCursor: () => {
+                return { line: 2, ch: 0 };
+            },
+        });
+
+        expect(fileContents.get(activeFile)).toEqual([
+            "# h1",
+            "",
+            "# Archived",
+            "",
+            "## h2",
+            "text",
+        ]);
+    });
+
+    test("No heading under cursor", async () => {
+        await archiveHeadingAndCheckActiveFile(["text"], ["text"]);
+    });
+
+    test("Moves to separate file", async () => {
+        await archiveHeading(["# h1", "# Archived", ""], {
+            ...DEFAULT_SETTINGS,
+            archiveToSeparateFile: true,
+        });
+
+        // TODO: whitespace inconsistency
+        expect(fileContents.get(archive)).toEqual(["", "# Archived", "## h1"]);
     });
 });

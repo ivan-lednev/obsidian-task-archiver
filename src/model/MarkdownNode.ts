@@ -11,9 +11,5 @@ export abstract class MarkdownNode<C extends MarkdownNode<C>> {
         this.children.push(child);
     }
 
-    prependChild(child: C) {
-        this.children.unshift(child);
-    }
-
     abstract stringify(indentation: string): string[];
 }

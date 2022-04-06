@@ -11,6 +11,7 @@ import { ActiveFile, DiskFile, EditorFile } from "./archiver/ActiveFile";
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;
     private archiver: Archiver;
+    private parser: SectionParser;
 
     async onload() {
         await this.loadSettings();
@@ -30,11 +31,21 @@ export default class ObsidianTaskArchiver extends Plugin {
                 this.archiver.deleteTasksInActiveFile(file)
             ),
         });
+        this.addCommand({
+            id: "archive-heading-under-cursor",
+            name: "Archive heading under cursor",
+            editorCallback: (editor) => {
+                this.archiver.archiveHeadingUnderCursor(editor);
+            },
+        });
 
+        this.parser = new SectionParser(
+            new BlockParser(this.settings.indentationSettings)
+        );
         this.archiver = new Archiver(
             this.app.vault,
             this.app.workspace,
-            new SectionParser(new BlockParser(this.settings.indentationSettings)),
+            this.parser,
             new DateTreeResolver(this.settings),
             this.settings
         );
@@ -71,6 +82,7 @@ export default class ObsidianTaskArchiver extends Plugin {
                 }
                 return true;
             }
+            return false;
         };
     }
 
