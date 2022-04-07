@@ -1,11 +1,17 @@
 import { IndentationSettings } from "./archiver/IndentationSettings";
 import { Block } from "./model/Block";
 import { Section } from "./model/Section";
-import { last } from "lodash";
+import { last, partition } from "lodash";
 import { TextBlock } from "./model/TextBlock";
 import { Editor, EditorPosition } from "obsidian";
+import escapeStringRegexp from "escape-string-regexp";
 
-const headingPattern = /^(#+)\s/;
+const HEADING_PATTERN = /^(#+)\s/;
+const BULLET_SIGN = `(?:[-*+]|\\d+\\.)`;
+const LIST_ITEM_PATTERN = new RegExp(`^[ \t]*${BULLET_SIGN}( |\t)`);
+const STRING_WITH_SPACES_PATTERN = new RegExp(`^[ \t]+`);
+const TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[[x ]]`);
+const COMPLETED_TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[x]`);
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
@@ -40,6 +46,24 @@ function findBlockRecursivelyInCollection(
     return null;
 }
 
+export function isCompletedTask(line: string) {
+    return COMPLETED_TASK_PATTERN.test(line);
+}
+
+function isTask(line: string) {
+    return TASK_PATTERN.test(line);
+}
+
+export function sortBlocksRecursively(root: Block) {
+    const [tasks, nonTasks] = partition(root.children, (b) => isTask(b.text));
+    const [complete, incomplete] = partition(tasks, (b) => isCompletedTask(b.text));
+    root.children = [...nonTasks, ...incomplete, ...complete];
+
+    for (const child of root.children) {
+        sortBlocksRecursively(child);
+    }
+}
+
 export function addNewlinesToSection(section: Section) {
     let lastSection = section;
     const childrenLength = section.children.length;
@@ -55,7 +79,7 @@ export function addNewlinesToSection(section: Section) {
     }
 }
 
-export function deleteHeadingUnderCursor(editor: Editor) {
+export function detectHeadingUnderCursor(editor: Editor) {
     let thisHeadingStartLineNumber = null;
     let thisHeadingLevel = null;
 
@@ -65,7 +89,7 @@ export function deleteHeadingUnderCursor(editor: Editor) {
         lookingAtLineNumber--
     ) {
         const lookingAtLine = editor.getLine(lookingAtLineNumber);
-        const headingMatch = lookingAtLine.match(headingPattern);
+        const headingMatch = lookingAtLine.match(HEADING_PATTERN);
         if (headingMatch) {
             thisHeadingStartLineNumber = lookingAtLineNumber;
             const [, headingToken] = headingMatch;
@@ -108,7 +132,66 @@ export function deleteHeadingUnderCursor(editor: Editor) {
         },
     ];
 
-    const thisHeadingLines = editor.getRange(...thisHeadingRange).split("\n");
-    editor.replaceRange("", ...thisHeadingRange);
-    return thisHeadingLines;
+    return thisHeadingRange;
+}
+
+export function detectListUnderCursor(editor: Editor) {
+    let thisListStartLineNumber = null;
+
+    for (
+        let lookingAtLineNumber = editor.getCursor().line;
+        lookingAtLineNumber >= 0;
+        lookingAtLineNumber--
+    ) {
+        const lookingAtLine = editor.getLine(lookingAtLineNumber);
+        if (!isListItem(lookingAtLine) && !isIndentedLine(lookingAtLine)) {
+            break;
+        }
+        thisListStartLineNumber = lookingAtLineNumber;
+    }
+
+    if (thisListStartLineNumber === null) {
+        return null;
+    }
+
+    const lineBelowListStart = thisListStartLineNumber + 1;
+    let thisListLastLineNumber = thisListStartLineNumber;
+
+    for (
+        let lookingAtLineNumber = lineBelowListStart;
+        lookingAtLineNumber <= editor.lastLine();
+        lookingAtLineNumber++
+    ) {
+        const lookingAtLine = editor.getLine(lookingAtLineNumber);
+        if (!isListItem(lookingAtLine) && !isIndentedLine(lookingAtLine)) {
+            break;
+        }
+        thisListLastLineNumber = lookingAtLineNumber;
+    }
+
+    if (thisListLastLineNumber === null) {
+        return null;
+    }
+
+    const thisListRange: [EditorPosition, EditorPosition] = [
+        { line: thisListStartLineNumber, ch: 0 },
+        {
+            line: thisListLastLineNumber,
+            ch: editor.getLine(thisListLastLineNumber).length,
+        },
+    ];
+    return thisListRange;
+}
+
+function isListItem(line: string) {
+    return LIST_ITEM_PATTERN.test(line);
+}
+
+function isIndentedLine(line: string) {
+    return STRING_WITH_SPACES_PATTERN.test(line);
+}
+
+export function buildHeadingPattern(heading: string) {
+    const escapedArchiveHeading = escapeStringRegexp(heading);
+    return new RegExp(`\\s*${escapedArchiveHeading}$`);
 }

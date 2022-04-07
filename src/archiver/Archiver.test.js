@@ -4,6 +4,7 @@ import { SectionParser } from "../parser/SectionParser";
 import { DateTreeResolver } from "./DateTreeResolver";
 import { BlockParser } from "../parser/BlockParser";
 import { EditorFile } from "./ActiveFile";
+import { Sorter } from "../Sorter";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -67,7 +68,7 @@ const editor = {
     replaceRange: (replacement, from, to) => {
         fileContents
             .get(activeFile)
-            .splice(from.line, to.line - from.line + 1, replacement.split("\n"));
+            .splice(from.line, to.line - from.line + 1, ...replacement.split("\n"));
     },
 };
 
@@ -538,5 +539,101 @@ describe("Archive heading under cursor", () => {
 
         // TODO: whitespace inconsistency
         expect(fileContents.get(archive)).toEqual(["", "# Archived", "## h1"]);
+    });
+});
+
+function sortListUnderCursorAndCheckActiveFile(input, expectedOutput) {
+    const sorter = buildSorter(input, DEFAULT_SETTINGS);
+
+    sorter.sortListUnderCursor(editor);
+
+    expect(fileContents.get(activeFile)).toEqual(expectedOutput);
+}
+
+function buildSorter(input, settings) {
+    fileContents.set(activeFile, input);
+
+    return new Sorter(
+        new SectionParser(new BlockParser(settings.indentationSettings)),
+        settings
+    );
+}
+
+describe("Sort tasks in list under cursor recursively", () => {
+    test("No list under cursor", () => {
+        sortListUnderCursorAndCheckActiveFile(["text"], ["text"]);
+    });
+
+    test("One level of sorting, mixed entries", () => {
+        sortListUnderCursorAndCheckActiveFile(
+            [
+                "- [x] completed 1",
+                "- text 1",
+                "- [ ] incomplete 1",
+                "- text 2",
+                "- [x] completed 2",
+                "- text 3",
+            ],
+            [
+                "- text 1",
+                "- text 2",
+                "- text 3",
+                "- [ ] incomplete 1",
+                "- [x] completed 1",
+                "- [x] completed 2",
+            ]
+        );
+    });
+
+    test("Multiple levels of nesting", () => {
+        sortListUnderCursorAndCheckActiveFile(
+            [
+                "- [x] completed",
+                "\t- [x] completed",
+                "\t- [ ] incomplete",
+                "\t- text 1",
+                "- [ ] incomplete",
+                "\t- text",
+                "\t\t- [x] completed",
+                "\t\t- text",
+            ],
+            [
+                "- [ ] incomplete",
+                "\t- text",
+                "\t\t- text",
+                "\t\t- [x] completed",
+                "- [x] completed",
+                "\t- text 1",
+                "\t- [ ] incomplete",
+                "\t- [x] completed",
+            ]
+        );
+    });
+
+    test("Text under list item", () => {
+        sortListUnderCursorAndCheckActiveFile(
+            [
+                "- [ ] incomplete",
+                "  text under list item",
+                "  text under list item 2",
+                "- text",
+                "\t- text",
+                "\t\t- [x] completed",
+                "\t\t  text under list item",
+                "\t\t  text under list item 2",
+                "\t\t- text",
+            ],
+            [
+                "- text",
+                "\t- text",
+                "\t\t- text",
+                "\t\t- [x] completed",
+                "\t\t  text under list item",
+                "\t\t  text under list item 2",
+                "- [ ] incomplete",
+                "  text under list item",
+                "  text under list item 2",
+            ]
+        );
     });
 });

@@ -29,22 +29,24 @@ export class DateTreeResolver {
         this.indentationSettings = settings.indentationSettings;
     }
 
+    // TODO: out of place
     private static stripSurroundingNewlines(blocks: Block[]) {
         const isEmpty = (block: Block) => block.text.trim().length === 0;
         return chain(blocks).dropWhile(isEmpty).dropRightWhile(isEmpty).value();
     }
 
+    // TODO: out of place
     private static addSurroundingNewlines(blocks: Block[]) {
         const empty = new TextBlock("");
         return [empty, ...blocks, empty];
     }
 
-    mergeNewBlocksWithDateTree(tree: Block, newBlocks: Block[]) {
-        tree.children = DateTreeResolver.stripSurroundingNewlines(tree.children);
-        const insertionPoint = this.getCurrentDateBlock(tree);
+    mergeNewBlocksWithDateTree(root: Block, newBlocks: Block[]) {
+        root.children = DateTreeResolver.stripSurroundingNewlines(root.children);
+        const insertionPoint = this.getCurrentDateBlock(root);
         insertionPoint.children = [...insertionPoint.children, ...newBlocks];
         if (this.settings.addNewlinesAroundHeadings) {
-            tree.children = DateTreeResolver.addSurroundingNewlines(tree.children);
+            root.children = DateTreeResolver.addSurroundingNewlines(root.children);
         }
     }
 

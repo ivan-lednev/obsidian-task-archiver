@@ -1,5 +1,4 @@
 import { ArchiverSettings } from "./ArchiverSettings";
-import escapeStringRegexp from "escape-string-regexp";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
@@ -8,13 +7,12 @@ import { DateTreeResolver } from "./DateTreeResolver";
 import { RootBlock } from "../model/RootBlock";
 import {
     addNewlinesToSection,
+    buildHeadingPattern,
     buildIndentation,
-    deleteHeadingUnderCursor,
+    detectHeadingUnderCursor,
+    isCompletedTask,
 } from "../util";
-import { ListBlock } from "../model/ListBlock";
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
-
-const completedTaskPattern = /^(?:[-*]|\d+\.) \[x]/;
 
 type TreeEditorCallback = (tree: Section) => void;
 
@@ -35,7 +33,7 @@ export class Archiver {
         const archiveFile = await this.getArchiveFile(file);
 
         await this.editFileTree(archiveFile, (tree: Section) =>
-            this.archiveToRoot(tasks, tree)
+            this.archiveBlocksToRoot(tasks, tree)
         );
 
         return tasks.length === 0
@@ -51,19 +49,29 @@ export class Archiver {
     }
 
     async archiveHeadingUnderCursor(editor: Editor) {
-        const thisHeadingLines = deleteHeadingUnderCursor(editor);
-        if (thisHeadingLines === null) {
+        const thisHeadingRange = detectHeadingUnderCursor(editor);
+        if (thisHeadingRange === null) {
             return;
         }
+
+        const thisHeadingLines = editor.getRange(...thisHeadingRange).split("\n");
+
+        editor.replaceRange("", ...thisHeadingRange);
+
         const parsedHeadingRoot = this.parser.parse(thisHeadingLines);
         const parsedHeading = parsedHeadingRoot.children[0];
+        const activeFile = new EditorFile(editor);
+        await this.archiveSection(activeFile, parsedHeading);
+    }
 
-        const archiveFile = await this.getArchiveFile(new EditorFile(editor));
+    async archiveSection(activeFile: ActiveFile, section: Section) {
+        const archiveFile = await this.getArchiveFile(activeFile);
+
         await this.editFileTree(archiveFile, (tree) => {
             const archiveSection = this.getArchiveSectionFromRoot(tree);
             const archiveHeadingLevel = archiveSection.tokenLevel;
-            parsedHeading.recalculateTokenLevels(archiveHeadingLevel + 1);
-            archiveSection.appendChild(parsedHeading);
+            section.recalculateTokenLevels(archiveHeadingLevel + 1);
+            archiveSection.appendChild(section);
         });
     }
 
@@ -87,7 +95,7 @@ export class Archiver {
         return tasks;
     }
 
-    private archiveToRoot(tasks: Block[], root: Section) {
+    private archiveBlocksToRoot(tasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
         this.dateTreeResolver.mergeNewBlocksWithDateTree(
             archiveSection.blockContent,
@@ -115,11 +123,13 @@ export class Archiver {
 
     private extractTasksFromTree(tree: Section) {
         return tree.extractBlocksRecursively({
-            blockFilter: (block: Block) =>
-                block instanceof ListBlock && completedTaskPattern.test(block.text),
-            sectionFilter: (section: Section) =>
-                !this.archiveHeadingPattern.test(section.text),
+            blockFilter: (block: Block) => isCompletedTask(block.text),
+            sectionFilter: (section: Section) => !this.isArchive(section.text),
         });
+    }
+
+    private isArchive(line: string) {
+        return this.archiveHeadingPattern.test(line);
     }
 
     private async getOrCreateArchiveFileOnDisk() {
@@ -145,7 +155,3 @@ export class Archiver {
     }
 }
 
-function buildHeadingPattern(heading: string) {
-    const escapedArchiveHeading = escapeStringRegexp(heading);
-    return new RegExp(`\\s*${escapedArchiveHeading}$`);
-}

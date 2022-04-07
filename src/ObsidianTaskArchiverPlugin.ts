@@ -2,20 +2,48 @@ import { MarkdownView, Notice, Plugin } from "obsidian";
 import { Archiver } from "src/archiver/Archiver";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
-import { DefaultSettings } from "./defaultSettings";
 import { SectionParser } from "./parser/SectionParser";
 import { DateTreeResolver } from "./archiver/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
 import { ActiveFile, DiskFile, EditorFile } from "./archiver/ActiveFile";
+import { Sorter } from "./Sorter";
+
+const DEFAULT_SETTINGS: ArchiverSettings = {
+    archiveHeading: "Archived",
+    archiveHeadingDepth: 1,
+    weeklyNoteFormat: "YYYY-MM-[W]-w",
+    useWeeks: true,
+    dailyNoteFormat: "YYYY-MM-DD",
+    useDays: false,
+    addNewlinesAroundHeadings: true,
+    archiveToSeparateFile: false,
+    defaultArchiveFileName: "% (archive)",
+    indentationSettings: {
+        useTab: true,
+        tabSize: 4,
+    },
+};
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: ArchiverSettings;
-    private archiver: Archiver;
     private parser: SectionParser;
+    private archiver: Archiver;
+    private sorter: Sorter;
 
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
+        this.parser = new SectionParser(
+            new BlockParser(this.settings.indentationSettings)
+        );
+        this.archiver = new Archiver(
+            this.app.vault,
+            this.app.workspace,
+            this.parser,
+            new DateTreeResolver(this.settings),
+            this.settings
+        );
+        this.sorter = new Sorter(this.parser, this.settings);
 
         this.addCommand({
             id: "archive-tasks",
@@ -38,21 +66,17 @@ export default class ObsidianTaskArchiver extends Plugin {
                 this.archiver.archiveHeadingUnderCursor(editor);
             },
         });
-
-        this.parser = new SectionParser(
-            new BlockParser(this.settings.indentationSettings)
-        );
-        this.archiver = new Archiver(
-            this.app.vault,
-            this.app.workspace,
-            this.parser,
-            new DateTreeResolver(this.settings),
-            this.settings
-        );
+        this.addCommand({
+            id: "sort-tasks-in-list-under-cursor",
+            name: "Sort tasks in list under cursor",
+            editorCallback: (editor) => {
+                this.sorter.sortListUnderCursor(editor);
+            },
+        });
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, DefaultSettings, await this.loadData(), {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData(), {
             indentationSettings: {
                 useTab: this.getConfig("useTab"),
                 tabSize: this.getConfig("tabSize"),
