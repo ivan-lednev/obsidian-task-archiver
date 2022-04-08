@@ -1,8 +1,12 @@
-The plugin adds commands that either delete or move completed tasks in the active file either under a pre-configured heading in the same file or to a separate file.
+This plugin is a toolbox for working with completed tasks in your markdown files. It brings some
+of [org-mode's](https://orgmode.org/) features to Obsidian. It provides features such as archiving, deleting and sorting
+tasks and document sections.
 
-This is handy if you like organizing your tasks in an outline: completed tasks don't clutter up your workspace, but you can still go back to them when needed.
+## Commands <a id="commands"></a>
 
-## Here is what it looks like
+### Archive tasks in this file
+
+Here is what it looks like:
 
 ```md
 - [ ] This one I haven't done yet
@@ -10,7 +14,21 @@ This is handy if you like organizing your tasks in an outline: completed tasks d
     - Some task details
 - [x] Feed the plants
 ```
-Turns into
+
+Turns into:
+
+```md
+- [ ] This one I haven't done yet
+
+# Archived
+
+- [x] Water the dog
+    - Some task details
+- [x] Feed the plants
+```
+
+Or, with date tree enabled:
+
 ```md
 - [ ] This one I haven't done yet
 
@@ -21,43 +39,60 @@ Turns into
         - [x] Water the dog
             - Some task details
         - [x] Feed the plants
-
 ```
+
+### Delete tasks in this file
+
+This one is the same as 'Archive tasks in this file', except that the tasks get discarded.
+
+### Archive heading under cursor
+
+Grab the whole section under the heading under cursor, including all the child sections and move it to the archive.
+
+### Sort tasks in list under cursor
+
+Grab the whole list under cursor and recursively reorder all the items based on completeness:
+
+1. Plain list items
+2. Incomplete tasks
+3. Completed tasks
 
 ## Configuration
 
 The plugin lets you configure the following:
+
 - what text makes a heading an archive;
 - whether to add newlines around headings when moving stuff around;
 - moving tasks to the current file or to a separate file.
 
 ### Date tree
 
-Each checked date tree option (weeks, days) will create an additional level in the archive hierarchy with a link to the corresponding periodic note.
+Each checked date tree option (weeks, days) will create an additional level in the archive hierarchy with a link to the
+corresponding periodic note.
 
 ## Usage
 
-Open the command palette and run one of the archiver commands:
-- `Archive tasks in this file`
-- `Delete tasks in this file`
+Open the command palette and run one of the archiver [commands](#commands).
 
 ## Roadmap
 
 - [x] Move completed tasks to a separate archive file
 - [x] Delete completed tasks
+- [x] Archive any document section
+- [x] Archive sublists per list item
 - [ ] Per-file configuration through front-matter
 - [ ] More options for the date tree
-  - [x] Days
-  - [ ] Months
-  - [ ] Years
+    - [x] Days
+    - [ ] Months
+    - [ ] Years
 - [ ] Multiple archive subheadings per file
-- [ ] Archive sublists per list item
-- [ ] Archive any document section
 
 ## Acknowledgements
 
-This plugin is a simple & incomplete (for now) implementation of the archiving features of [org-mode](https://orgmode.org/).
+This plugin is a simple & incomplete (for now) implementation of the archiving features
+of [org-mode](https://orgmode.org/).
 
 Also, I relied on the code from these excellent plugins:
+
 - [obsidian-kanban](https://github.com/mgmeyers/obsidian-kanban);
 - [obsidian-outliner](https://github.com/vslinko/obsidian-outliner).
