@@ -45,7 +45,7 @@ export class BlockParser {
     }
 
     private getIndentationLevel(indentation: string) {
-        // TODO: kludge for null; this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
+        // TODO: this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
         let levelsOfIndentation = 1;
         if (this.settings.useTab) {
             return levelsOfIndentation + indentation.length;

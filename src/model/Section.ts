@@ -39,7 +39,7 @@ export class Section extends MarkdownNode<Section> {
     stringify(indentation: string): string[] {
         const lines = [];
 
-        // TODO: kludge for null
+        // TODO: kludge for root block
         if (this.text) {
             lines.push("#".repeat(this.tokenLevel) + this.text);
         }

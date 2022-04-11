@@ -31,8 +31,7 @@ export class SectionParser {
     }
 
     private parseRawSections(lines: string[]) {
-        // TODO: kludge for null
-        const sections: RawSection[] = [{ text: null, level: 0, lines: [] }];
+        const sections: RawSection[] = [{ text: "", level: 0, lines: [] }];
 
         for (const line of lines) {
             const match = line.match(this.HEADING);

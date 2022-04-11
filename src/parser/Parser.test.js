@@ -246,8 +246,7 @@ describe("Extraction", () => {
 
         const actual = parsed
             .extractBlocksRecursively({
-                blockFilter: (block) =>
-                    block.text !== null && block.text === "Extract me",
+                blockFilter: (block) => block.text === "Extract me",
             })
             .map((b) => b.stringify(DEFAULT_INDENTATION));
         expect(actual).toEqual(extracted);
