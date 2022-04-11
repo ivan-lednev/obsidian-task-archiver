@@ -17,6 +17,8 @@ import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 type TreeEditorCallback = (tree: Section) => void;
 
 export class Archiver {
+    private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
+
     constructor(
         private readonly vault: Vault,
         private readonly workspace: Workspace,
@@ -49,6 +51,7 @@ export class Archiver {
     }
 
     async archiveHeadingUnderCursor(editor: Editor) {
+        // TODO: out of place
         const thisHeadingRange = detectHeadingUnderCursor(editor);
         if (thisHeadingRange === null) {
             return;
@@ -61,6 +64,7 @@ export class Archiver {
         const parsedHeadingRoot = this.parser.parse(thisHeadingLines);
         const parsedHeading = parsedHeadingRoot.children[0];
         const activeFile = new EditorFile(editor);
+
         await this.archiveSection(activeFile, parsedHeading);
     }
 
@@ -77,7 +81,7 @@ export class Archiver {
 
     private async getArchiveFile(activeFile: ActiveFile) {
         return this.settings.archiveToSeparateFile
-            ? new DiskFile(await this.getOrCreateArchiveFileOnDisk(), this.vault)
+            ? new DiskFile(await this.getOrCreateArchiveFile(), this.vault)
             : activeFile;
     }
 
@@ -90,7 +94,7 @@ export class Archiver {
     private async extractTasksFromActiveFile(file: ActiveFile) {
         let tasks: Block[] = [];
         await this.editFileTree(file, (tree) => {
-            tasks = this.extractTasksFromTree(tree);
+            tasks = this.extractTasksFromTreeSkippingArchive(tree);
         });
         return tasks;
     }
@@ -111,17 +115,21 @@ export class Archiver {
             if (this.settings.addNewlinesAroundHeadings) {
                 addNewlinesToSection(section);
             }
-            archiveSection = new Section(
-                ` ${this.settings.archiveHeading}`,
-                this.settings.archiveHeadingDepth,
-                new RootBlock()
-            );
+            archiveSection = this.buildArchiveSection();
             section.appendChild(archiveSection);
         }
         return archiveSection;
     }
 
-    private extractTasksFromTree(tree: Section) {
+    private buildArchiveSection() {
+        return new Section(
+            ` ${this.settings.archiveHeading}`,
+            this.settings.archiveHeadingDepth,
+            new RootBlock()
+        );
+    }
+
+    private extractTasksFromTreeSkippingArchive(tree: Section) {
         return tree.extractBlocksRecursively({
             blockFilter: (block: Block) => isCompletedTask(block.text),
             sectionFilter: (section: Section) => !this.isArchive(section.text),
@@ -132,21 +140,30 @@ export class Archiver {
         return this.archiveHeadingPattern.test(line);
     }
 
-    private async getOrCreateArchiveFileOnDisk() {
-        const archiveFileName = `${this.settings.defaultArchiveFileName.replace(
-            "%",
-            this.workspace.getActiveFile().basename
-        )}.md`;
+    private async getOrCreateArchiveFile() {
+        const archiveFileName = this.buildArchiveFileName();
+        return await this.getOrCreateFile(archiveFileName);
+    }
 
-        let archiveFile =
-            this.vault.getAbstractFileByPath(archiveFileName) ||
-            (await this.vault.create(archiveFileName, ""));
+    private buildArchiveFileName() {
+        const activeFileBaseName = this.workspace.getActiveFile().basename;
+        const archiveFileBaseName = this.settings.defaultArchiveFileName.replace(
+            Archiver.ACTIVE_FILE_PLACEHOLDER,
+            activeFileBaseName
+        );
+        return `${archiveFileBaseName}.md`;
+    }
 
-        if (archiveFile instanceof TFile) {
-            return archiveFile;
+    private async getOrCreateFile(name: string) {
+        const file =
+            this.vault.getAbstractFileByPath(name) ||
+            (await this.vault.create(name, ""));
+
+        if (!(file instanceof TFile)) {
+            throw new Error(`${name} is not a valid markdown file`);
         }
 
-        throw new Error(`${archiveFileName} is not a valid markdown file`);
+        return file;
     }
 
     private stringifyTree(tree: Section) {
