@@ -49,13 +49,75 @@ This one is the same as 'Archive tasks in this file', except that the tasks get 
 
 Grab the whole section under the heading under cursor, including all the child sections and move it to the archive.
 
+This:
+
+```markdown
+Some top-level text
+
+# H1 heading
+
+Some text
+
+## H2 heading
+
+More text
+```
+
+Turns into:
+
+```markdown
+Some top-level text
+
+# Archived
+
+## H1 heading
+
+Some text
+
+### H2 heading
+
+More text
+```
+
 ### Sort tasks in list under cursor
 
-Grab the whole list under cursor and recursively reorder all the items based on completeness:
+Grab the whole list under cursor and **recursively** reorder all the items based on completeness:
 
-1. Plain list items
-2. Incomplete tasks
-3. Completed tasks
+1. Plain list items first
+2. Then, incomplete tasks
+3. And finally, completed tasks
+
+This list:
+
+```markdown
+- [x] Task
+- Item
+- [ ] Incomplete
+    - [x] Task
+    - Item More notes
+    - [ ] Incomplete
+- Item 2
+- [ ] Incomplete 2
+    - [x] Task
+    - Item
+    - [x] Task 2
+```
+
+Turns into:
+
+```markdown
+- Item
+- Item 2
+- [ ] Incomplete
+    - Item More notes
+    - [ ] Incomplete
+    - [x] Task
+- [ ] Incomplete 2
+    - Item
+    - [x] Task
+    - [x] Task 2
+- [x] Task
+```
 
 ## Configuration
 
