@@ -1,7 +1,7 @@
 import { IndentationSettings } from "./archiver/IndentationSettings";
 import { Block } from "./model/Block";
 import { Section } from "./model/Section";
-import { last, partition } from "lodash";
+import { chain, isEmpty, last, partition } from "lodash";
 import { TextBlock } from "./model/TextBlock";
 import { Editor, EditorPosition } from "obsidian";
 import escapeStringRegexp from "escape-string-regexp";
@@ -194,4 +194,34 @@ function isIndentedLine(line: string) {
 export function buildHeadingPattern(heading: string) {
     const escapedArchiveHeading = escapeStringRegexp(heading);
     return new RegExp(`\\s*${escapedArchiveHeading}$`);
+}
+
+export function normalizeNewlinesRecursively(root: Section) {
+    for (const child of root.children) {
+        child.blockContent.children = normalizeNewlines(child.blockContent.children);
+        normalizeNewlinesRecursively(child);
+    }
+}
+
+// todo: pass section, not blocks
+export function stripSurroundingNewlines(blocks: Block[]) {
+    return chain(blocks).dropWhile(isEmptyBlock).dropRightWhile(isEmptyBlock).value();
+}
+
+function isEmptyBlock(block: Block) {
+    return block.text.trim().length === 0;
+}
+
+// todo: pass section, not blocks
+export function addSurroundingNewlines(blocks: Block[]) {
+    const newLine = new TextBlock("");
+    if (isEmpty(blocks)) {
+        return [newLine];
+    }
+    return [newLine, ...blocks, newLine];
+}
+
+// todo: pass section, not blocks
+export function normalizeNewlines(blocks: Block[]) {
+    return addSurroundingNewlines(stripSurroundingNewlines(blocks));
 }

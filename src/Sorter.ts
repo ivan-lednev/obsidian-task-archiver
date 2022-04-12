@@ -1,7 +1,7 @@
 import { SectionParser } from "./parser/SectionParser";
 import { ArchiverSettings } from "./archiver/ArchiverSettings";
 import { Editor } from "obsidian";
-import { buildIndentation, detectListUnderCursor, sortBlocksRecursively } from "./util";
+import { buildIndentation, detectListUnderCursor, sortBlocksRecursively } from "./Util";
 
 export class Sorter {
     constructor(

@@ -26,8 +26,8 @@ export class BlockParser {
     }
 
     private parseFlatBlock(line: string) {
-        const [indentation, text] = this.splitOnIndentation(line);
-        const level = this.getIndentationLevel(indentation);
+        const [, text] = this.splitOnIndentation(line);
+        const level = this.getIndentationLevel(line);
         const markdownNode = text.match(this.LIST_MARKER)
             ? new ListBlock(text)
             : new TextBlock(text);
@@ -44,8 +44,9 @@ export class BlockParser {
         return [indentation, text];
     }
 
-    private getIndentationLevel(indentation: string) {
+    getIndentationLevel(line: string) {
         // TODO: this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
+        const [indentation] = this.splitOnIndentation(line);
         let levelsOfIndentation = 1;
         if (this.settings.useTab) {
             return levelsOfIndentation + indentation.length;

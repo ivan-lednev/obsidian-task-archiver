@@ -1,6 +1,6 @@
 import { SectionParser } from "./SectionParser";
 import { TextBlock } from "../model/TextBlock";
-import { buildIndentation, findBlockRecursively } from "../util";
+import { buildIndentation, findBlockRecursively } from "../Util";
 import { BlockParser } from "./BlockParser";
 
 const DEFAULT_SETTINGS = {

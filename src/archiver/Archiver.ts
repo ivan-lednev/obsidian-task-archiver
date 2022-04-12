@@ -10,9 +10,13 @@ import {
     buildHeadingPattern,
     buildIndentation,
     detectHeadingUnderCursor,
+    detectListUnderCursor,
     isCompletedTask,
-} from "../util";
+    normalizeNewlinesRecursively,
+} from "../Util";
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
+import { isEmpty } from "lodash";
+import { BlockParser } from "../parser/BlockParser";
 
 type TreeEditorCallback = (tree: Section) => void;
 
@@ -38,16 +42,14 @@ export class Archiver {
             this.archiveBlocksToRoot(tasks, tree)
         );
 
-        return tasks.length === 0
+        return isEmpty(tasks)
             ? "No tasks to archive"
             : `Archived ${tasks.length} tasks`;
     }
 
     async deleteTasksInActiveFile(file: ActiveFile) {
         const tasks = await this.extractTasksFromActiveFile(file);
-        return tasks.length === 0
-            ? "No tasks to delete"
-            : `Deleted ${tasks.length} tasks`;
+        return isEmpty(tasks) ? "No tasks to delete" : `Deleted ${tasks.length} tasks`;
     }
 
     async archiveHeadingUnderCursor(editor: Editor) {
@@ -78,6 +80,7 @@ export class Archiver {
             archiveSection.appendChild(section);
         });
     }
+
 
     private async getArchiveFile(activeFile: ActiveFile) {
         return this.settings.archiveToSeparateFile

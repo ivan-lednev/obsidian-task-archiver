@@ -2,9 +2,11 @@ import { ArchiverSettings } from "./ArchiverSettings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 import { IndentationSettings } from "./IndentationSettings";
-import { findBlockRecursively } from "../util";
-import { chain } from "lodash";
-import { TextBlock } from "../model/TextBlock";
+import {
+    addSurroundingNewlines,
+    findBlockRecursively,
+    stripSurroundingNewlines,
+} from "../Util";
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
@@ -29,24 +31,12 @@ export class DateTreeResolver {
         this.indentationSettings = settings.indentationSettings;
     }
 
-    // TODO: out of place
-    private static stripSurroundingNewlines(blocks: Block[]) {
-        const isEmpty = (block: Block) => block.text.trim().length === 0;
-        return chain(blocks).dropWhile(isEmpty).dropRightWhile(isEmpty).value();
-    }
-
-    // TODO: out of place
-    private static addSurroundingNewlines(blocks: Block[]) {
-        const empty = new TextBlock("");
-        return [empty, ...blocks, empty];
-    }
-
     mergeNewBlocksWithDateTree(root: Block, newBlocks: Block[]) {
-        root.children = DateTreeResolver.stripSurroundingNewlines(root.children);
+        root.children = stripSurroundingNewlines(root.children);
         const insertionPoint = this.getCurrentDateBlock(root);
         insertionPoint.children = [...insertionPoint.children, ...newBlocks];
         if (this.settings.addNewlinesAroundHeadings) {
-            root.children = DateTreeResolver.addSurroundingNewlines(root.children);
+            root.children = addSurroundingNewlines(root.children);
         }
     }
 

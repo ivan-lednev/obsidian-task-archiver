@@ -5,6 +5,7 @@ import { DateTreeResolver } from "./DateTreeResolver";
 import { BlockParser } from "../parser/BlockParser";
 import { EditorFile } from "./ActiveFile";
 import { Sorter } from "../Sorter";
+import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -90,7 +91,7 @@ async function archiveCompletedTasks(input, settings = DEFAULT_SETTINGS) {
     return await archiver.archiveTasksInActiveFile(new EditorFile(editor));
 }
 
-function buildArchiver(input, settings) {
+function buildArchiver(input, settings = DEFAULT_SETTINGS) {
     // TODO: this is out of place
     fileContents.set(activeFile, input);
     fileContents.set(archive, [""]);
@@ -111,10 +112,9 @@ async function deleteCompletedTasks(input, settings = DEFAULT_SETTINGS) {
 
 describe("Moving top-level tasks to the archive", () => {
     test("Only normalizes whitespace when there are no completed tasks", async () => {
-        // TODO: no need for these newlines
         await archiveTasksAndCheckActiveFile(
             ["foo", "bar", "# Archived"],
-            ["foo", "bar", "# Archived", "", ""]
+            ["foo", "bar", "# Archived", ""]
         );
     });
 
@@ -426,7 +426,7 @@ describe("Date tree", () => {
         });
 
         test("The week and the day are already in the tree", async () => {
-            archiveTasksAndCheckActiveFile(
+            await archiveTasksAndCheckActiveFile(
                 [
                     "- [x] foo",
                     "- [ ] bar",
@@ -635,5 +635,226 @@ describe("Sort tasks in list under cursor recursively", () => {
                 "  text under list item 2",
             ]
         );
+    });
+});
+
+function buildListToHeadingTransformer(input, settings = DEFAULT_SETTINGS) {
+    // TODO: this is out of place
+    fileContents.set(activeFile, input);
+
+    return new ListToHeadingTransformer(
+        new SectionParser(new BlockParser(settings.indentationSettings)),
+        settings
+    );
+}
+
+describe("Turn list items into headings", () => {
+    test("No list under cursor", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer(["text"]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["text"]);
+    });
+
+    test("Single list line", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer(["- li"]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["# li", ""]);
+    });
+
+    test("One level of nesting, cursor at line 0", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "- li",
+            "\t- li 2",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["# li", "", "- li 2", ""]);
+    });
+
+    test("One level of nesting, cursor at nested list line", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "- li",
+            "\t- li 2",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings({
+            ...editor,
+            getCursor: () => {
+                return { line: 1, ch: 0 };
+            },
+        });
+
+        expect(fileContents.get(activeFile)).toEqual(["# li", "", "## li 2", ""]);
+    });
+
+    test("Multiple levels of nesting, cursor in mid depth", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "- li 1",
+            "\t- li 2",
+            "\t\t- li 3",
+            "\t\t\t\t- li 4",
+            "\t\t\t\t\t- li 6",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings({
+            ...editor,
+            getCursor: () => {
+                return { line: 2, ch: 0 };
+            },
+        });
+
+        expect(fileContents.get(activeFile)).toEqual([
+            "# li 1",
+            "",
+            "## li 2",
+            "",
+            "### li 3",
+            "",
+            "- li 4",
+            "\t- li 6",
+            "",
+        ]);
+    });
+
+    test("Heading above list determines starting depth", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "# h 1",
+            "",
+            "- li 1",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings({
+            ...editor,
+            getCursor: () => {
+                return { line: 2, ch: 0 };
+            },
+        });
+
+        expect(fileContents.get(activeFile)).toEqual(["# h 1", "", "## li 1", ""]);
+    });
+
+    test("Text after list item", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "- li 1",
+            "  Text content 1",
+            "  Text content 2",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual([
+            "# li 1",
+            "",
+            "Text content 1",
+            "Text content 2",
+            "",
+        ]);
+    });
+
+    test("Text after deeply nested list item", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "- li 1",
+            "\t- li 2",
+            "\t\t- li 3",
+            "\t\t\t- li 4",
+            "\t\t\t  Text content 1",
+            "\t\t\t  Text content 2",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings({
+            ...editor,
+            getCursor: () => {
+                return { line: 3, ch: 0 };
+            },
+        });
+
+        expect(fileContents.get(activeFile)).toEqual([
+            "# li 1",
+            "",
+            "## li 2",
+            "",
+            "### li 3",
+            "",
+            "#### li 4",
+            "",
+            "Text content 1",
+            "Text content 2",
+            "",
+        ]);
+    });
+
+    test("Respects newline settings", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer(
+            ["- li 1", "\t- li 2", "\t\t- li 3"],
+            {
+                ...DEFAULT_SETTINGS,
+                addNewlinesAroundHeadings: false,
+            }
+        );
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["# li 1", "- li 2", "\t- li 3"]);
+    });
+
+    test("Respects indentation settings", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer(
+            ["- li 1", "    - li 2", "        - li 3"],
+            {
+                ...DEFAULT_SETTINGS,
+                indentationSettings: {
+                    useTabs: false,
+                    tabSize: 4,
+                },
+            }
+        );
+
+        listToHeadingTransformer.turnListItemsIntoHeadings({
+            ...editor,
+            getCursor: () => {
+                return { line: 2, ch: 0 };
+            },
+        });
+
+        expect(fileContents.get(activeFile)).toEqual([
+            "# li 1",
+            "",
+            "## li 2",
+            "",
+            "### li 3",
+            "",
+        ]);
+    });
+
+    test("Tasks in list", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer(["- [x] li"]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["# li", ""]);
+    });
+
+    test("Numbered lists", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer(["11. li"]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["# li", ""]);
+    });
+
+    test("Different list tokens", () => {
+        const listToHeadingTransformer = buildListToHeadingTransformer([
+            "* li",
+            "\t+ li 2",
+        ]);
+
+        listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+
+        expect(fileContents.get(activeFile)).toEqual(["# li", "", "+ li 2", ""]);
     });
 });
