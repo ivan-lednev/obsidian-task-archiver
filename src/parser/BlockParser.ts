@@ -4,11 +4,9 @@ import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { TreeBuilder } from "./TreeBuilder";
 import { IndentationSettings } from "../archiver/IndentationSettings";
+import {INDENTATION_PATTERN, LIST_MARKER_PATTERN} from "../Patterns";
 
 export class BlockParser {
-    private readonly LIST_MARKER = /^[-*]|\d+\.\s/;
-    private readonly INDENTATION = /^(?: {2}|\t)*/;
-
     constructor(private readonly settings: IndentationSettings) {}
 
     parse(lines: string[]): Block {
@@ -28,7 +26,7 @@ export class BlockParser {
     private parseFlatBlock(line: string) {
         const [, text] = this.splitOnIndentation(line);
         const level = this.getIndentationLevel(line);
-        const markdownNode = text.match(this.LIST_MARKER)
+        const markdownNode = text.match(LIST_MARKER_PATTERN)
             ? new ListBlock(text)
             : new TextBlock(text);
         return {
@@ -37,8 +35,9 @@ export class BlockParser {
         };
     }
 
+    // TODO
     private splitOnIndentation(line: string) {
-        const indentationMatch = line.match(this.INDENTATION);
+        const indentationMatch = line.match(INDENTATION_PATTERN);
         const indentation = indentationMatch[0];
         const text = line.substring(indentation.length);
         return [indentation, text];

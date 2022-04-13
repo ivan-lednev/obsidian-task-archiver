@@ -2,6 +2,7 @@ import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
 import { last } from "lodash";
+import {HEADING_PATTERN} from "../Patterns";
 
 interface RawSection {
     text: string;
@@ -10,7 +11,6 @@ interface RawSection {
 }
 
 export class SectionParser {
-    private readonly HEADING = /^(#+)(\s.*)$/;
 
     constructor(private readonly blockParser: BlockParser) {}
 
@@ -30,11 +30,12 @@ export class SectionParser {
         return root.markdownNode;
     }
 
+    // TODO
     private parseRawSections(lines: string[]) {
         const sections: RawSection[] = [{ text: "", level: 0, lines: [] }];
 
         for (const line of lines) {
-            const match = line.match(this.HEADING);
+            const match = line.match(HEADING_PATTERN);
             if (match) {
                 const [, headingToken, text] = match;
                 sections.push({

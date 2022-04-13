@@ -5,13 +5,13 @@ import { chain, isEmpty, last, partition } from "lodash";
 import { TextBlock } from "./model/TextBlock";
 import { Editor, EditorPosition } from "obsidian";
 import escapeStringRegexp from "escape-string-regexp";
-
-const HEADING_PATTERN = /^(#+)\s/;
-const BULLET_SIGN = `(?:[-*+]|\\d+\\.)`;
-const LIST_ITEM_PATTERN = new RegExp(`^[ \t]*${BULLET_SIGN}( |\t)`);
-const STRING_WITH_SPACES_PATTERN = new RegExp(`^[ \t]+`);
-const TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[[x ]]`);
-const COMPLETED_TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[x]`);
+import {
+    COMPLETED_TASK_PATTERN,
+    HEADING_PATTERN,
+    LIST_ITEM_PATTERN,
+    STRING_WITH_SPACES_PATTERN,
+    TASK_PATTERN,
+} from "./Patterns";
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
