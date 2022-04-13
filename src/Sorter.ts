@@ -1,12 +1,12 @@
 import { SectionParser } from "./parser/SectionParser";
-import { ArchiverSettings } from "./archiver/ArchiverSettings";
+import { Settings } from "./Settings";
 import { Editor } from "obsidian";
 import { buildIndentation, detectListUnderCursor, sortBlocksRecursively } from "./Util";
 
 export class Sorter {
     constructor(
         private readonly parser: SectionParser,
-        private readonly settings: ArchiverSettings
+        private readonly settings: Settings
     ) {}
 
     sortListUnderCursor(editor: Editor) {

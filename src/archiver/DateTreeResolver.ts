@@ -1,7 +1,7 @@
-import { ArchiverSettings } from "./ArchiverSettings";
+import { Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
-import { IndentationSettings } from "./IndentationSettings";
+import { IndentationSettings } from "../IndentationSettings";
 import {
     addSurroundingNewlines,
     findBlockRecursively,
@@ -15,7 +15,7 @@ export class DateTreeResolver {
     private readonly dateLevels: DateLevel[];
     private readonly indentationSettings: IndentationSettings;
 
-    constructor(private readonly settings: ArchiverSettings) {
+    constructor(private readonly settings: Settings) {
         this.dateLevels = [];
         if (settings.useWeeks) {
             this.dateLevels.push("weeks");

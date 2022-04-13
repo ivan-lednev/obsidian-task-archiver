@@ -1,15 +1,15 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
 import { Archiver } from "src/archiver/Archiver";
-import { ArchiverSettings } from "./archiver/ArchiverSettings";
+import { Settings } from "./Settings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
 import { SectionParser } from "./parser/SectionParser";
 import { DateTreeResolver } from "./archiver/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
-import { ActiveFile, DiskFile, EditorFile } from "./archiver/ActiveFile";
+import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { Sorter } from "./Sorter";
 import { ListToHeadingTransformer } from "./ListToHeadingTransformer";
 
-const DEFAULT_SETTINGS: ArchiverSettings = {
+const DEFAULT_SETTINGS: Settings = {
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",
@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: ArchiverSettings = {
 };
 
 export default class ObsidianTaskArchiver extends Plugin {
-    settings: ArchiverSettings;
+    settings: Settings;
     private parser: SectionParser;
     private archiver: Archiver;
     private sorter: Sorter;

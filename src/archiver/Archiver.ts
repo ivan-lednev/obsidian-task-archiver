@@ -1,4 +1,4 @@
-import { ArchiverSettings } from "./ArchiverSettings";
+import { Settings } from "../Settings";
 import { SectionParser } from "../parser/SectionParser";
 import { Section } from "../model/Section";
 import { Block } from "../model/Block";
@@ -12,7 +12,7 @@ import {
     detectHeadingUnderCursor,
     isCompletedTask,
 } from "../Util";
-import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
+import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
 import { isEmpty } from "lodash";
 
 type TreeEditorCallback = (tree: Section) => void;
@@ -25,7 +25,7 @@ export class Archiver {
         private readonly workspace: Workspace,
         private readonly parser: SectionParser,
         private readonly dateTreeResolver: DateTreeResolver,
-        private readonly settings: ArchiverSettings,
+        private readonly settings: Settings,
         private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
         )

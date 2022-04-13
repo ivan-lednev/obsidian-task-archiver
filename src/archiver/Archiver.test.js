@@ -3,7 +3,7 @@ import { Archiver } from "./Archiver";
 import { SectionParser } from "../parser/SectionParser";
 import { DateTreeResolver } from "./DateTreeResolver";
 import { BlockParser } from "../parser/BlockParser";
-import { EditorFile } from "./ActiveFile";
+import { EditorFile } from "../ActiveFile";
 import { Sorter } from "../Sorter";
 import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
 

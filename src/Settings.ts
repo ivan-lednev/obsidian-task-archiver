@@ -1,6 +1,6 @@
 import { IndentationSettings } from "./IndentationSettings";
 
-export interface ArchiverSettings {
+export interface Settings {
     archiveHeading: string;
     archiveHeadingDepth: number;
     weeklyNoteFormat: string;

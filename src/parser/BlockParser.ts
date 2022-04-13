@@ -3,7 +3,7 @@ import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { TreeBuilder } from "./TreeBuilder";
-import { IndentationSettings } from "../archiver/IndentationSettings";
+import { IndentationSettings } from "../IndentationSettings";
 import { LIST_MARKER_PATTERN } from "../Patterns";
 import { splitOnIndentation } from "../Util";
 

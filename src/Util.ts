@@ -1,4 +1,4 @@
-import { IndentationSettings } from "./archiver/IndentationSettings";
+import { IndentationSettings } from "./IndentationSettings";
 import { Block } from "./model/Block";
 import { Section } from "./model/Section";
 import { chain, isEmpty, last, partition } from "lodash";

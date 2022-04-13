@@ -10,12 +10,12 @@ import { Block } from "./model/Block";
 import { RootBlock } from "./model/RootBlock";
 import { Section } from "./model/Section";
 import { SectionParser } from "./parser/SectionParser";
-import { ArchiverSettings } from "./archiver/ArchiverSettings";
+import { Settings } from "./Settings";
 
 export class ListToHeadingTransformer {
     constructor(
         private readonly parser: SectionParser,
-        private readonly settings: ArchiverSettings
+        private readonly settings: Settings
     ) {}
 
     turnListItemsIntoHeadings(editor: Editor) {
