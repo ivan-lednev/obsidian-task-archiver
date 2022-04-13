@@ -3,9 +3,9 @@ import { ListBlock } from "../model/ListBlock";
 import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { TreeBuilder } from "./TreeBuilder";
-import { IndentationSettings } from "../IndentationSettings";
 import { LIST_MARKER_PATTERN } from "../Patterns";
 import { splitOnIndentation } from "../Util";
+import { IndentationSettings } from "../Settings";
 
 export class BlockParser {
     constructor(private readonly settings: IndentationSettings) {}

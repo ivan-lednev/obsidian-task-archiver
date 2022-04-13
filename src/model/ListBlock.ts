@@ -1,5 +1,5 @@
 import { Block } from "./Block";
-import { flatMap } from "lodash";
+import { flatMap } from "lodash-es";
 
 export class ListBlock extends Block {
     stringify(indentation: string): string[] {

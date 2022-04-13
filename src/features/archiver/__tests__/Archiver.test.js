@@ -1,11 +1,11 @@
 import moment from "moment";
-import { Archiver } from "./Archiver";
-import { SectionParser } from "../parser/SectionParser";
-import { DateTreeResolver } from "./DateTreeResolver";
-import { BlockParser } from "../parser/BlockParser";
-import { EditorFile } from "../ActiveFile";
-import { Sorter } from "../Sorter";
-import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
+import { Archiver } from "../Archiver";
+import { SectionParser } from "../../../parser/SectionParser";
+import { DateTreeResolver } from "../DateTreeResolver";
+import { BlockParser } from "../../../parser/BlockParser";
+import { EditorFile } from "../../../ActiveFile";
+import { TaskListSorter } from "../../TaskListSorter";
+import { ListToHeadingTransformer } from "../../ListToHeadingTransformer";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -547,17 +547,17 @@ function sortListUnderCursorAndCheckActiveFile(
     expectedOutput,
     settings = DEFAULT_SETTINGS
 ) {
-    const sorter = buildSorter(input, settings);
+    const taskListSorter = buildTaskListSorter(input, settings);
 
-    sorter.sortListUnderCursor(editor);
+    taskListSorter.sortListUnderCursor(editor);
 
     expect(fileContents.get(activeFile)).toEqual(expectedOutput);
 }
 
-function buildSorter(input, settings) {
+function buildTaskListSorter(input, settings) {
     fileContents.set(activeFile, input);
 
-    return new Sorter(
+    return new TaskListSorter(
         new SectionParser(new BlockParser(settings.indentationSettings)),
         settings
     );

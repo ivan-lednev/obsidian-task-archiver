@@ -1,9 +1,13 @@
-import { SectionParser } from "./parser/SectionParser";
-import { Settings } from "./Settings";
+import { SectionParser } from "../parser/SectionParser";
+import { Settings } from "../Settings";
 import { Editor } from "obsidian";
-import { buildIndentation, detectListUnderCursor, sortBlocksRecursively } from "./Util";
+import {
+    buildIndentation,
+    detectListUnderCursor,
+    sortBlocksRecursively,
+} from "../Util";
 
-export class Sorter {
+export class TaskListSorter {
     constructor(
         private readonly parser: SectionParser,
         private readonly settings: Settings

@@ -4,13 +4,13 @@ import {
     detectHeadingUnderCursor,
     detectListUnderCursor,
     normalizeNewlinesRecursively,
-} from "./Util";
-import { BlockParser } from "./parser/BlockParser";
-import { Block } from "./model/Block";
-import { RootBlock } from "./model/RootBlock";
-import { Section } from "./model/Section";
-import { SectionParser } from "./parser/SectionParser";
-import { Settings } from "./Settings";
+} from "../Util";
+import { BlockParser } from "../parser/BlockParser";
+import { Block } from "../model/Block";
+import { RootBlock } from "../model/RootBlock";
+import { Section } from "../model/Section";
+import { SectionParser } from "../parser/SectionParser";
+import { Settings } from "../Settings";
 
 export class ListToHeadingTransformer {
     constructor(

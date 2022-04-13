@@ -1,7 +1,6 @@
-import { IndentationSettings } from "./IndentationSettings";
 import { Block } from "./model/Block";
 import { Section } from "./model/Section";
-import { chain, isEmpty, last, partition } from "lodash";
+import { chain, isEmpty, last, partition } from "lodash-es";
 import { TextBlock } from "./model/TextBlock";
 import { Editor, EditorPosition } from "obsidian";
 import escapeStringRegexp from "escape-string-regexp";
@@ -13,6 +12,7 @@ import {
     STRING_WITH_SPACES_PATTERN,
     TASK_PATTERN,
 } from "./Patterns";
+import { IndentationSettings } from "./Settings";
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);

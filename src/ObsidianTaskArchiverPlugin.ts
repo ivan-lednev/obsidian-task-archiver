@@ -1,35 +1,19 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
-import { Archiver } from "src/archiver/Archiver";
-import { Settings } from "./Settings";
+import { Archiver } from "src/features/archiver/Archiver";
+import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
 import { SectionParser } from "./parser/SectionParser";
-import { DateTreeResolver } from "./archiver/DateTreeResolver";
+import { DateTreeResolver } from "./features/archiver/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
-import { Sorter } from "./Sorter";
-import { ListToHeadingTransformer } from "./ListToHeadingTransformer";
-
-const DEFAULT_SETTINGS: Settings = {
-    archiveHeading: "Archived",
-    archiveHeadingDepth: 1,
-    weeklyNoteFormat: "YYYY-MM-[W]-w",
-    useWeeks: true,
-    dailyNoteFormat: "YYYY-MM-DD",
-    useDays: false,
-    addNewlinesAroundHeadings: true,
-    archiveToSeparateFile: false,
-    defaultArchiveFileName: "% (archive)",
-    indentationSettings: {
-        useTab: true,
-        tabSize: 4,
-    },
-};
+import { TaskListSorter } from "./features/TaskListSorter";
+import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: Settings;
     private parser: SectionParser;
     private archiver: Archiver;
-    private sorter: Sorter;
+    private taskListSorter: TaskListSorter;
     private listToHeadingTransformer: ListToHeadingTransformer;
 
     async onload() {
@@ -46,7 +30,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             new DateTreeResolver(this.settings),
             this.settings
         );
-        this.sorter = new Sorter(this.parser, this.settings);
+        this.taskListSorter = new TaskListSorter(this.parser, this.settings);
         this.listToHeadingTransformer = new ListToHeadingTransformer(
             this.parser,
             this.settings
@@ -77,7 +61,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             id: "sort-tasks-in-list-under-cursor",
             name: "Sort tasks in list under cursor",
             editorCallback: (editor) => {
-                this.sorter.sortListUnderCursor(editor);
+                this.taskListSorter.sortListUnderCursor(editor);
             },
         });
         this.addCommand({
