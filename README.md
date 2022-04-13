@@ -132,6 +132,28 @@ Turns into:
 - [x] Task
 ```
 
+### Turn list items at this level into headings
+
+Grab the list under cursor and turn every list item at and above the level of the item under cursor into a heading.
+
+This:
+
+```markdown
+- li 1
+    - li 2 | <- cursor
+        - li 3
+```
+
+Turns into:
+
+```markdown
+# li 1
+
+## li 2
+
+- li 3
+```
+
 ## Configuration
 
 The plugin lets you configure the following:
