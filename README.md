@@ -4,7 +4,8 @@ tasks and document sections.
 
 ## Commands <a id="commands"></a>
 
-### Archive tasks in this file
+<details>
+<summary>Archive tasks in this file</summary>
 
 Here is what it looks like:
 
@@ -41,11 +42,17 @@ Or, with date tree enabled:
         - [x] Feed the plants
 ```
 
-### Delete tasks in this file
+</details>
+
+<details>
+<summary>Delete tasks in this file</summary>
 
 This one is the same as 'Archive tasks in this file', except that the tasks get discarded.
 
-### Archive heading under cursor
+</details>
+
+<details>
+<summary>Archive heading under cursor</summary>
 
 Grab the whole section under the heading under cursor, including all the child sections and move it to the archive.
 
@@ -79,7 +86,10 @@ Some text
 More text
 ```
 
-### Sort tasks in list under cursor
+</details>
+
+<details>
+<summary>Sort tasks in list under cursor</summary>
 
 Grab the whole list under cursor and **recursively** reorder all the items based on completeness:
 
@@ -119,7 +129,10 @@ Turns into:
 - [x] Task
 ```
 
-### Turn list items at this level into headings
+</details>
+
+<details>
+<summary>Turn list items at this level into headings</summary>
 
 Grab the list under cursor and turn every list item at and above the level of the item under cursor into a heading.
 
@@ -140,6 +153,8 @@ Turns into:
 
 - li 3
 ```
+
+</details>
 
 ## Configuration
 
