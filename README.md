@@ -2,19 +2,6 @@ This plugin is a toolbox for working with completed tasks in your markdown files
 of [org-mode's](https://orgmode.org/) features to Obsidian. It provides features such as archiving, deleting and sorting
 tasks and document sections.
 
-## Table of contents
-
-- [Commands <a id="commands"></a>](#commands--a-id--commands----a-)
-    * [Archive tasks in this file](#archive-tasks-in-this-file)
-    * [Delete tasks in this file](#delete-tasks-in-this-file)
-    * [Archive heading under cursor](#archive-heading-under-cursor)
-    * [Sort tasks in list under cursor](#sort-tasks-in-list-under-cursor)
-- [Configuration](#configuration)
-    * [Date tree](#date-tree)
-- [Usage](#usage)
-- [Roadmap](#roadmap)
-- [Acknowledgements](#acknowledgements)
-
 ## Commands <a id="commands"></a>
 
 ### Archive tasks in this file
