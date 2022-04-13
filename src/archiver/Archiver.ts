@@ -50,7 +50,6 @@ export class Archiver {
     }
 
     async archiveHeadingUnderCursor(editor: Editor) {
-        // TODO: out of place
         const thisHeadingRange = detectHeadingUnderCursor(editor);
         if (thisHeadingRange === null) {
             return;
@@ -170,4 +169,3 @@ export class Archiver {
         return tree.stringify(indentation);
     }
 }
-

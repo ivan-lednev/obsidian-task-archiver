@@ -233,7 +233,6 @@ describe("Stringification", () => {
     });
 });
 
-// TODO: move this out into the AST files
 describe("Extraction", () => {
     test("Extract top-level block with a filter", () => {
         const lines = ["Text", "Extract me"];
@@ -280,7 +279,6 @@ describe("Insertion", () => {
     });
 });
 
-// TODO: doesn't belong here
 describe("Block search", () => {
     test("Find a block matching a matcher", () => {
         const lines = ["- list", "\t- text"];

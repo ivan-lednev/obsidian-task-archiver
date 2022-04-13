@@ -18,7 +18,6 @@ export class Section extends MarkdownNode<Section> {
             filter.blockFilter
         );
 
-        // TODO: mutation
         this.blockContent.children = theRest;
 
         for (const section of this.children) {
@@ -39,7 +38,6 @@ export class Section extends MarkdownNode<Section> {
     stringify(indentation: string): string[] {
         const lines = [];
 
-        // TODO: kludge for root block
         if (this.text) {
             lines.push("#".repeat(this.tokenLevel) + this.text);
         }

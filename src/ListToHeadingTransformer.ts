@@ -101,4 +101,3 @@ function buildSectionFromList(listRoot: Block) {
     );
     return new Section(sectionText, 0, newBlockContent);
 }
-

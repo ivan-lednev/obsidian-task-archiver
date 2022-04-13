@@ -8,6 +8,7 @@ import escapeStringRegexp from "escape-string-regexp";
 import {
     COMPLETED_TASK_PATTERN,
     HEADING_PATTERN,
+    INDENTATION_PATTERN,
     LIST_ITEM_PATTERN,
     STRING_WITH_SPACES_PATTERN,
     TASK_PATTERN,
@@ -203,7 +204,6 @@ export function normalizeNewlinesRecursively(root: Section) {
     }
 }
 
-// todo: pass section, not blocks
 export function stripSurroundingNewlines(blocks: Block[]) {
     return chain(blocks).dropWhile(isEmptyBlock).dropRightWhile(isEmptyBlock).value();
 }
@@ -212,7 +212,6 @@ function isEmptyBlock(block: Block) {
     return block.text.trim().length === 0;
 }
 
-// todo: pass section, not blocks
 export function addSurroundingNewlines(blocks: Block[]) {
     const newLine = new TextBlock("");
     if (isEmpty(blocks)) {
@@ -221,7 +220,13 @@ export function addSurroundingNewlines(blocks: Block[]) {
     return [newLine, ...blocks, newLine];
 }
 
-// todo: pass section, not blocks
 export function normalizeNewlines(blocks: Block[]) {
     return addSurroundingNewlines(stripSurroundingNewlines(blocks));
+}
+
+export function splitOnIndentation(line: string) {
+    const indentationMatch = line.match(INDENTATION_PATTERN);
+    const indentation = indentationMatch[0];
+    const text = line.substring(indentation.length);
+    return [indentation, text];
 }

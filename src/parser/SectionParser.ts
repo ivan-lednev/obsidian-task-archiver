@@ -13,24 +13,7 @@ interface RawSection {
 export class SectionParser {
     constructor(private readonly blockParser: BlockParser) {}
 
-    parse(lines: string[]) {
-        const flatSectionsWithRawContent = this.parseRawSections(lines);
-        const flatSectionsWithParsedContent = this.parseBlocksInSections(
-            flatSectionsWithRawContent
-        );
-
-        const [root, children] = [
-            flatSectionsWithParsedContent[0],
-            flatSectionsWithParsedContent.slice(1),
-        ];
-
-        new TreeBuilder().buildTree(root, children);
-
-        return root.markdownNode;
-    }
-
-    // TODO
-    private parseRawSections(lines: string[]) {
+    private static parseRawSections(lines: string[]) {
         const sections: RawSection[] = [{ text: "", level: 0, lines: [] }];
 
         for (const line of lines) {
@@ -50,8 +33,23 @@ export class SectionParser {
         return sections;
     }
 
+    parse(lines: string[]) {
+        const flatSectionsWithRawContent = SectionParser.parseRawSections(lines);
+        const flatSectionsWithParsedContent = this.parseBlocksInSections(
+            flatSectionsWithRawContent
+        );
+
+        const [root, children] = [
+            flatSectionsWithParsedContent[0],
+            flatSectionsWithParsedContent.slice(1),
+        ];
+
+        new TreeBuilder().buildTree(root, children);
+
+        return root.markdownNode;
+    }
+
     private parseBlocksInSections(raw: RawSection[]) {
-        // TODO: don't nest different objects in one go: split Section creation from parsing blocks?
         return raw.map((s) => {
             return {
                 markdownNode: new Section(
