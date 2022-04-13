@@ -542,8 +542,12 @@ describe("Archive heading under cursor", () => {
     });
 });
 
-function sortListUnderCursorAndCheckActiveFile(input, expectedOutput) {
-    const sorter = buildSorter(input, DEFAULT_SETTINGS);
+function sortListUnderCursorAndCheckActiveFile(
+    input,
+    expectedOutput,
+    settings = DEFAULT_SETTINGS
+) {
+    const sorter = buildSorter(input, settings);
 
     sorter.sortListUnderCursor(editor);
 
@@ -808,7 +812,7 @@ describe("Turn list items into headings", () => {
             {
                 ...DEFAULT_SETTINGS,
                 indentationSettings: {
-                    useTabs: false,
+                    useTab: false,
                     tabSize: 4,
                 },
             }

@@ -125,7 +125,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             : new EditorFile(activeMarkdownView.editor);
     }
 
-    private async getConfig(key: string) {
+    private getConfig(key: string) {
         return (this.app.vault as any).getConfig(key);
     }
 }
