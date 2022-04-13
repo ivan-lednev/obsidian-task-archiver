@@ -2,7 +2,7 @@ import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
 import { last } from "lodash";
-import {HEADING_PATTERN} from "../Patterns";
+import { HEADING_PATTERN } from "../Patterns";
 
 interface RawSection {
     text: string;
@@ -11,7 +11,6 @@ interface RawSection {
 }
 
 export class SectionParser {
-
     constructor(private readonly blockParser: BlockParser) {}
 
     parse(lines: string[]) {

@@ -10,13 +10,10 @@ import {
     buildHeadingPattern,
     buildIndentation,
     detectHeadingUnderCursor,
-    detectListUnderCursor,
     isCompletedTask,
-    normalizeNewlinesRecursively,
 } from "../Util";
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { isEmpty } from "lodash";
-import { BlockParser } from "../parser/BlockParser";
 
 type TreeEditorCallback = (tree: Section) => void;
 
@@ -80,7 +77,6 @@ export class Archiver {
             archiveSection.appendChild(section);
         });
     }
-
 
     private async getArchiveFile(activeFile: ActiveFile) {
         return this.settings.archiveToSeparateFile

@@ -4,7 +4,7 @@ import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
 import { TreeBuilder } from "./TreeBuilder";
 import { IndentationSettings } from "../archiver/IndentationSettings";
-import {INDENTATION_PATTERN, LIST_MARKER_PATTERN} from "../Patterns";
+import { INDENTATION_PATTERN, LIST_MARKER_PATTERN } from "../Patterns";
 
 export class BlockParser {
     constructor(private readonly settings: IndentationSettings) {}
@@ -21,6 +21,18 @@ export class BlockParser {
 
         new TreeBuilder().buildTree(rootFlatBlock, flatBlocks);
         return rootBlock;
+    }
+
+    getIndentationLevel(line: string) {
+        // TODO: this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
+        const [indentation] = this.splitOnIndentation(line);
+        let levelsOfIndentation = 1;
+        if (this.settings.useTab) {
+            return levelsOfIndentation + indentation.length;
+        }
+        return (
+            levelsOfIndentation + Math.ceil(indentation.length / this.settings.tabSize)
+        );
     }
 
     private parseFlatBlock(line: string) {
@@ -41,17 +53,5 @@ export class BlockParser {
         const indentation = indentationMatch[0];
         const text = line.substring(indentation.length);
         return [indentation, text];
-    }
-
-    getIndentationLevel(line: string) {
-        // TODO: this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
-        const [indentation] = this.splitOnIndentation(line);
-        let levelsOfIndentation = 1;
-        if (this.settings.useTab) {
-            return levelsOfIndentation + indentation.length;
-        }
-        return (
-            levelsOfIndentation + Math.ceil(indentation.length / this.settings.tabSize)
-        );
     }
 }
