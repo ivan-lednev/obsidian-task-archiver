@@ -1,18 +1,18 @@
-import { Settings } from "../../Settings";
-import { SectionParser } from "../../parser/SectionParser";
-import { Section } from "../../model/Section";
-import { Block } from "../../model/Block";
+import { Settings } from "../Settings";
+import { SectionParser } from "../parser/SectionParser";
+import { Section } from "../model/Section";
+import { Block } from "../model/Block";
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { DateTreeResolver } from "./DateTreeResolver";
-import { RootBlock } from "../../model/RootBlock";
+import { RootBlock } from "../model/RootBlock";
 import {
     addNewlinesToSection,
     buildHeadingPattern,
     buildIndentation,
     detectHeadingUnderCursor,
     isCompletedTask,
-} from "../../Util";
-import { ActiveFile, DiskFile, EditorFile } from "../../ActiveFile";
+} from "../Util";
+import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
 import { isEmpty } from "lodash-es";
 
 type TreeEditorCallback = (tree: Section) => void;

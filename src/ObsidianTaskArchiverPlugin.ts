@@ -1,9 +1,9 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
-import { Archiver } from "src/features/archiver/Archiver";
+import { Archiver } from "src/features/Archiver";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { ArchiverSettingTab } from "./ArchiverSettingTab";
 import { SectionParser } from "./parser/SectionParser";
-import { DateTreeResolver } from "./features/archiver/DateTreeResolver";
+import { DateTreeResolver } from "./features/DateTreeResolver";
 import { BlockParser } from "./parser/BlockParser";
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { TaskListSorter } from "./features/TaskListSorter";
