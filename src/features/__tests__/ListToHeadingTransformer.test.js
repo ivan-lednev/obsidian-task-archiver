@@ -1,4 +1,5 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestHarness } from "../__mocks__/Util";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
+import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
 
 function turnListItemsIntoHeadingsAndCheckActiveFile(
     activeFileState,
@@ -6,13 +7,16 @@ function turnListItemsIntoHeadingsAndCheckActiveFile(
     cursor = { line: 0, ch: 0 },
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testHarness = new TestHarness(activeFileState, settings);
-    const transformer = testHarness.buildListToHeadingTransformer();
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const transformer = new ListToHeadingTransformer(
+        testDependencies.sectionParser,
+        settings
+    );
 
-    testHarness.mockEditor.cursor = cursor;
-    transformer.turnListItemsIntoHeadings(testHarness.mockEditor);
+    testDependencies.mockEditor.cursor = cursor;
+    transformer.turnListItemsIntoHeadings(testDependencies.mockEditor);
 
-    testHarness.expectActiveFileStateToEqual(expectedActiveFileState);
+    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
 test("No list under cursor", () => {

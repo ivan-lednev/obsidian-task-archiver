@@ -1,10 +1,7 @@
-import { Archiver } from "../Archiver";
 import { SectionParser } from "../../parser/SectionParser";
-import { DateTreeResolver } from "../DateTreeResolver";
 import { BlockParser } from "../../parser/BlockParser";
-import { EditorFile } from "../../ActiveFile";
-import { TaskListSorter } from "../TaskListSorter";
-import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
+import { DateTreeResolver } from "../DateTreeResolver";
+import {EditorFile} from "../../ActiveFile";
 
 export const DEFAULT_SETTINGS_FOR_TESTS = {
     archiveHeading: "Archived",
@@ -22,7 +19,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
     defaultArchiveFileName: "<filename> (archive)",
 };
 
-export class TestHarness {
+export class TestDependencies {
     constructor(activeFileState, settings) {
         this.mockActiveFile = buildMockMarkdownTFile(activeFileState);
         this.mockArchiveFile = buildMockMarkdownTFile([""]);
@@ -31,38 +28,22 @@ export class TestHarness {
             getActiveFile: () => this.mockActiveFile,
         };
         this.mockEditor = new MockEditor(this.mockActiveFile);
-        this.editorFile = new EditorFile(this.mockEditor);
-        this.settings = settings;
+        this.editorFile = new EditorFile(this.mockEditor)
         this.sectionParser = new SectionParser(
-            new BlockParser(this.settings.indentationSettings)
+            new BlockParser(settings.indentationSettings)
         );
+        this.dateTreeResolver = new DateTreeResolver(settings);
     }
+}
 
-    buildArchiver() {
-        return new Archiver(
-            this.mockVault,
-            this.mockWorkspace,
-            this.sectionParser,
-            new DateTreeResolver(this.settings),
-            this.settings
-        );
-    }
+function buildMockMarkdownTFile(fileState) {
+    // This is needed to pass `instanceof` checks
+    const TFile = jest.requireMock("obsidian").TFile;
+    const mockFile = Object.create(TFile.prototype);
+    mockFile.state = fileState;
 
-    buildSorter() {
-        return new TaskListSorter(this.sectionParser, this.settings);
-    }
-
-    buildListToHeadingTransformer() {
-        return new ListToHeadingTransformer(this.sectionParser, this.settings);
-    }
-
-    expectActiveFileStateToEqual(expected) {
-        expect(this.mockActiveFile.state).toEqual(expected);
-    }
-
-    expectArchiveFileStateToEqual(expected) {
-        expect(this.mockArchiveFile.state).toEqual(expected);
-    }
+    mockFile.extension = "md";
+    return mockFile;
 }
 
 class MockVault {
@@ -125,12 +106,3 @@ class MockEditor {
     }
 }
 
-function buildMockMarkdownTFile(fileState) {
-    // This is needed to pass `instanceof` checks
-    const TFile = jest.requireMock("obsidian").TFile;
-    const mockFile = Object.create(TFile.prototype);
-    mockFile.state = fileState;
-
-    mockFile.extension = "md";
-    return mockFile;
-}

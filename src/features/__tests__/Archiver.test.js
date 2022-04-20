@@ -1,5 +1,6 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestHarness } from "../__mocks__/Util";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
 import moment from "moment";
+import { Archiver } from "../Archiver";
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
@@ -7,6 +8,16 @@ const DAY = "2021-01-01";
 Date.now = () => new Date(DAY).getTime();
 
 jest.mock("obsidian");
+
+function buildArchiver(testDependencies, settings) {
+    return new Archiver(
+        testDependencies.mockVault,
+        testDependencies.mockWorkspace,
+        testDependencies.sectionParser,
+        testDependencies.dateTreeResolver,
+        settings
+    );
+}
 
 async function archiveTasksAndCheckMessage(activeFileState, expectedMessage) {
     const [, message] = await archiveTasks(activeFileState, DEFAULT_SETTINGS_FOR_TESTS);
@@ -18,17 +29,19 @@ async function archiveTasksAndCheckActiveFile(
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const [testHarness] = await archiveTasks(activeFileState, settings);
-    testHarness.expectActiveFileStateToEqual(expectedActiveFileState);
+    const [testDependencies] = await archiveTasks(activeFileState, settings);
+    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
 async function archiveTasks(activeFileState, settings) {
-    const testHarness = new TestHarness(activeFileState, settings);
-    const archiver = testHarness.buildArchiver();
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const archiver = buildArchiver(testDependencies, settings);
 
-    const message = await archiver.archiveTasksInActiveFile(testHarness.editorFile);
+    const message = await archiver.archiveTasksInActiveFile(
+        testDependencies.editorFile
+    );
 
-    return [testHarness, message];
+    return [testDependencies, message];
 }
 
 describe("Moving top-level tasks to the archive", () => {
@@ -209,13 +222,13 @@ describe("Moving top-level tasks to the archive", () => {
 
 describe("Separate files", () => {
     test("Creates a new archive in a separate file", async () => {
-        const [testHarness] = await archiveTasks(["- [x] foo", "- [ ] bar"], {
+        const [testDependencies] = await archiveTasks(["- [x] foo", "- [ ] bar"], {
             ...DEFAULT_SETTINGS_FOR_TESTS,
             archiveToSeparateFile: true,
         });
 
-        testHarness.expectActiveFileStateToEqual(["- [ ] bar"]);
-        testHarness.expectArchiveFileStateToEqual([
+        expect(testDependencies.mockActiveFile.state).toEqual(["- [ ] bar"]);
+        expect(testDependencies.mockArchiveFile.state).toEqual([
             "",
             "# Archived",
             "",
@@ -388,17 +401,17 @@ async function deleteTasksAndCheckActiveFile(
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const [testHarness] = await deleteTasks(activeFileState, settings);
-    testHarness.expectActiveFileStateToEqual(expectedActiveFileState);
+    const [testDependencies] = await deleteTasks(activeFileState, settings);
+    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
 async function deleteTasks(activeFileState, settings) {
-    const testHarness = new TestHarness(activeFileState, settings);
-    const archiver = testHarness.buildArchiver();
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const archiver = buildArchiver(testDependencies, settings);
 
-    const message = await archiver.deleteTasksInActiveFile(testHarness.editorFile);
+    const message = await archiver.deleteTasksInActiveFile(testDependencies.editorFile);
 
-    return [testHarness, message];
+    return [testDependencies, message];
 }
 
 describe("Deleting completed tasks", () => {
@@ -413,8 +426,8 @@ async function archiveHeadingAndCheckActiveFile(
     cursor = { line: 0, ch: 0 },
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testHarness = await archiveHeading(activeFileState, cursor, settings);
-    testHarness.expectActiveFileStateToEqual(expectedActiveFileState);
+    const testDependencies = await archiveHeading(activeFileState, cursor, settings);
+    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
 async function archiveHeading(
@@ -422,13 +435,13 @@ async function archiveHeading(
     cursor = { line: 0, ch: 0 },
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testHarness = new TestHarness(activeFileState, settings);
-    const archiver = testHarness.buildArchiver();
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const archiver = buildArchiver(testDependencies, settings);
 
-    testHarness.mockEditor.cursor = cursor;
-    await archiver.archiveHeadingUnderCursor(testHarness.mockEditor);
+    testDependencies.mockEditor.cursor = cursor;
+    await archiver.archiveHeadingUnderCursor(testDependencies.mockEditor);
 
-    return testHarness;
+    return testDependencies;
 }
 
 describe("Archive heading under cursor", () => {
@@ -459,7 +472,7 @@ describe("Archive heading under cursor", () => {
     });
 
     test("Moves to separate file", async () => {
-        const testHarness = await archiveHeading(
+        const testDependencies = await archiveHeading(
             ["# h1", "# Archived", ""],
             undefined,
             {
@@ -469,6 +482,10 @@ describe("Archive heading under cursor", () => {
         );
 
         // TODO: whitespace inconsistency
-        testHarness.expectArchiveFileStateToEqual(["", "# Archived", "## h1"]);
+        expect(testDependencies.mockArchiveFile.state).toEqual([
+            "",
+            "# Archived",
+            "## h1",
+        ]);
     });
 });

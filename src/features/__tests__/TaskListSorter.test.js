@@ -1,16 +1,17 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestHarness } from "../__mocks__/Util";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
+import { TaskListSorter } from "../TaskListSorter";
 
 function sortListUnderCursorAndCheckActiveFile(
     activeFileState,
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testHarness = new TestHarness(activeFileState, settings);
-    const sorter = testHarness.buildSorter();
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const sorter = new TaskListSorter(testDependencies.sectionParser, settings);
 
-    sorter.sortListUnderCursor(testHarness.mockEditor);
+    sorter.sortListUnderCursor(testDependencies.mockEditor);
 
-    testHarness.expectActiveFileStateToEqual(expectedActiveFileState);
+    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
 test("No list under cursor", () => {
