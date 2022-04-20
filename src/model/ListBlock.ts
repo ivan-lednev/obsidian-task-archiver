@@ -1,5 +1,5 @@
 import { Block } from "./Block";
-import { flatMap } from "lodash-es";
+import { flatMap } from "lodash";
 
 export class ListBlock extends Block {
     private static readonly EXTRA_INDENTATION_FOR_CHILD_TEXT_BLOCKS = "  ";

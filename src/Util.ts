@@ -1,6 +1,5 @@
 import { Block } from "./model/Block";
 import { Section } from "./model/Section";
-import { chain, isEmpty, last, partition } from "lodash-es";
 import { TextBlock } from "./model/TextBlock";
 import { Editor, EditorPosition } from "obsidian";
 import escapeStringRegexp from "escape-string-regexp";
@@ -13,6 +12,8 @@ import {
     TASK_PATTERN,
 } from "./Patterns";
 import { IndentationSettings } from "./Settings";
+import { dropRightWhile, dropWhile } from "lodash/fp";
+import { flow, isEmpty, last, partition } from "lodash";
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
@@ -205,7 +206,7 @@ export function normalizeNewlinesRecursively(root: Section) {
 }
 
 export function stripSurroundingNewlines(blocks: Block[]) {
-    return chain(blocks).dropWhile(isEmptyBlock).dropRightWhile(isEmptyBlock).value();
+    return flow(dropWhile(isEmptyBlock), dropRightWhile(isEmptyBlock))(blocks);
 }
 
 function isEmptyBlock(block: Block) {

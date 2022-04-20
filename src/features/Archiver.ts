@@ -13,7 +13,7 @@ import {
     isCompletedTask,
 } from "../Util";
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { isEmpty } from "lodash-es";
+import { isEmpty } from "lodash";
 
 type TreeEditorCallback = (tree: Section) => void;
 

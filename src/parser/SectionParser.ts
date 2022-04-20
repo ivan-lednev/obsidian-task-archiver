@@ -1,8 +1,8 @@
 import { BlockParser } from "./BlockParser";
 import { Section } from "../model/Section";
 import { TreeBuilder } from "./TreeBuilder";
-import { last } from "lodash-es";
 import { HEADING_PATTERN } from "../Patterns";
+import { last } from "lodash";
 
 interface RawSection {
     text: string;
