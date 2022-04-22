@@ -23,7 +23,9 @@ export default {
   },
   external: ['obsidian'],
   plugins: [
-    typescript(),
+    typescript({
+      noEmitOnError: true,
+    }),
     nodeResolve({browser: true}),
     commonjs(),
     optimizeLodashImports()
