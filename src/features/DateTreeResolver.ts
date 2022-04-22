@@ -1,11 +1,12 @@
 import { IndentationSettings, Settings } from "../Settings";
-import { Block } from "../model/Block";
-import { ListBlock } from "../model/ListBlock";
 import {
     addSurroundingNewlines,
     findBlockRecursively,
     stripSurroundingNewlines,
 } from "../Util";
+import { Block } from "../model/Block";
+import { ListBlock } from "../model/ListBlock";
+
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 

@@ -1,7 +1,9 @@
-import { MarkdownNode } from "../model/MarkdownNode";
-import { ListBlock } from "../model/ListBlock";
-import { Section } from "../model/Section";
 import { last } from "lodash";
+
+import { ListBlock } from "../model/ListBlock";
+import { MarkdownNode } from "../model/MarkdownNode";
+import { Section } from "../model/Section";
+
 
 export interface FlatNode<T extends MarkdownNode<T>> {
     markdownNode: T;

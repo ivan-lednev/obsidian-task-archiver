@@ -1,8 +1,9 @@
-import { Block } from "./model/Block";
-import { Section } from "./model/Section";
-import { TextBlock } from "./model/TextBlock";
 import { Editor, EditorPosition } from "obsidian";
+
 import escapeStringRegexp from "escape-string-regexp";
+import { flow, isEmpty, last, partition } from "lodash";
+import { dropRightWhile, dropWhile } from "lodash/fp";
+
 import {
     COMPLETED_TASK_PATTERN,
     HEADING_PATTERN,
@@ -12,8 +13,9 @@ import {
     TASK_PATTERN,
 } from "./Patterns";
 import { IndentationSettings } from "./Settings";
-import { dropRightWhile, dropWhile } from "lodash/fp";
-import { flow, isEmpty, last, partition } from "lodash";
+import { Block } from "./model/Block";
+import { Section } from "./model/Section";
+import { TextBlock } from "./model/TextBlock";
 
 export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);

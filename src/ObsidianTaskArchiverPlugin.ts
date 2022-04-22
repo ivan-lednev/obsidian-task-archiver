@@ -1,13 +1,26 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
-import { Archiver } from "src/features/Archiver";
-import { DEFAULT_SETTINGS, Settings } from "./Settings";
-import { ArchiverSettingTab } from "./ArchiverSettingTab";
-import { SectionParser } from "./parser/SectionParser";
-import { DateTreeResolver } from "./features/DateTreeResolver";
-import { BlockParser } from "./parser/BlockParser";
+
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
-import { TaskListSorter } from "./features/TaskListSorter";
+import { ArchiverSettingTab } from "./ArchiverSettingTab";
+import { DEFAULT_SETTINGS, Settings } from "./Settings";
+import { Archiver } from "./features/Archiver";
+import { DateTreeResolver } from "./features/DateTreeResolver";
 import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
+import { TaskListSorter } from "./features/TaskListSorter";
+import { BlockParser } from "./parser/BlockParser";
+import { SectionParser } from "./parser/SectionParser";
+
+
+async function withNotice(cb: () => Promise<string>) {
+    try {
+        const message = await cb();
+        // eslint-disable-next-line no-new
+        new Notice(message);
+    } catch (e) {
+        // eslint-disable-next-line no-new
+        new Notice(e);
+    }
+}
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: Settings;
@@ -74,12 +87,14 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData(), {
+        this.settings = {
+            ...DEFAULT_SETTINGS,
+            ...(await this.loadData()),
             indentationSettings: {
                 useTab: this.getConfig("useTab"),
                 tabSize: this.getConfig("tabSize"),
             },
-        });
+        };
     }
 
     async saveSettings() {
@@ -87,7 +102,7 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     private createCheckCallbackForPreviewAndEditView(
-        callback: (activeFile: ActiveFile) => Promise<string>
+        callback: (file: ActiveFile) => Promise<string>
     ) {
         return (checking: boolean) => {
             const activeMarkdownView =
@@ -110,15 +125,7 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     private getConfig(key: string) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (this.app.vault as any).getConfig(key);
-    }
-}
-
-async function withNotice(cb: () => Promise<string>) {
-    try {
-        const message = await cb();
-        new Notice(message);
-    } catch (e) {
-        new Notice(e);
     }
 }

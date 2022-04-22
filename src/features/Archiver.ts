@@ -1,10 +1,11 @@
-import { Settings } from "../Settings";
-import { SectionParser } from "../parser/SectionParser";
-import { Section } from "../model/Section";
-import { Block } from "../model/Block";
 import { Editor, TFile, Vault, Workspace } from "obsidian";
+
+import { isEmpty } from "lodash";
+
 import { DateTreeResolver } from "./DateTreeResolver";
-import { RootBlock } from "../model/RootBlock";
+
+import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
+import { Settings } from "../Settings";
 import {
     addNewlinesToSection,
     buildHeadingPattern,
@@ -12,8 +13,11 @@ import {
     detectHeadingUnderCursor,
     isCompletedTask,
 } from "../Util";
-import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { isEmpty } from "lodash";
+import { Block } from "../model/Block";
+import { RootBlock } from "../model/RootBlock";
+import { Section } from "../model/Section";
+import { SectionParser } from "../parser/SectionParser";
+
 
 type TreeEditorCallback = (tree: Section) => void;
 

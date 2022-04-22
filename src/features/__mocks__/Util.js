@@ -1,7 +1,8 @@
-import { SectionParser } from "../../parser/SectionParser";
+import { EditorFile } from "../../ActiveFile";
 import { BlockParser } from "../../parser/BlockParser";
+import { SectionParser } from "../../parser/SectionParser";
 import { DateTreeResolver } from "../DateTreeResolver";
-import {EditorFile} from "../../ActiveFile";
+
 
 export const DEFAULT_SETTINGS_FOR_TESTS = {
     archiveHeading: "Archived",
@@ -28,7 +29,7 @@ export class TestDependencies {
             getActiveFile: () => this.mockActiveFile,
         };
         this.mockEditor = new MockEditor(this.mockActiveFile);
-        this.editorFile = new EditorFile(this.mockEditor)
+        this.editorFile = new EditorFile(this.mockEditor);
         this.sectionParser = new SectionParser(
             new BlockParser(settings.indentationSettings)
         );
@@ -36,14 +37,14 @@ export class TestDependencies {
     }
 }
 
-function buildMockMarkdownTFile(fileState) {
-    // This is needed to pass `instanceof` checks
-    const TFile = jest.requireMock("obsidian").TFile;
-    const mockFile = Object.create(TFile.prototype);
-    mockFile.state = fileState;
+const MockTFile = jest.requireMock("obsidian").TFile;
 
-    mockFile.extension = "md";
-    return mockFile;
+// This is needed to pass `instanceof` checks
+function buildMockMarkdownTFile(fileState) {
+    return Object.assign(new MockTFile(), {
+        state: fileState,
+        extension: "md",
+    });
 }
 
 class MockVault {
@@ -105,4 +106,3 @@ class MockEditor {
         );
     }
 }
-

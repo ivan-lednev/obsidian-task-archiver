@@ -1,4 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
+
 import ObsidianTaskArchiver from "./ObsidianTaskArchiverPlugin";
 
 export class ArchiverSettingTab extends PluginSettingTab {

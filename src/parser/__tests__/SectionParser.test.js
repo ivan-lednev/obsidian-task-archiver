@@ -1,7 +1,8 @@
-import { SectionParser } from "../SectionParser";
-import { TextBlock } from "../../model/TextBlock";
 import { buildIndentation, findBlockRecursively } from "../../Util";
+import { TextBlock } from "../../model/TextBlock";
 import { BlockParser } from "../BlockParser";
+import { SectionParser } from "../SectionParser";
+
 
 const DEFAULT_SETTINGS = {
     useTab: true,

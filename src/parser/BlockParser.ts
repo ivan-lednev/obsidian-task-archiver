@@ -1,11 +1,13 @@
+import { TreeBuilder } from "./TreeBuilder";
+
+import { LIST_MARKER_PATTERN } from "../Patterns";
+import { IndentationSettings } from "../Settings";
+import { splitOnIndentation } from "../Util";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
-import { TextBlock } from "../model/TextBlock";
 import { RootBlock } from "../model/RootBlock";
-import { TreeBuilder } from "./TreeBuilder";
-import { LIST_MARKER_PATTERN } from "../Patterns";
-import { splitOnIndentation } from "../Util";
-import { IndentationSettings } from "../Settings";
+import { TextBlock } from "../model/TextBlock";
+
 
 export class BlockParser {
     constructor(private readonly settings: IndentationSettings) {}

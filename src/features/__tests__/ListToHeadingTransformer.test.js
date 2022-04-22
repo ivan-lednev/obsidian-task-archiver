@@ -1,5 +1,5 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
 import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
 
 function turnListItemsIntoHeadingsAndCheckActiveFile(
     activeFileState,

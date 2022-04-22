@@ -1,16 +1,17 @@
 import { Editor } from "obsidian";
+
+import { Settings } from "../Settings";
 import {
     buildIndentation,
     detectHeadingUnderCursor,
     detectListUnderCursor,
     normalizeNewlinesRecursively,
 } from "../Util";
-import { BlockParser } from "../parser/BlockParser";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
+import { BlockParser } from "../parser/BlockParser";
 import { SectionParser } from "../parser/SectionParser";
-import { Settings } from "../Settings";
 
 export class ListToHeadingTransformer {
     constructor(
