@@ -6,8 +6,9 @@
     "scripts": {
         "dev": "rollup --config rollup.config.js --watch",
         "compile": "rollup --config rollup.config.js --environment BUILD:production",
-        "test": "jest",
+        "test": "jest --collectCoverage",
         "lint": "eslint src && prettier src --check",
+        "fixFormatting": "prettier --write",
         "build": "npm run compile && npm run test && npm run lint"
     },
     "keywords": [],
