@@ -9,7 +9,7 @@
         "test": "jest --collectCoverage",
         "lint": "eslint src && prettier src --check",
         "fixFormatting": "prettier src --write",
-        "build": "npm run compile && npm run test && npm run lint"
+        "build": "npm run fixFormatting && npm run compile && npm run test && npm run lint"
     },
     "keywords": [],
     "author": "Ivan Lednev",

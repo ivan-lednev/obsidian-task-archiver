@@ -1,3 +1,5 @@
+import { TFile } from "obsidian";
+
 import { EditorFile } from "../../ActiveFile";
 import { BlockParser } from "../../parser/BlockParser";
 import { SectionParser } from "../../parser/SectionParser";
@@ -36,11 +38,9 @@ export class TestDependencies {
     }
 }
 
-const MockTFile = jest.requireMock("obsidian").TFile;
-
 // This is needed to pass `instanceof` checks
 function buildMockMarkdownTFile(fileState) {
-    return Object.assign(new MockTFile(), {
+    return Object.assign(new TFile(), {
         state: fileState,
         extension: "md",
     });

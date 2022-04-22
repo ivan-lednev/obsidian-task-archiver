@@ -4,12 +4,11 @@ import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./Util";
 
 import { Archiver } from "../Archiver";
 
-window.moment = moment;
 const WEEK = "2021-01-W-1";
 const DAY = "2021-01-01";
-Date.now = () => new Date(DAY).getTime();
 
-jest.mock("obsidian");
+window.moment = moment;
+Date.now = () => new Date(DAY).getTime();
 
 function buildArchiver(testDependencies, settings) {
     return new Archiver(
