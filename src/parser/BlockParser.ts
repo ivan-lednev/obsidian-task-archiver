@@ -8,7 +8,6 @@ import { ListBlock } from "../model/ListBlock";
 import { RootBlock } from "../model/RootBlock";
 import { TextBlock } from "../model/TextBlock";
 
-
 export class BlockParser {
     constructor(private readonly settings: IndentationSettings) {}
 
@@ -28,7 +27,7 @@ export class BlockParser {
     getIndentationLevel(line: string) {
         // TODO: this needs to be 1 only because the root block is 0, but this way this knowledge is implicit
         const [indentation] = splitOnIndentation(line);
-        let levelsOfIndentation = 1;
+        const levelsOfIndentation = 1;
         if (this.settings.useTab) {
             return levelsOfIndentation + indentation.length;
         }

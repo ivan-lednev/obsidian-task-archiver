@@ -1,5 +1,6 @@
-import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
 import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./Util";
+
+import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
 
 function turnListItemsIntoHeadingsAndCheckActiveFile(
     activeFileState,

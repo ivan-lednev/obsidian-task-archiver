@@ -3,7 +3,6 @@ import { TextBlock } from "../../model/TextBlock";
 import { BlockParser } from "../BlockParser";
 import { SectionParser } from "../SectionParser";
 
-
 const DEFAULT_SETTINGS = {
     useTab: true,
     tabSize: 2,

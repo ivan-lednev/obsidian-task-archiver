@@ -6,7 +6,6 @@ import { TreeBuilder } from "./TreeBuilder";
 import { HEADING_PATTERN } from "../Patterns";
 import { Section } from "../model/Section";
 
-
 interface RawSection {
     text: string;
     level: number;

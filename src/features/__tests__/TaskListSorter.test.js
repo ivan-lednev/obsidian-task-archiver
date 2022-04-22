@@ -1,5 +1,6 @@
-import { TaskListSorter } from "../TaskListSorter";
 import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./Util";
+
+import { TaskListSorter } from "../TaskListSorter";
 
 function sortListUnderCursorAndCheckActiveFile(
     activeFileState,

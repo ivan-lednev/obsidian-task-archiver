@@ -10,7 +10,6 @@ import { TaskListSorter } from "./features/TaskListSorter";
 import { BlockParser } from "./parser/BlockParser";
 import { SectionParser } from "./parser/SectionParser";
 
-
 async function withNotice(cb: () => Promise<string>) {
     try {
         const message = await cb();

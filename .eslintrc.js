@@ -2,7 +2,7 @@ module.exports = {
     env: {
         browser: true,
         es2021: true,
-        node: true
+        node: true,
     },
     extends: [
         "eslint:recommended",
@@ -16,5 +16,12 @@ module.exports = {
         sourceType: "module",
     },
     plugins: ["@typescript-eslint", "jest"],
-    rules: {},
+    rules: {
+        "jest/expect-expect": [
+            "warn",
+            {
+                assertFunctionNames: ["expect", "*Check*"],
+            },
+        ],
+    },
 };

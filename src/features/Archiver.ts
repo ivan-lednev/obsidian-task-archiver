@@ -18,7 +18,6 @@ import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
 import { SectionParser } from "../parser/SectionParser";
 
-
 type TreeEditorCallback = (tree: Section) => void;
 
 export class Archiver {

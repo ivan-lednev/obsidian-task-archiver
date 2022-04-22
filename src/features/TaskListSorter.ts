@@ -8,7 +8,6 @@ import {
 } from "../Util";
 import { SectionParser } from "../parser/SectionParser";
 
-
 export class TaskListSorter {
     constructor(
         private readonly parser: SectionParser,

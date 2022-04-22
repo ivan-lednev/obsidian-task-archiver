@@ -73,7 +73,7 @@ export class ListToHeadingTransformer {
 function replaceChildBlocksWithChildSectionsRecursively(
     section: Section,
     maxReplacementDepth: number,
-    currentDepth: number = 1 // TODO: again, implicit knowledge about levels
+    currentDepth = 1 // TODO: again, implicit knowledge about levels
 ) {
     if (currentDepth > maxReplacementDepth) {
         return;

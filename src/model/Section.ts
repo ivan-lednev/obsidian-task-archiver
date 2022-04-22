@@ -4,7 +4,6 @@ import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
 import { TreeFilter } from "./TreeFilter";
 
-
 export class Section extends MarkdownNode<Section> {
     children: Section[];
     tokenLevel: number;

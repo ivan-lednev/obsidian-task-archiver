@@ -3,7 +3,6 @@ import { BlockParser } from "../../parser/BlockParser";
 import { SectionParser } from "../../parser/SectionParser";
 import { DateTreeResolver } from "../DateTreeResolver";
 
-
 export const DEFAULT_SETTINGS_FOR_TESTS = {
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,

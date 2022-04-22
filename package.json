@@ -7,7 +7,7 @@
         "dev": "rollup --config rollup.config.js -w",
         "build": "rollup --config rollup.config.js --environment BUILD:production",
         "test": "tsc --noEmit && jest",
-        "testSpecific": "jest --testNamePattern=\"Appends an archive heading to the end of file with a newline if there isn't any\""
+        "lint": "eslint src && prettier src --check"
     },
     "keywords": [],
     "author": "Ivan Lednev",

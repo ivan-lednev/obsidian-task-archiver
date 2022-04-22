@@ -7,7 +7,6 @@ import {
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
 
-
 type DateLevel = "years" | "months" | "weeks" | "days";
 
 export class DateTreeResolver {
