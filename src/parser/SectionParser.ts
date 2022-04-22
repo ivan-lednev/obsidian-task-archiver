@@ -6,61 +6,45 @@ import { TreeBuilder } from "./TreeBuilder";
 import { HEADING_PATTERN } from "../Patterns";
 import { Section } from "../model/Section";
 
-interface RawSection {
-    text: string;
-    level: number;
-    lines: string[];
-}
-
-export class SectionParser {
-    constructor(private readonly blockParser: BlockParser) {}
-
-    private static parseRawSections(lines: string[]) {
-        const sections: RawSection[] = [{ text: "", level: 0, lines: [] }];
-
-        for (const line of lines) {
+function buildRawSectionsFromLines(lines: string[]) {
+    return lines.reduce(
+        (sections, line) => {
             const match = line.match(HEADING_PATTERN);
             if (match) {
                 const [, headingToken, text] = match;
                 sections.push({
                     text,
-                    level: headingToken.length,
+                    tokenLevel: headingToken.length,
                     lines: [],
                 });
             } else {
                 last(sections).lines.push(line);
             }
-        }
+            return sections;
+        },
+        [{ text: "", tokenLevel: 0, lines: [] }]
+    );
+}
 
-        return sections;
-    }
+export class SectionParser {
+    constructor(private readonly blockParser: BlockParser) {}
 
     parse(lines: string[]) {
-        const flatSectionsWithRawContent = SectionParser.parseRawSections(lines);
-        const flatSectionsWithParsedContent = this.parseBlocksInSections(
-            flatSectionsWithRawContent
-        );
+        const [root, ...flatChildren] = buildRawSectionsFromLines(lines)
+            .map(
+                (rawSection) =>
+                    new Section(
+                        rawSection.text,
+                        rawSection.tokenLevel,
+                        this.blockParser.parse(rawSection.lines)
+                    )
+            )
+            .map((section) => ({
+                markdownNode: section,
+                level: section.tokenLevel,
+            }));
 
-        const [root, children] = [
-            flatSectionsWithParsedContent[0],
-            flatSectionsWithParsedContent.slice(1),
-        ];
-
-        new TreeBuilder().buildTree(root, children);
-
+        new TreeBuilder().buildTree(root, flatChildren);
         return root.markdownNode;
-    }
-
-    private parseBlocksInSections(raw: RawSection[]) {
-        return raw.map((s) => {
-            return {
-                markdownNode: new Section(
-                    s.text,
-                    s.level,
-                    this.blockParser.parse(s.lines)
-                ),
-                level: s.level,
-            };
-        });
     }
 }
