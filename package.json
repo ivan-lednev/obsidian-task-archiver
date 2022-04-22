@@ -4,10 +4,11 @@
     "description": "Obsidian Task Archiver",
     "main": "main.js",
     "scripts": {
-        "dev": "rollup --config rollup.config.js -w",
-        "build": "rollup --config rollup.config.js --environment BUILD:production",
+        "dev": "rollup --config rollup.config.js --watch",
+        "compile": "rollup --config rollup.config.js --environment BUILD:production",
         "test": "tsc --noEmit && jest",
-        "lint": "eslint src && prettier src --check"
+        "lint": "eslint src && prettier src --check",
+        "build": "npm run compile && npm run test && npm run lint"
     },
     "keywords": [],
     "author": "Ivan Lednev",
