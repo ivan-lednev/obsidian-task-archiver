@@ -1,6 +1,8 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
 import moment from "moment";
+
 import { Archiver } from "../Archiver";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "../__mocks__/Util";
+
 
 window.moment = moment;
 const WEEK = "2021-01-W-1";
