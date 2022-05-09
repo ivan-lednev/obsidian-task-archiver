@@ -5,7 +5,7 @@ import { flow, isEmpty, last, partition } from "lodash";
 import { dropRightWhile, dropWhile } from "lodash/fp";
 
 import {
-    COMPLETED_TASK_PATTERN,
+    TOP_LEVEL_COMPLETED_TASK_PATTERN,
     HEADING_PATTERN,
     INDENTATION_PATTERN,
     LIST_ITEM_PATTERN,
@@ -50,8 +50,8 @@ function findBlockRecursivelyInCollection(
     return null;
 }
 
-export function isCompletedTask(line: string) {
-    return COMPLETED_TASK_PATTERN.test(line);
+export function isTopLevelCompletedTask(line: string) {
+    return TOP_LEVEL_COMPLETED_TASK_PATTERN.test(line);
 }
 
 function isTask(line: string) {
@@ -60,7 +60,7 @@ function isTask(line: string) {
 
 export function sortBlocksRecursively(root: Block) {
     const [tasks, nonTasks] = partition(root.children, (b) => isTask(b.text));
-    const [complete, incomplete] = partition(tasks, (b) => isCompletedTask(b.text));
+    const [complete, incomplete] = partition(tasks, (b) => isTopLevelCompletedTask(b.text));
     root.children = [...nonTasks, ...incomplete, ...complete];
 
     for (const child of root.children) {

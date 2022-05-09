@@ -11,7 +11,7 @@ import {
     buildHeadingPattern,
     buildIndentation,
     detectHeadingUnderCursor,
-    isCompletedTask,
+    isTopLevelCompletedTask,
 } from "../Util";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
@@ -132,7 +132,7 @@ export class Archiver {
 
     private extractTasksFromTreeSkippingArchive(tree: Section) {
         return tree.extractBlocksRecursively({
-            blockFilter: (block: Block) => isCompletedTask(block.text),
+            blockFilter: (block: Block) => isTopLevelCompletedTask(block.text),
             sectionFilter: (section: Section) => !this.isArchive(section.text),
         });
     }

@@ -6,4 +6,4 @@ const BULLET_SIGN = `(?:[-*+]|\\d+\\.)`;
 export const LIST_ITEM_PATTERN = new RegExp(`^[ \t]*${BULLET_SIGN}( |\t)`);
 export const STRING_WITH_SPACES_PATTERN = new RegExp(`^[ \t]+`);
 export const TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[[x ]]`);
-export const COMPLETED_TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[x]`);
+export const TOP_LEVEL_COMPLETED_TASK_PATTERN = new RegExp(`^${BULLET_SIGN} \\[x]`);
