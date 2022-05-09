@@ -251,6 +251,24 @@ describe("Extraction", () => {
         expect(actual).toEqual(extracted);
         expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual(theRest);
     });
+
+    test("Deep block extraction with filter", () => {
+        const lines = ["- 1", "\t- Extract me", "\t\t- 1.1.1", "\t- 1.2"];
+        const extracted = [["- Extract me", "\t- 1.1.1"]];
+        const theRest = ["- 1", "\t- 1.2"];
+
+        const parsed = new SectionParser(new BlockParser(DEFAULT_SETTINGS)).parse(
+            lines
+        );
+
+        const actual = parsed
+            .deepExtractBlocksRecursively({
+                blockFilter: (block) => block.text.includes("Extract me"),
+            })
+            .map((b) => b.stringify(DEFAULT_INDENTATION));
+        expect(actual).toEqual(extracted);
+        expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual(theRest);
+    });
 });
 
 describe("Insertion", () => {

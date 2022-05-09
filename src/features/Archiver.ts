@@ -47,6 +47,19 @@ export class Archiver {
             : `Archived ${tasks.length} tasks`;
     }
 
+    async archiveTasksInActiveFileRecursively(file: ActiveFile) {
+        const tasks = await this.extractNestedTasksFromActiveFile(file);
+        const archiveFile = await this.getArchiveFile(file);
+
+        await this.editFileTree(archiveFile, (tree: Section) =>
+            this.archiveBlocksToRoot(tasks, tree)
+        );
+
+        return isEmpty(tasks)
+            ? "No tasks to archive"
+            : `Archived ${tasks.length} tasks`;
+    }
+
     async deleteTasksInActiveFile(file: ActiveFile) {
         const tasks = await this.extractTasksFromActiveFile(file);
         return isEmpty(tasks) ? "No tasks to delete" : `Deleted ${tasks.length} tasks`;
@@ -100,6 +113,14 @@ export class Archiver {
         return tasks;
     }
 
+    private async extractNestedTasksFromActiveFile(file: ActiveFile) {
+        let tasks: Block[] = [];
+        await this.editFileTree(file, (tree) => {
+            tasks = this.extractNestedTasksFromTreeSkippingArchive(tree);
+        });
+        return tasks;
+    }
+
     private archiveBlocksToRoot(tasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
         this.dateTreeResolver.mergeNewBlocksWithDateTree(
@@ -132,6 +153,13 @@ export class Archiver {
 
     private extractTasksFromTreeSkippingArchive(tree: Section) {
         return tree.extractBlocksRecursively({
+            blockFilter: (block: Block) => isTopLevelCompletedTask(block.text),
+            sectionFilter: (section: Section) => !this.isArchive(section.text),
+        });
+    }
+
+    private extractNestedTasksFromTreeSkippingArchive(tree: Section) {
+        return tree.deepExtractBlocksRecursively({
             blockFilter: (block: Block) => isTopLevelCompletedTask(block.text),
             sectionFilter: (section: Section) => !this.isArchive(section.text),
         });

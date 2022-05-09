@@ -4,6 +4,13 @@ import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
 import { TreeFilter } from "./TreeFilter";
 
+function shallowExtractBlocks(
+    blockTree: Block,
+    blockFilter: (block: Block) => boolean
+) {
+    return partition(blockTree.children, blockFilter);
+}
+
 export class Section extends MarkdownNode<Section> {
     children: Section[];
     tokenLevel: number;
@@ -14,8 +21,8 @@ export class Section extends MarkdownNode<Section> {
     }
 
     extractBlocksRecursively(filter: TreeFilter): Block[] {
-        const [extracted, theRest] = partition(
-            this.blockContent.children,
+        const [extracted, theRest] = shallowExtractBlocks(
+            this.blockContent,
             filter.blockFilter
         );
 
@@ -25,6 +32,29 @@ export class Section extends MarkdownNode<Section> {
             if (!filter.sectionFilter || filter.sectionFilter(section)) {
                 extracted.push(...section.extractBlocksRecursively(filter));
             }
+        }
+        return extracted;
+    }
+
+    deepExtractBlocksRecursively(filter: TreeFilter): Block[] {
+        const extracted = this.deepExtractBlocks(this.blockContent, filter.blockFilter);
+
+        for (const section of this.children) {
+            if (!filter.sectionFilter || filter.sectionFilter(section)) {
+                extracted.push(...section.deepExtractBlocksRecursively(filter));
+            }
+        }
+        return extracted;
+    }
+
+    private deepExtractBlocks(
+        blockTree: Block,
+        blockFilter: (block: Block) => boolean
+    ) {
+        const [extracted, theRest] = shallowExtractBlocks(blockTree, blockFilter);
+        blockTree.children = theRest;
+        for (const subTree of theRest) {
+            extracted.push(...this.deepExtractBlocks(subTree, blockFilter));
         }
         return extracted;
     }

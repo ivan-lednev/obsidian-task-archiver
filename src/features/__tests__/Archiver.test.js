@@ -45,6 +45,26 @@ async function archiveTasks(activeFileState, settings) {
     return [testDependencies, message];
 }
 
+async function archiveTasksRecursivelyAndCheckActiveFile(
+    activeFileState,
+    expectedActiveFileState,
+    settings = DEFAULT_SETTINGS_FOR_TESTS
+) {
+    const [testDependencies] = await archiveTasksRecursively(activeFileState, settings);
+    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
+}
+
+async function archiveTasksRecursively(activeFileState, settings) {
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const archiver = buildArchiver(testDependencies, settings);
+
+    const message = await archiver.archiveTasksInActiveFileRecursively(
+        testDependencies.editorFile
+    );
+
+    return [testDependencies, message];
+}
+
 describe("Moving top-level tasks to the archive", () => {
     test("Only normalizes whitespace when there are no completed tasks", async () => {
         await archiveTasksAndCheckActiveFile(
@@ -218,6 +238,15 @@ describe("Moving top-level tasks to the archive", () => {
                 }
             );
         });
+    });
+});
+
+describe("Moving top-level & inner tasks to the archive", () => {
+    test("Basic case", () => {
+        archiveTasksRecursivelyAndCheckActiveFile(
+            ["- List item", "\t- [x] Completed inner task"],
+            ["- List item", "", "# Archived", "", "- [x] Completed inner task", ""]
+        );
     });
 });
 
