@@ -38,7 +38,7 @@ async function archiveTasks(activeFileState, settings) {
     const testDependencies = new TestDependencies(activeFileState, settings);
     const archiver = buildArchiver(testDependencies, settings);
 
-    const message = await archiver.archiveTasksInActiveFile(
+    const message = await archiver.archiveShallowTasksInActiveFile(
         testDependencies.editorFile
     );
 
@@ -58,7 +58,7 @@ async function archiveTasksRecursively(activeFileState, settings) {
     const testDependencies = new TestDependencies(activeFileState, settings);
     const archiver = buildArchiver(testDependencies, settings);
 
-    const message = await archiver.archiveTasksInActiveFileRecursively(
+    const message = await archiver.archiveDeepTasksInActiveFile(
         testDependencies.editorFile
     );
 

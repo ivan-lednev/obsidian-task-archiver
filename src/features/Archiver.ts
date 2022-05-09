@@ -10,15 +10,27 @@ import {
     addNewlinesToSection,
     buildHeadingPattern,
     buildIndentation,
+    deepExtractBlocks,
     detectHeadingUnderCursor,
-    isTopLevelCompletedTask,
+    isCompletedTask,
+    shallowExtractBlocks,
 } from "../Util";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
 import { SectionParser } from "../parser/SectionParser";
 
-type TreeEditorCallback = (tree: Section) => void;
+export interface BlockExtractor {
+    (root: Block, filter: BlockFilter): Block[];
+}
+
+interface BlockFilter {
+    (block: Block): boolean;
+}
+
+interface TreeEditorCallback {
+    (tree: Section): void;
+}
 
 export class Archiver {
     private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
@@ -31,24 +43,26 @@ export class Archiver {
         private readonly settings: Settings,
         private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
-        )
+        ),
+        private readonly completedTaskOutsideArchiveFilter = {
+            blockFilter: (block: Block) => isCompletedTask(block.text),
+            sectionFilter: (section: Section) => !this.isArchive(section.text),
+        }
     ) {}
 
-    async archiveTasksInActiveFile(file: ActiveFile) {
-        const tasks = await this.extractTasksFromActiveFile(file);
-        const archiveFile = await this.getArchiveFile(file);
-
-        await this.editFileTree(archiveFile, (tree: Section) =>
-            this.archiveBlocksToRoot(tasks, tree)
-        );
-
-        return isEmpty(tasks)
-            ? "No tasks to archive"
-            : `Archived ${tasks.length} tasks`;
+    async archiveShallowTasksInActiveFile(file: ActiveFile) {
+        return await this.archiveTasksInActiveFile(file, shallowExtractBlocks);
     }
 
-    async archiveTasksInActiveFileRecursively(file: ActiveFile) {
-        const tasks = await this.extractNestedTasksFromActiveFile(file);
+    async archiveDeepTasksInActiveFile(file: ActiveFile) {
+        return await this.archiveTasksInActiveFile(file, deepExtractBlocks);
+    }
+
+    private async archiveTasksInActiveFile(
+        file: ActiveFile,
+        extractor: BlockExtractor
+    ) {
+        const tasks = await this.extractTasksFromActiveFile(file, extractor);
         const archiveFile = await this.getArchiveFile(file);
 
         await this.editFileTree(archiveFile, (tree: Section) =>
@@ -61,7 +75,7 @@ export class Archiver {
     }
 
     async deleteTasksInActiveFile(file: ActiveFile) {
-        const tasks = await this.extractTasksFromActiveFile(file);
+        const tasks = await this.extractTasksFromActiveFile(file, shallowExtractBlocks);
         return isEmpty(tasks) ? "No tasks to delete" : `Deleted ${tasks.length} tasks`;
     }
 
@@ -105,18 +119,16 @@ export class Archiver {
         await file.writeLines(this.stringifyTree(tree));
     }
 
-    private async extractTasksFromActiveFile(file: ActiveFile) {
+    private async extractTasksFromActiveFile(
+        file: ActiveFile,
+        extractor: BlockExtractor
+    ) {
         let tasks: Block[] = [];
         await this.editFileTree(file, (tree) => {
-            tasks = this.extractTasksFromTreeSkippingArchive(tree);
-        });
-        return tasks;
-    }
-
-    private async extractNestedTasksFromActiveFile(file: ActiveFile) {
-        let tasks: Block[] = [];
-        await this.editFileTree(file, (tree) => {
-            tasks = this.extractNestedTasksFromTreeSkippingArchive(tree);
+            tasks = tree.extractBlocksRecursively(
+                this.completedTaskOutsideArchiveFilter,
+                extractor
+            );
         });
         return tasks;
     }
@@ -149,20 +161,6 @@ export class Archiver {
             this.settings.archiveHeadingDepth,
             new RootBlock()
         );
-    }
-
-    private extractTasksFromTreeSkippingArchive(tree: Section) {
-        return tree.extractBlocksRecursively({
-            blockFilter: (block: Block) => isTopLevelCompletedTask(block.text),
-            sectionFilter: (section: Section) => !this.isArchive(section.text),
-        });
-    }
-
-    private extractNestedTasksFromTreeSkippingArchive(tree: Section) {
-        return tree.deepExtractBlocksRecursively({
-            blockFilter: (block: Block) => isTopLevelCompletedTask(block.text),
-            sectionFilter: (section: Section) => !this.isArchive(section.text),
-        });
     }
 
     private isArchive(line: string) {

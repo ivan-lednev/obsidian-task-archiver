@@ -1,4 +1,9 @@
-import { buildIndentation, findBlockRecursively } from "../../Util";
+import {
+    buildIndentation,
+    deepExtractBlocks,
+    findBlockRecursively,
+    shallowExtractBlocks,
+} from "../../Util";
 import { TextBlock } from "../../model/TextBlock";
 import { BlockParser } from "../BlockParser";
 import { SectionParser } from "../SectionParser";
@@ -244,9 +249,12 @@ describe("Extraction", () => {
         );
 
         const actual = parsed
-            .extractBlocksRecursively({
-                blockFilter: (block) => block.text === "Extract me",
-            })
+            .extractBlocksRecursively(
+                {
+                    blockFilter: (block) => block.text === "Extract me",
+                },
+                shallowExtractBlocks
+            )
             .map((b) => b.stringify(DEFAULT_INDENTATION));
         expect(actual).toEqual(extracted);
         expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual(theRest);
@@ -262,9 +270,12 @@ describe("Extraction", () => {
         );
 
         const actual = parsed
-            .deepExtractBlocksRecursively({
-                blockFilter: (block) => block.text.includes("Extract me"),
-            })
+            .extractBlocksRecursively(
+                {
+                    blockFilter: (block) => block.text.includes("Extract me"),
+                },
+                deepExtractBlocks
+            )
             .map((b) => b.stringify(DEFAULT_INDENTATION));
         expect(actual).toEqual(extracted);
         expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual(theRest);

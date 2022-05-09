@@ -1,15 +1,10 @@
-import { flatMap, partition } from "lodash";
+import { flatMap } from "lodash";
 
 import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
 import { TreeFilter } from "./TreeFilter";
 
-function shallowExtractBlocks(
-    blockTree: Block,
-    blockFilter: (block: Block) => boolean
-) {
-    return partition(blockTree.children, blockFilter);
-}
+import { BlockExtractor } from "../features/Archiver";
 
 export class Section extends MarkdownNode<Section> {
     children: Section[];
@@ -20,41 +15,13 @@ export class Section extends MarkdownNode<Section> {
         this.tokenLevel = tokenLevel;
     }
 
-    extractBlocksRecursively(filter: TreeFilter): Block[] {
-        const [extracted, theRest] = shallowExtractBlocks(
-            this.blockContent,
-            filter.blockFilter
-        );
-
-        this.blockContent.children = theRest;
+    extractBlocksRecursively(filter: TreeFilter, extractor: BlockExtractor): Block[] {
+        const extracted = extractor(this.blockContent, filter.blockFilter);
 
         for (const section of this.children) {
             if (!filter.sectionFilter || filter.sectionFilter(section)) {
-                extracted.push(...section.extractBlocksRecursively(filter));
+                extracted.push(...section.extractBlocksRecursively(filter, extractor));
             }
-        }
-        return extracted;
-    }
-
-    deepExtractBlocksRecursively(filter: TreeFilter): Block[] {
-        const extracted = this.deepExtractBlocks(this.blockContent, filter.blockFilter);
-
-        for (const section of this.children) {
-            if (!filter.sectionFilter || filter.sectionFilter(section)) {
-                extracted.push(...section.deepExtractBlocksRecursively(filter));
-            }
-        }
-        return extracted;
-    }
-
-    private deepExtractBlocks(
-        blockTree: Block,
-        blockFilter: (block: Block) => boolean
-    ) {
-        const [extracted, theRest] = shallowExtractBlocks(blockTree, blockFilter);
-        blockTree.children = theRest;
-        for (const subTree of theRest) {
-            extracted.push(...this.deepExtractBlocks(subTree, blockFilter));
         }
         return extracted;
     }

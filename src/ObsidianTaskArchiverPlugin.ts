@@ -52,14 +52,14 @@ export default class ObsidianTaskArchiver extends Plugin {
             id: "archive-tasks",
             name: "Archive tasks in this file",
             checkCallback: this.createCheckCallbackForPreviewAndEditView((file) =>
-                this.archiver.archiveTasksInActiveFile(file)
+                this.archiver.archiveShallowTasksInActiveFile(file)
             ),
         });
         this.addCommand({
             id: "archive-tasks-deeply",
             name: "Archive tasks including nested tasks in this file",
             checkCallback: this.createCheckCallbackForPreviewAndEditView((file) =>
-                this.archiver.archiveTasksInActiveFileRecursively(file)
+                this.archiver.archiveDeepTasksInActiveFile(file)
             ),
         });
         this.addCommand({
