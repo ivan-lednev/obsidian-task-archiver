@@ -156,6 +156,35 @@ Turns into:
 
 </details>
 
+
+<details>
+<summary>Archive tasks including nested tasks in this file</summary>
+
+Same as simple archiving, except that now completed nested tasks also get archived, with their sub-items.
+
+This:
+
+```markdown
+- [ ] Incomplete task
+    - [x] Completed subtask
+        - Task details
+    - [ ] Incomplete subtask
+```
+
+Turns into:
+
+```markdown
+- [ ] Incomplete task
+    - [ ] Incomplete subtask
+  
+# Archived
+
+- [x] Completed subtask
+    - Task details
+```
+
+</details>
+
 ## Configuration
 
 The plugin lets you configure the following:
