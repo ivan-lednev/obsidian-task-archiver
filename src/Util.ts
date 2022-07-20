@@ -5,14 +5,19 @@ import { flow, isEmpty, last, partition } from "lodash";
 import { dropRightWhile, dropWhile } from "lodash/fp";
 
 import {
-    COMPLETED_TASK_PATTERN,
     HEADING_PATTERN,
     INDENTATION_PATTERN,
     LIST_ITEM_PATTERN,
     STRING_WITH_SPACES_PATTERN,
-    TASK_PATTERN,
+    DEFAULT_COMPLETED_TASK_PATTERN,
+    DEFAULT_TASK_PATTERN,
 } from "./Patterns";
+
+let taskPattern = new RegExp(DEFAULT_TASK_PATTERN);
+let completedTaskPattern = new RegExp(DEFAULT_COMPLETED_TASK_PATTERN);
+
 import { IndentationSettings } from "./Settings";
+import { Settings } from "./Settings";
 import { Block } from "./model/Block";
 import { Section } from "./model/Section";
 import { TextBlock } from "./model/TextBlock";
@@ -50,12 +55,16 @@ function findBlockRecursivelyInCollection(
     return null;
 }
 
+export function setTaskPattern(pattern: string) {
+    taskPattern = new RegExp(DEFAULT_TASK_PATTERN + ".*" + pattern);
+    completedTaskPattern = new RegExp(DEFAULT_COMPLETED_TASK_PATTERN +  ".*" + pattern); 
+}
 export function isCompletedTask(line: string) {
-    return COMPLETED_TASK_PATTERN.test(line);
+    return completedTaskPattern.test(line);
 }
 
 function isTask(line: string) {
-    return TASK_PATTERN.test(line);
+    return taskPattern.test(line);
 }
 
 export function sortBlocksRecursively(root: Block) {
