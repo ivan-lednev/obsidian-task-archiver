@@ -7,6 +7,7 @@ import { Archiver } from "./features/Archiver";
 import { DateTreeResolver } from "./features/DateTreeResolver";
 import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
 import { TaskListSorter } from "./features/TaskListSorter";
+import { TaskTester } from "./features/TaskTester";
 import { BlockParser } from "./parser/BlockParser";
 import { SectionParser } from "./parser/SectionParser";
 
@@ -23,7 +24,6 @@ async function withNotice(cb: () => Promise<string>) {
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: Settings;
-    private parser: SectionParser;
     private archiver: Archiver;
     private taskListSorter: TaskListSorter;
     private listToHeadingTransformer: ListToHeadingTransformer;
@@ -32,19 +32,23 @@ export default class ObsidianTaskArchiver extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
 
-        this.parser = new SectionParser(
+        const parser = new SectionParser(
             new BlockParser(this.settings.indentationSettings)
         );
+        const taskTester = new TaskTester(this.settings);
+        const dateTreeResolver = new DateTreeResolver(this.settings);
+
         this.archiver = new Archiver(
             this.app.vault,
             this.app.workspace,
-            this.parser,
-            new DateTreeResolver(this.settings),
+            parser,
+            dateTreeResolver,
+            taskTester,
             this.settings
         );
-        this.taskListSorter = new TaskListSorter(this.parser, this.settings);
+        this.taskListSorter = new TaskListSorter(parser, taskTester, this.settings);
         this.listToHeadingTransformer = new ListToHeadingTransformer(
-            this.parser,
+            parser,
             this.settings
         );
 

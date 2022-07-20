@@ -5,12 +5,10 @@ import { flow, isEmpty, last, partition } from "lodash";
 import { dropRightWhile, dropWhile } from "lodash/fp";
 
 import {
-    COMPLETED_TASK_PATTERN,
     HEADING_PATTERN,
     INDENTATION_PATTERN,
     LIST_ITEM_PATTERN,
     STRING_WITH_SPACES_PATTERN,
-    TASK_PATTERN,
 } from "./Patterns";
 import { IndentationSettings } from "./Settings";
 import { Block } from "./model/Block";
@@ -48,24 +46,6 @@ function findBlockRecursivelyInCollection(
         }
     }
     return null;
-}
-
-export function isCompletedTask(line: string) {
-    return COMPLETED_TASK_PATTERN.test(line);
-}
-
-function isTask(line: string) {
-    return TASK_PATTERN.test(line);
-}
-
-export function sortBlocksRecursively(root: Block) {
-    const [tasks, nonTasks] = partition(root.children, (b) => isTask(b.text));
-    const [complete, incomplete] = partition(tasks, (b) => isCompletedTask(b.text));
-    root.children = [...nonTasks, ...incomplete, ...complete];
-
-    for (const child of root.children) {
-        sortBlocksRecursively(child);
-    }
 }
 
 export function addNewlinesToSection(section: Section) {

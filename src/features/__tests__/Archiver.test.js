@@ -16,6 +16,7 @@ function buildArchiver(testDependencies, settings) {
         testDependencies.mockWorkspace,
         testDependencies.sectionParser,
         testDependencies.dateTreeResolver,
+        testDependencies.taskTester,
         settings
     );
 }
@@ -206,6 +207,19 @@ describe("Moving top-level tasks to the archive", () => {
                 archiveHeading: "[[Archived]]",
             }
         );
+    });
+
+    describe("Additional task pattern from configuration", () => {
+        test("Reads the additional task pattern from the config", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["- [x] foo #task", "- [x] bar", "# Archived"],
+                ["- [x] bar", "# Archived", "", "- [x] foo #task", ""],
+                {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    additionalTaskPattern: "#task",
+                }
+            );
+        });
     });
 
     describe("Creating a new archive", () => {

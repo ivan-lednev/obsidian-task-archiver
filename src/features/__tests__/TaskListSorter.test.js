@@ -8,7 +8,11 @@ function sortListUnderCursorAndCheckActiveFile(
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const sorter = new TaskListSorter(testDependencies.sectionParser, settings);
+    const sorter = new TaskListSorter(
+        testDependencies.sectionParser,
+        testDependencies.taskTester,
+        settings
+    );
 
     sorter.sortListUnderCursor(testDependencies.mockEditor);
 

@@ -4,6 +4,7 @@ import { EditorFile } from "../../ActiveFile";
 import { BlockParser } from "../../parser/BlockParser";
 import { SectionParser } from "../../parser/SectionParser";
 import { DateTreeResolver } from "../DateTreeResolver";
+import { TaskTester } from "../TaskTester";
 
 export const DEFAULT_SETTINGS_FOR_TESTS = {
     archiveHeading: "Archived",
@@ -12,6 +13,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
     useWeeks: false,
     dailyNoteFormat: "YYYY-MM-DD",
     useDays: false,
+    additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
     indentationSettings: {
         useTab: true,
@@ -35,6 +37,7 @@ export class TestDependencies {
             new BlockParser(settings.indentationSettings)
         );
         this.dateTreeResolver = new DateTreeResolver(settings);
+        this.taskTester = new TaskTester(settings);
     }
 }
 

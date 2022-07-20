@@ -12,6 +12,39 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
+        new Setting(containerEl)
+            .setName("Additional task pattern")
+            .setDesc(
+                "Only archive tasks matching this pattern, typically '#task' but can be anything."
+            )
+            .addText((textComponent) => {
+                textComponent
+                    .setValue(this.plugin.settings.additionalTaskPattern)
+                    .onChange(async (value) => {
+                        const validation =
+                            containerEl.querySelector("#pattern-validation");
+                        validation.setText(getPatternValidation(value));
+
+                        this.plugin.settings.additionalTaskPattern = value;
+                        await this.plugin.saveSettings();
+                    });
+            })
+            .then((setting) => {
+                setting.descEl.appendChild(
+                    createFragment((fragment) => {
+                        fragment.createEl("br");
+                        fragment.createEl("b", {
+                            text: getPatternValidation(
+                                this.plugin.settings.additionalTaskPattern
+                            ),
+                            attr: {
+                                id: "pattern-validation",
+                            },
+                        });
+                    })
+                );
+            });
+
         containerEl.createEl("h2", { text: "Archive heading settings" });
 
         new Setting(containerEl)
@@ -199,5 +232,20 @@ export class ArchiverSettingTab extends PluginSettingTab {
                     });
                 });
         }
+    }
+}
+
+function getPatternValidation(pattern: string) {
+    return validatePattern(pattern)
+        ? "✔️ The current pattern is valid"
+        : "❌ The current pattern is invalid";
+}
+
+function validatePattern(pattern: string) {
+    try {
+        new RegExp(pattern);
+        return true;
+    } catch (e) {
+        return false;
     }
 }

@@ -11,6 +11,7 @@ export interface Settings {
     dailyNoteFormat: string;
     useDays: boolean;
     indentationSettings: IndentationSettings;
+    additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
     defaultArchiveFileName: string;
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
     useWeeks: true,
     dailyNoteFormat: "YYYY-MM-DD",
     useDays: false,
+    additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
     archiveToSeparateFile: false,
     defaultArchiveFileName: "% (archive)",

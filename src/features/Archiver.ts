@@ -3,6 +3,7 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { isEmpty } from "lodash";
 
 import { DateTreeResolver } from "./DateTreeResolver";
+import { TaskTester } from "./TaskTester";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
 import { Settings } from "../Settings";
@@ -12,7 +13,6 @@ import {
     buildIndentation,
     deepExtractBlocks,
     detectHeadingUnderCursor,
-    isCompletedTask,
     shallowExtractBlocks,
 } from "../Util";
 import { Block } from "../model/Block";
@@ -40,12 +40,13 @@ export class Archiver {
         private readonly workspace: Workspace,
         private readonly parser: SectionParser,
         private readonly dateTreeResolver: DateTreeResolver,
+        private readonly taskTester: TaskTester,
         private readonly settings: Settings,
         private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
         ),
         private readonly completedTaskOutsideArchiveFilter = {
-            blockFilter: (block: Block) => isCompletedTask(block.text),
+            blockFilter: (block: Block) => this.taskTester.isCompletedTask(block.text),
             sectionFilter: (section: Section) => !this.isArchive(section.text),
         }
     ) {}
