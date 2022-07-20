@@ -9,6 +9,7 @@ import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
 import { TaskListSorter } from "./features/TaskListSorter";
 import { BlockParser } from "./parser/BlockParser";
 import { SectionParser } from "./parser/SectionParser";
+import { setTaskPattern } from "./Util";
 
 async function withNotice(cb: () => Promise<string>) {
     try {
@@ -30,6 +31,7 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     async onload() {
         await this.loadSettings();
+        setTaskPattern(this.settings.taskPattern);
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
 
         this.parser = new SectionParser(

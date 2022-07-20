@@ -1,7 +1,12 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 
 import ObsidianTaskArchiver from "./ObsidianTaskArchiverPlugin";
+import {
+    DEFAULT_COMPLETED_TASK_PATTERN,
+    DEFAULT_TASK_PATTERN,
+} from "./Patterns";
 
+import {setTaskPattern} from "./Util"
 export class ArchiverSettingTab extends PluginSettingTab {
     constructor(app: App, private plugin: ObsidianTaskArchiver) {
         super(app, plugin);
@@ -146,6 +151,19 @@ export class ArchiverSettingTab extends PluginSettingTab {
                     });
                 });
         }
+
+        new Setting(containerEl)
+            .setName("Task pattern")
+            .setDesc("Only archive tasks matching this pattern, typically '#task' but can be anything.")
+            .addText((textComponent) => {
+                    textComponent
+                        .setValue(this.plugin.settings.taskPattern)
+                        .onChange(async (value) => {
+                             this.plugin.settings.taskPattern = value;
+                             setTaskPattern(value);
+                            await this.plugin.saveSettings();
+                        }); 
+                });
 
         new Setting(containerEl)
             .setName("Use days")
