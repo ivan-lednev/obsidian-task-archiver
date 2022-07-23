@@ -189,6 +189,7 @@ Turns into:
 
 The plugin lets you configure the following:
 
+- additional patterns to detect completed tasks (say, only archive tasks with `#task`)
 - what text makes a heading an archive;
 - whether to add newlines around headings when moving stuff around;
 - moving tasks to the current file or to a separate file.
@@ -224,3 +225,7 @@ Also, I relied on the code from these excellent plugins:
 
 - [obsidian-kanban](https://github.com/mgmeyers/obsidian-kanban);
 - [obsidian-outliner](https://github.com/vslinko/obsidian-outliner).
+
+### Contributors
+
+- Richard Cook (wealthychef@gmail.com)
