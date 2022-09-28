@@ -1,3 +1,4 @@
+
 This plugin is a toolbox for working with completed tasks in your markdown files. It brings some
 of [org-mode's](https://orgmode.org/) features to Obsidian. It provides features such as archiving, deleting and sorting
 tasks and document sections.
@@ -218,3 +219,7 @@ Also, I relied on the code from these excellent plugins:
 ### Contributors
 
 - Richard Cook (wealthychef@gmail.com)
+
+## Support
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/K3K4FBU43)
