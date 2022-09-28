@@ -45,6 +45,71 @@ export class ArchiverSettingTab extends PluginSettingTab {
                 );
             });
 
+        new Setting(containerEl)
+            .setName("Regex replacement during archiving")
+            .setDesc("This replacement is going to be applied to every archived task")
+            .addToggle((toggleComponent) => {
+                toggleComponent
+                    .setValue(this.plugin.settings.textReplacement.applyReplacement)
+                    .onChange(async (value) => {
+                        this.plugin.settings.textReplacement.applyReplacement = value;
+                        await this.plugin.saveSettings();
+                        this.display();
+                    });
+            });
+
+        if (this.plugin.settings.textReplacement.applyReplacement) {
+            new Setting(containerEl).setName("Regex:").addTextArea((component) => {
+                component.setValue(this.plugin.settings.textReplacement.regex);
+                component.onChange(async (value) => {
+                    this.plugin.settings.textReplacement.regex = value;
+                    await this.plugin.saveSettings();
+                });
+            });
+            new Setting(containerEl)
+                .setName("Replacement:")
+                .addTextArea((component) => {
+                    component.setValue(
+                        this.plugin.settings.textReplacement.replacement
+                    );
+                    component.onChange(async (value) => {
+                        this.plugin.settings.textReplacement.replacement = value;
+                        await this.plugin.saveSettings();
+                    });
+                });
+
+            new Setting(containerEl)
+                .setName("Test out your regex here:")
+                .addTextArea((component) => {
+                    component.setPlaceholder("test out your regex");
+                    component.setValue(
+                        this.plugin.settings.textReplacement.replacementTest
+                    );
+                    component.onChange(async (value) => {
+                        this.plugin.settings.textReplacement.replacementTest = value;
+                        await this.plugin.saveSettings();
+                    });
+                });
+
+            new Setting(containerEl).addButton((component) => {
+                component.setButtonText("Apply regex").onClick(() => {
+                    this.display();
+                });
+            });
+
+            new Setting(containerEl)
+                .setName("The replaced value looks like this:")
+                .addTextArea((component) => {
+                    const { regex, replacement, replacementTest } =
+                        this.plugin.settings.textReplacement;
+                    const replacementResult = replacementTest.replace(
+                        new RegExp(regex),
+                        replacement
+                    );
+                    component.setValue(replacementResult).setDisabled(true);
+                });
+        }
+
         containerEl.createEl("h2", { text: "Archive heading settings" });
 
         new Setting(containerEl)

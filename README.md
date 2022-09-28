@@ -190,6 +190,8 @@ Turns into:
 The plugin lets you configure the following:
 
 - additional patterns to detect completed tasks (say, only archive tasks with `#task`)
+- a regular expression for replacing the contents of the task during archiving; this is useful if you want to strip tags
+  from archived tasks
 - what text makes a heading an archive;
 - whether to add newlines around headings when moving stuff around;
 - moving tasks to the current file or to a separate file.
@@ -202,19 +204,6 @@ corresponding periodic note.
 ## Usage
 
 Open the command palette and run one of the archiver [commands](#commands).
-
-## Roadmap
-
-- [x] Move completed tasks to a separate archive file
-- [x] Delete completed tasks
-- [x] Archive any document section
-- [x] Archive sublists per list item
-- [ ] Per-file configuration through front-matter
-- [ ] More options for the date tree
-    - [x] Days
-    - [ ] Months
-    - [ ] Years
-- [ ] Multiple archive subheadings per file
 
 ## Acknowledgements
 

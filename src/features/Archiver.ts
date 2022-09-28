@@ -1,6 +1,6 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { isEmpty } from "lodash";
+import { cloneDeep, isEmpty } from "lodash";
 
 import { DateTreeResolver } from "./DateTreeResolver";
 import { TaskTester } from "./TaskTester";
@@ -63,7 +63,11 @@ export class Archiver {
         file: ActiveFile,
         extractor: BlockExtractor
     ) {
-        const tasks = await this.extractTasksFromActiveFile(file, extractor);
+        const { applyReplacement } = this.settings.textReplacement;
+        let tasks = await this.extractTasksFromActiveFile(file, extractor);
+        if (applyReplacement) {
+            tasks = this.applyReplacementRecursively(tasks);
+        }
         const archiveFile = await this.getArchiveFile(file);
 
         await this.editFileTree(archiveFile, (tree: Section) =>
@@ -73,6 +77,23 @@ export class Archiver {
         return isEmpty(tasks)
             ? "No tasks to archive"
             : `Archived ${tasks.length} tasks`;
+    }
+
+    private applyReplacementRecursively(blocks: Block[]) {
+        const { regex, replacement } = this.settings.textReplacement;
+        const compiledRegex = new RegExp(regex);
+        return blocks.map((originalBlock) => {
+            const blockTextWithReplacement = originalBlock.text.replace(
+                compiledRegex,
+                replacement
+            );
+            const updatedBlock = cloneDeep(originalBlock);
+            updatedBlock.text = blockTextWithReplacement;
+            updatedBlock.children = this.applyReplacementRecursively(
+                originalBlock.children
+            );
+            return updatedBlock;
+        });
     }
 
     async deleteTasksInActiveFile(file: ActiveFile) {

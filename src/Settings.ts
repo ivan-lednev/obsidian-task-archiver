@@ -3,6 +3,13 @@ export interface IndentationSettings {
     tabSize: number;
 }
 
+export interface TextReplacementSettings {
+    applyReplacement: boolean;
+    regex: string;
+    replacement: string;
+    replacementTest: string;
+}
+
 export interface Settings {
     archiveHeading: string;
     archiveHeadingDepth: number;
@@ -10,11 +17,12 @@ export interface Settings {
     useWeeks: boolean;
     dailyNoteFormat: string;
     useDays: boolean;
-    indentationSettings: IndentationSettings;
     additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
     defaultArchiveFileName: string;
+    indentationSettings: IndentationSettings;
+    textReplacement: TextReplacementSettings;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,5 +39,11 @@ export const DEFAULT_SETTINGS: Settings = {
     indentationSettings: {
         useTab: true,
         tabSize: 4,
+    },
+    textReplacement: {
+        applyReplacement: false,
+        regex: "#([A-Za-z-]+)",
+        replacement: "@$1",
+        replacementTest: "task #some-tag",
     },
 };

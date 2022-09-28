@@ -255,6 +255,34 @@ describe("Moving top-level tasks to the archive", () => {
     });
 });
 
+describe("Archived block transformation", () => {
+    test("Nested blocks", async () => {
+        await archiveTasksAndCheckActiveFile(
+            [
+                "- [x] foo #task",
+                "\t- other block #other-tag",
+                "\t  some text #other-tag",
+            ],
+            [
+                "",
+                "# Archived",
+                "",
+                "- [x] foo @task",
+                "\t- other block @other-tag",
+                "\t  some text @other-tag",
+                "",
+            ],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                textReplacement: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS.textReplacement,
+                    applyReplacement: true,
+                },
+            }
+        );
+    });
+});
+
 describe("Moving top-level & inner tasks to the archive", () => {
     test("Basic case", () => {
         archiveTasksRecursivelyAndCheckActiveFile(

@@ -21,6 +21,12 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
     },
     archiveToSeparateFile: false,
     defaultArchiveFileName: "<filename> (archive)",
+    textReplacement: {
+        applyReplacement: false,
+        regex: "#([A-Za-z-]+)",
+        replacement: "@$1",
+        replacementTest: "task #some-tag",
+    },
 };
 
 export class TestDependencies {
