@@ -28,12 +28,22 @@ interface BlockFilter {
     (block: Block): boolean;
 }
 
+interface SectionFilter {
+    (section: Section): boolean;
+}
+
+interface TreeFilter {
+    blockFilter: BlockFilter;
+    sectionFilter: SectionFilter;
+}
+
 interface TreeEditorCallback {
     (tree: Section): void;
 }
 
 export class Archiver {
     private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
+    private readonly taskFilter: TreeFilter;
 
     constructor(
         private readonly vault: Vault,
@@ -44,12 +54,17 @@ export class Archiver {
         private readonly settings: Settings,
         private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
-        ),
-        private readonly completedTaskOutsideArchiveFilter = {
-            blockFilter: (block: Block) => this.taskTester.isCompletedTask(block.text),
+        )
+    ) {
+        const blockFilter = (block: Block) =>
+            settings.archiveAllCheckedTaskTypes
+                ? this.taskTester.isCheckedTask(block.text)
+                : this.taskTester.isCompletedTask(block.text);
+        this.taskFilter = {
+            blockFilter,
             sectionFilter: (section: Section) => !this.isArchive(section.text),
-        }
-    ) {}
+        };
+    }
 
     async archiveShallowTasksInActiveFile(file: ActiveFile) {
         return await this.archiveTasksInActiveFile(file, shallowExtractBlocks);
@@ -147,10 +162,7 @@ export class Archiver {
     ) {
         let tasks: Block[] = [];
         await this.editFileTree(file, (tree) => {
-            tasks = tree.extractBlocksRecursively(
-                this.completedTaskOutsideArchiveFilter,
-                extractor
-            );
+            tasks = tree.extractBlocksRecursively(this.taskFilter, extractor);
         });
         return tasks;
     }

@@ -253,6 +253,26 @@ describe("Moving top-level tasks to the archive", () => {
             );
         });
     });
+
+    describe("Archive all checkmark types", () => {
+        test("Ignores checked tasks by default", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["- [-] foo", "# Archived"],
+                ["- [-] foo", "# Archived", ""]
+            );
+        });
+
+        test("Basic case", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["- [-] foo", "# Archived"],
+                ["# Archived", "", "- [-] foo", ""],
+                {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveAllCheckedTaskTypes: true,
+                }
+            );
+        });
+    });
 });
 
 describe("Archived block transformation", () => {

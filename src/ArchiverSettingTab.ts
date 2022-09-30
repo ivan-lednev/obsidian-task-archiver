@@ -46,6 +46,20 @@ export class ArchiverSettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
+            .setName("Archive all checked tasks")
+            .setDesc(
+                "Archive tasks with symbols other than 'x' (like '[>]', '[-]', etc.)"
+            )
+            .addToggle((toggleComponent) => {
+                toggleComponent
+                    .setValue(this.plugin.settings.archiveAllCheckedTaskTypes)
+                    .onChange(async (value) => {
+                        this.plugin.settings.archiveAllCheckedTaskTypes = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(containerEl)
             .setName("Regex replacement during archiving")
             .setDesc("This replacement is going to be applied to every archived task")
             .addToggle((toggleComponent) => {

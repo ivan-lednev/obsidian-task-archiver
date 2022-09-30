@@ -1,4 +1,8 @@
-import { DEFAULT_COMPLETED_TASK_PATTERN, DEFAULT_TASK_PATTERN } from "../Patterns";
+import {
+    CHECKED_TASK_PATTERN,
+    DEFAULT_COMPLETED_TASK_PATTERN,
+    DEFAULT_TASK_PATTERN,
+} from "../Patterns";
 import { Settings } from "../Settings";
 
 export class TaskTester {
@@ -20,6 +24,12 @@ export class TaskTester {
         return (
             DEFAULT_COMPLETED_TASK_PATTERN.test(line) &&
             this.doesMatchAdditionalTaskPattern(line)
+        );
+    }
+
+    isCheckedTask(line: string) {
+        return (
+            CHECKED_TASK_PATTERN.test(line) && this.doesMatchAdditionalTaskPattern(line)
         );
     }
 

@@ -21,6 +21,7 @@ export interface Settings {
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
     defaultArchiveFileName: string;
+    archiveAllCheckedTaskTypes: boolean;
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
 }
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
     addNewlinesAroundHeadings: true,
     archiveToSeparateFile: false,
     defaultArchiveFileName: "% (archive)",
+    archiveAllCheckedTaskTypes: false,
     indentationSettings: {
         useTab: true,
         tabSize: 4,

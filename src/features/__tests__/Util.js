@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
     },
     archiveToSeparateFile: false,
     defaultArchiveFileName: "<filename> (archive)",
+    archiveAllCheckedTaskTypes: false,
     textReplacement: {
         applyReplacement: false,
         regex: "#([A-Za-z-]+)",
