@@ -191,6 +191,7 @@ Turns into:
 The plugin lets you configure the following:
 
 - additional patterns to detect completed tasks (say, only archive tasks with `#task`)
+- archive any checked tasks, not just completed ones (`[>]`, `[-]`, etc.)
 - a regular expression for replacing the contents of the task during archiving; this is useful if you want to strip tags
   from archived tasks
 - what text makes a heading an archive;
