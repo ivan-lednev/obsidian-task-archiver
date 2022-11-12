@@ -242,7 +242,6 @@ describe("Moving top-level tasks to the archive", () => {
         });
 
         test("Pulls heading depth from the config", async () => {
-            // TODO: this extra newline in the result is a bit clunky
             await archiveTasksAndCheckActiveFile(
                 ["- [x] foo"],
                 ["", "### Archived", "", "- [x] foo", ""],
@@ -250,6 +249,13 @@ describe("Moving top-level tasks to the archive", () => {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     archiveHeadingDepth: 3,
                 }
+            );
+        });
+
+        test("Detects an existing archive heading at any level", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["# Top level heading", "- [x] foo", "### Archived"],
+                ["# Top level heading", "### Archived", "", "- [x] foo", ""]
             );
         });
     });

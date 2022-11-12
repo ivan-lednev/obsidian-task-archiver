@@ -13,6 +13,7 @@ import {
     buildIndentation,
     deepExtractBlocks,
     detectHeadingUnderCursor,
+    findSectionRecursively,
     shallowExtractBlocks,
 } from "../Util";
 import { Block } from "../model/Block";
@@ -176,17 +177,20 @@ export class Archiver {
     }
 
     private getArchiveSectionFromRoot(section: Section) {
-        let archiveSection = section.children.find((s) =>
-            this.archiveHeadingPattern.test(s.text)
+        const existingArchiveSection = findSectionRecursively(section, (section) =>
+            this.archiveHeadingPattern.test(section.text)
         );
-        if (!archiveSection) {
-            if (this.settings.addNewlinesAroundHeadings) {
-                addNewlinesToSection(section);
-            }
-            archiveSection = this.buildArchiveSection();
-            section.appendChild(archiveSection);
+        if (existingArchiveSection) {
+            return existingArchiveSection;
         }
-        return archiveSection;
+
+        if (this.settings.addNewlinesAroundHeadings) {
+            addNewlinesToSection(section);
+        }
+        const newArchiveSection = this.buildArchiveSection();
+        section.appendChild(newArchiveSection);
+
+        return newArchiveSection;
     }
 
     private buildArchiveSection() {

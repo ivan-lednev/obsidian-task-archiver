@@ -48,6 +48,25 @@ function findBlockRecursivelyInCollection(
     return null;
 }
 
+export function findSectionRecursively(
+    root: Section,
+    matcher: (section: Section) => boolean
+): Section | null {
+    if (matcher(root)) {
+        return root;
+    }
+    if (isEmpty(root.children)) {
+        return null;
+    }
+    for (const child of root.children) {
+        const result = findSectionRecursively(child, matcher);
+        if (result) {
+            return result;
+        }
+    }
+    return null;
+}
+
 export function addNewlinesToSection(section: Section) {
     let lastSection = section;
     const childrenLength = section.children.length;
