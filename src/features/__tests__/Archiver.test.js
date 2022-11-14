@@ -6,9 +6,10 @@ import { Archiver } from "../Archiver";
 
 const WEEK = "2021-01-W-1";
 const DAY = "2021-01-01";
+const TIME = "2021-01-01T00:01"
 
 window.moment = moment;
-Date.now = () => new Date(DAY).getTime();
+Date.now = () => new Date(TIME).getTime();
 
 function buildArchiver(testDependencies, settings) {
     return new Archiver(
