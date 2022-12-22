@@ -109,6 +109,7 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+        await this.loadSettings();
     }
 
     private createCheckCallbackForPreviewAndEditView(
