@@ -32,25 +32,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
 
-        const parser = new SectionParser(
-            new BlockParser(this.settings.indentationSettings)
-        );
-        const taskTester = new TaskTester(this.settings);
-        const dateTreeResolver = new DateTreeResolver(this.settings);
-
-        this.archiver = new Archiver(
-            this.app.vault,
-            this.app.workspace,
-            parser,
-            dateTreeResolver,
-            taskTester,
-            this.settings
-        );
-        this.taskListSorter = new TaskListSorter(parser, taskTester, this.settings);
-        this.listToHeadingTransformer = new ListToHeadingTransformer(
-            parser,
-            this.settings
-        );
+        this.initializeDependencies()
 
         this.addCommand({
             id: "archive-tasks",
@@ -109,7 +91,29 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
-        await this.loadSettings();
+        this.initializeDependencies();
+    }
+
+    private initializeDependencies() {
+        const parser = new SectionParser(
+            new BlockParser(this.settings.indentationSettings)
+        );
+        const taskTester = new TaskTester(this.settings);
+        const dateTreeResolver = new DateTreeResolver(this.settings);
+
+        this.archiver = new Archiver(
+            this.app.vault,
+            this.app.workspace,
+            parser,
+            dateTreeResolver,
+            taskTester,
+            this.settings
+        );
+        this.taskListSorter = new TaskListSorter(parser, taskTester, this.settings);
+        this.listToHeadingTransformer = new ListToHeadingTransformer(
+            parser,
+            this.settings
+        );
     }
 
     private createCheckCallbackForPreviewAndEditView(
