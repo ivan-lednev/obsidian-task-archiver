@@ -11,6 +11,7 @@ export interface TextReplacementSettings {
 }
 
 export interface Settings {
+    dateFormat: string;
     archiveHeading: string;
     archiveHeadingDepth: number;
     weeklyNoteFormat: string;
@@ -38,6 +39,7 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveToSeparateFile: false,
     defaultArchiveFileName: "% (archive)",
     archiveAllCheckedTaskTypes: false,
+    dateFormat: "YYYY-MM-DD",
     indentationSettings: {
         useTab: true,
         tabSize: 4,

@@ -13,6 +13,46 @@ export class ArchiverSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
+            .setName("{{date}} format")
+            .setDesc(
+                "This variable can be used for\n1) adding metadata to completed tasks;\n2) archiving tasks to a daily note"
+            )
+            .then((setting) => {
+                setting.addMomentFormat((momentFormat) => {
+                    setting.descEl.appendChild(
+                        createFragment((fragment) => {
+                            fragment.appendText("For more syntax, refer to ");
+                            fragment.createEl(
+                                "a",
+                                {
+                                    text: "format reference",
+                                    href: "https://momentjs.com/docs/#/displaying/format/",
+                                },
+                                (a) => {
+                                    a.setAttr("target", "_blank");
+                                }
+                            );
+                            fragment.createEl("br");
+                            fragment.appendText(
+                                "Your current syntax looks like this: "
+                            );
+                            momentFormat.setSampleEl(fragment.createEl("b"));
+                            fragment.createEl("br");
+                        })
+                    );
+
+                    momentFormat
+                        .setDefaultFormat(this.plugin.settings.dateFormat)
+                        .setPlaceholder(this.plugin.settings.dateFormat)
+                        .setValue(this.plugin.settings.dateFormat)
+                        .onChange(async (value) => {
+                            this.plugin.settings.dateFormat = value;
+                            await this.plugin.saveSettings();
+                        });
+                });
+            });
+
+        new Setting(containerEl)
             .setName("Additional task pattern")
             .setDesc(
                 "Only archive tasks matching this pattern, typically '#task' but can be anything."
@@ -190,9 +230,33 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
         if (this.plugin.settings.archiveToSeparateFile) {
             new Setting(containerEl)
-                .setName("Separate archive file name")
+                .setName("Archive file name")
                 .setDesc(
-                    "If archiving to a separate file is on, replace the '%' with the active file name and try to find a file with this base name"
+                    createFragment((fragment) => {
+                        fragment.appendText("Special values are available here:");
+                        fragment.appendChild(
+                            createEl("ul", {}, (ul) => {
+                                ul.appendChild(
+                                    createEl("li", {}, (li) =>
+                                        li.append(
+                                            createEl("b", { text: "{{date}}" }),
+                                            " resolves to the date in the format specified above. You can use this to archive tasks to daily notes"
+                                        )
+                                    )
+                                );
+                                ul.appendChild(
+                                    createEl("li", {}, (li) =>
+                                        li.append(
+                                            createEl("b", {
+                                                text: "{{sourceFileName}}",
+                                            }),
+                                            " points to the active file name"
+                                        )
+                                    )
+                                );
+                            })
+                        );
+                    })
                 )
                 .addText((textComponent) => {
                     textComponent
@@ -321,10 +385,10 @@ function getPatternValidation(pattern: string) {
 }
 
 function validatePattern(pattern: string) {
-    try {
-        new RegExp(pattern);
-        return true;
-    } catch (e) {
-        return false;
-    }
+  try {
+    new RegExp(pattern);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }

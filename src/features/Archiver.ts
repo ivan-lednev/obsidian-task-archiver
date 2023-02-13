@@ -7,15 +7,7 @@ import { TaskTester } from "./TaskTester";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
 import { Settings } from "../Settings";
-import {
-    addNewlinesToSection,
-    buildHeadingPattern,
-    buildIndentation,
-    deepExtractBlocks,
-    detectHeadingUnderCursor,
-    findSectionRecursively,
-    shallowExtractBlocks,
-} from "../Util";
+import { addNewlinesToSection, buildHeadingPattern, buildIndentation, deepExtractBlocks, detectHeadingUnderCursor, findSectionRecursively, shallowExtractBlocks } from "../Util";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
@@ -44,6 +36,8 @@ interface TreeEditorCallback {
 
 export class Archiver {
     private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
+    private static readonly ACTIVE_FILE_PLACEHOLDER_NEW = "{{sourceFileName}}";
+    private static readonly DATE_PLACEHOLDER = "{{date}}";
     private readonly taskFilter: TreeFilter;
 
     constructor(
@@ -212,10 +206,13 @@ export class Archiver {
 
     private buildArchiveFileName() {
         const activeFileBaseName = this.workspace.getActiveFile().basename;
-        const archiveFileBaseName = this.settings.defaultArchiveFileName.replace(
-            Archiver.ACTIVE_FILE_PLACEHOLDER,
-            activeFileBaseName
-        );
+        const archiveFileBaseName = this.settings.defaultArchiveFileName
+            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER, activeFileBaseName)
+            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER_NEW, activeFileBaseName)
+            .replace(
+                Archiver.DATE_PLACEHOLDER,
+                window.moment().format(this.settings.dateFormat)
+            );
         return `${archiveFileBaseName}.md`;
     }
 
