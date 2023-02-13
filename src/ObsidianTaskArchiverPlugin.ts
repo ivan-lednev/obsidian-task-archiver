@@ -32,7 +32,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         await this.loadSettings();
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
 
-        this.initializeDependencies()
+        this.initializeDependencies();
 
         this.addCommand({
             id: "archive-tasks",

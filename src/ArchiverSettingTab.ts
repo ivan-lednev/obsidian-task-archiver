@@ -60,7 +60,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName("Regex replacement during archiving")
+            .setName("Replace some text before archiving")
             .setDesc("This replacement is going to be applied to every archived task")
             .addToggle((toggleComponent) => {
                 toggleComponent
@@ -73,29 +73,27 @@ export class ArchiverSettingTab extends PluginSettingTab {
             });
 
         if (this.plugin.settings.textReplacement.applyReplacement) {
-            new Setting(containerEl).setName("Regex:").addTextArea((component) => {
-                component.setValue(this.plugin.settings.textReplacement.regex);
-                component.onChange(async (value) => {
-                    this.plugin.settings.textReplacement.regex = value;
-                    await this.plugin.saveSettings();
-                });
-            });
             new Setting(containerEl)
-                .setName("Replacement:")
-                .addTextArea((component) => {
-                    component.setValue(
-                        this.plugin.settings.textReplacement.replacement
-                    );
+                .setName("Regular expression")
+                .addText((component) => {
+                    component.setValue(this.plugin.settings.textReplacement.regex);
                     component.onChange(async (value) => {
-                        this.plugin.settings.textReplacement.replacement = value;
+                        this.plugin.settings.textReplacement.regex = value;
                         await this.plugin.saveSettings();
                     });
                 });
+            new Setting(containerEl).setName("Replacement").addText((component) => {
+                component.setValue(this.plugin.settings.textReplacement.replacement);
+                component.onChange(async (value) => {
+                    this.plugin.settings.textReplacement.replacement = value;
+                    await this.plugin.saveSettings();
+                });
+            });
 
             new Setting(containerEl)
-                .setName("Test out your regex here:")
-                .addTextArea((component) => {
-                    component.setPlaceholder("test out your regex");
+                .setName("Try it out")
+                .addText((component) => {
+                    component.setPlaceholder("original");
                     component.setValue(
                         this.plugin.settings.textReplacement.replacementTest
                     );
@@ -103,24 +101,26 @@ export class ArchiverSettingTab extends PluginSettingTab {
                         this.plugin.settings.textReplacement.replacementTest = value;
                         await this.plugin.saveSettings();
                     });
-                });
-
-            new Setting(containerEl).addButton((component) => {
-                component.setButtonText("Apply regex").onClick(() => {
-                    this.display();
-                });
-            });
-
-            new Setting(containerEl)
-                .setName("The replaced value looks like this:")
-                .addTextArea((component) => {
+                })
+                .addButton((component) => {
+                    component
+                        .setButtonText("Replace")
+                        .setCta()
+                        .onClick(() => {
+                            this.display();
+                        });
+                })
+                .addText((component) => {
                     const { regex, replacement, replacementTest } =
                         this.plugin.settings.textReplacement;
                     const replacementResult = replacementTest.replace(
                         new RegExp(regex),
                         replacement
                     );
-                    component.setValue(replacementResult).setDisabled(true);
+                    component
+                        .setPlaceholder("result")
+                        .setValue(replacementResult)
+                        .setDisabled(true);
                 });
         }
 
