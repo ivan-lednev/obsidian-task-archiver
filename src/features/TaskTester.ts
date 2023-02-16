@@ -41,6 +41,7 @@ export class TaskTester {
         return this.compiledPattern.test(line);
     }
 
+    // TODO: we don't need this any longer
     private refreshPattern() {
         if (this.initialPattern === this.settings.additionalTaskPattern) {
             return;

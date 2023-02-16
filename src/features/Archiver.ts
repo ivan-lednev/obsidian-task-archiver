@@ -73,9 +73,8 @@ export class Archiver {
         file: ActiveFile,
         extractor: BlockExtractor
     ) {
-        const { applyReplacement } = this.settings.textReplacement;
         let tasks = await this.extractTasksFromActiveFile(file, extractor);
-        if (applyReplacement) {
+        if (this.settings.textReplacement.applyReplacement) {
             tasks = this.applyReplacementRecursively(tasks);
         }
         const archiveFile = await this.getArchiveFile(file);
@@ -204,11 +203,15 @@ export class Archiver {
         return await this.getOrCreateFile(archiveFileName);
     }
 
+    private getActiveFileBaseName() {
+        return this.workspace.getActiveFile().basename;
+    }
+
     private buildArchiveFileName() {
-        const activeFileBaseName = this.workspace.getActiveFile().basename;
+        // todo: to separate method
         const archiveFileBaseName = this.settings.defaultArchiveFileName
-            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER, activeFileBaseName)
-            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER_NEW, activeFileBaseName)
+            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER, this.getActiveFileBaseName())
+            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER_NEW, this.getActiveFileBaseName())
             .replace(
                 Archiver.DATE_PLACEHOLDER,
                 window.moment().format(this.settings.dateFormat)
