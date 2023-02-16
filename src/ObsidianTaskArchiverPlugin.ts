@@ -1,7 +1,7 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
 
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
-import { ArchiverSettingTab } from "./ArchiverSettingTab";
+import { ArchiverSettingTab } from "./settings-ui/ArchiverSettingTab";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { Archiver } from "./features/Archiver";
 import { DateTreeResolver } from "./features/DateTreeResolver";
