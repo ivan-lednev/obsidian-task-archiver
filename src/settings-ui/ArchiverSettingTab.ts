@@ -169,7 +169,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
         // }
 
         new ReplaceTextBeforeArchivingSetting(
-            this.containerEl,
+            this.containerEl.createDiv(),
             this.plugin
         );
         new ArchiveToSeparateFileSetting(this.containerEl.createDiv(), this.plugin);

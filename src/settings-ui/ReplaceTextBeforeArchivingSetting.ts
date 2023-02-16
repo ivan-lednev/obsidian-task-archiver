@@ -8,7 +8,7 @@ export class ReplaceTextBeforeArchivingSetting {
     private tryOutComponent: TryOutComponent;
 
     constructor(
-        private readonly containerEl: HTMLElement,
+        private readonly containerEl: HTMLDivElement,
         private readonly plugin: ObsidianTaskArchiver
     ) {
         this.display();
