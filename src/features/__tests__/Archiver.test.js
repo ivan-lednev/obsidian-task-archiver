@@ -18,6 +18,7 @@ function buildArchiver(testDependencies, settings) {
         testDependencies.sectionParser,
         testDependencies.dateTreeResolver,
         testDependencies.taskTester,
+        testDependencies.placeholderResolver,
         settings
     );
 }
@@ -637,6 +638,57 @@ describe("Archive list item under cursor", () => {
             ["- [ ] 1", "- [ ] 2"],
             ["- [ ] 1", "", "# Archived", "", "- [x] 2", ""],
             { line: 1, ch: 0 }
+        );
+    });
+});
+
+describe("Adding metadata to tasks", () => {
+    const metadata = "(completed: {{date}}; source: {{sourceFileName}})";
+    const metadataWithResolvedPlaceholders =
+        "(completed: 2021-01-01; source: mock-file-base-name)";
+    const settingsForTestingMetadata = {
+        ...DEFAULT_SETTINGS_FOR_TESTS,
+        additionalMetadataBeforeArchiving: {
+            ...DEFAULT_SETTINGS_FOR_TESTS.additionalMetadataBeforeArchiving,
+            addMetadata: true,
+            metadata,
+        },
+    };
+
+    test("Placeholders in metadata get resolved", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "# Archived"],
+            ["# Archived", "", `- [x] foo ${metadataWithResolvedPlaceholders}`, ""],
+            settingsForTestingMetadata
+        );
+    });
+
+    test("Metadata gets appended only to top-level tasks", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "\t- [x] bar", "# Archived"],
+            [
+                "# Archived",
+                "",
+                `- [x] foo ${metadataWithResolvedPlaceholders}`,
+                "\t- [x] bar",
+                "",
+            ],
+            settingsForTestingMetadata
+        );
+    });
+
+    test("Appends metadata only to top-level tasks while archiving nested tasks", async () => {
+        await archiveTasksRecursivelyAndCheckActiveFile(
+            ["- [ ] foo", "\t- [x] bar", "\t\t- [x] baz", "# Archived"],
+            [
+                "- [ ] foo",
+                "# Archived",
+                "",
+                `- [x] bar ${metadataWithResolvedPlaceholders}`,
+                "\t- [x] baz",
+                "",
+            ],
+            settingsForTestingMetadata
         );
     });
 });

@@ -10,10 +10,12 @@ import { ToggleSetting } from "./ToggleSetting";
 
 import ObsidianTaskArchiver from "../../ObsidianTaskArchiverPlugin";
 import { Settings } from "../../Settings";
+import { PlaceholderResolver } from "../../features/PlaceholderResolver";
 
 interface ArchiverSettingsProps {
   settings: Settings;
   plugin: ObsidianTaskArchiver;
+  placeholderResolver: PlaceholderResolver;
 }
 
 function validatePattern(pattern: string) {
@@ -97,13 +99,25 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
   const [headingDepth, setHeadingDepth] = createSignal(
     props.settings.archiveHeadingDepth
   );
+
   const [useWeeks, setUseWeeks] = createSignal(props.settings.useWeeks);
   const [weeklyNoteFormat, setWeeklyNoteFormat] = createSignal(
     props.settings.weeklyNoteFormat
   );
+
   const [useDays, setUseDays] = createSignal(props.settings.useDays);
   const [dailyNoteFormat, setDailyNoteFormat] = createSignal(
     props.settings.dailyNoteFormat
+  );
+
+  const [addMetadata, setAddMetadata] = createSignal(
+    props.settings.additionalMetadataBeforeArchiving.addMetadata
+  );
+  const [metadata, setMetadata] = createSignal(
+    props.settings.additionalMetadataBeforeArchiving.metadata
+  );
+  const [metadataDateFormat, setMetadataDateFormat] = createSignal(
+    props.settings.additionalMetadataBeforeArchiving.dateFormat
   );
 
   const getValidationMessage = () => {
@@ -293,6 +307,54 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
           }
           description={<DateFormatDescription dateFormat={dateFormat()} />}
           value={dateFormat()}
+          class="archiver-setting-sub-item"
+        />
+      </Show>
+
+      <ToggleSetting
+        onClick={async () => {
+          const inverse = !addMetadata();
+          setAddMetadata(inverse);
+          props.settings.additionalMetadataBeforeArchiving.addMetadata = inverse;
+          await props.plugin.saveSettings();
+        }}
+        name={"Append some metadata to task before archiving"}
+        value={addMetadata()}
+      />
+      <Show when={addMetadata()} keyed>
+        <TextSetting
+          onInput={async ({ currentTarget: { value } }) => {
+            setMetadata(value);
+            props.settings.additionalMetadataBeforeArchiving.metadata = value;
+            await props.plugin.saveSettings();
+          }}
+          name="Metadata to append"
+          description={
+            <>
+              <PlaceholdersDescription />
+              <br />
+              Current result:{" "}
+              <code>
+                - [x] water the cat #task{" "}
+                {props.placeholderResolver.resolvePlaceholders(
+                  metadata(),
+                  metadataDateFormat()
+                )}
+              </code>
+            </>
+          }
+          value={metadata()}
+          class="archiver-setting-sub-item"
+        />
+        <TextSetting
+          onInput={async ({ currentTarget: { value } }) => {
+            setMetadataDateFormat(value);
+            props.settings.additionalMetadataBeforeArchiving.dateFormat = value;
+            await props.plugin.saveSettings();
+          }}
+          name="Date format"
+          description={<DateFormatDescription dateFormat={metadataDateFormat()} />}
+          value={metadataDateFormat()}
           class="archiver-setting-sub-item"
         />
       </Show>

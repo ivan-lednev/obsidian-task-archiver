@@ -5,6 +5,7 @@ import { EditorFile } from "../../ActiveFile";
 import { BlockParser } from "../../parser/BlockParser";
 import { SectionParser } from "../../parser/SectionParser";
 import { DateTreeResolver } from "../DateTreeResolver";
+import { PlaceholderResolver } from "../PlaceholderResolver";
 import { TaskTester } from "../TaskTester";
 
 export const DEFAULT_SETTINGS_FOR_TESTS = {
@@ -29,6 +30,11 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
         replacement: "@$1",
         replacementTest: "task #some-tag",
     },
+    additionalMetadataBeforeArchiving: {
+        addMetadata: false,
+        metadata: "",
+        dateFormat: "YYYY-MM-DD",
+    },
 };
 
 export class TestDependencies {
@@ -46,12 +52,14 @@ export class TestDependencies {
         );
         this.dateTreeResolver = new DateTreeResolver(settings);
         this.taskTester = new TaskTester(settings);
+        this.placeholderResolver = new PlaceholderResolver(this.mockWorkspace);
     }
 }
 
 // This is needed to pass `instanceof` checks
 function buildMockMarkdownTFile(fileState) {
     return Object.assign(new TFile(), {
+        basename: "mock-file-base-name",
         state: fileState,
         extension: "md",
     });

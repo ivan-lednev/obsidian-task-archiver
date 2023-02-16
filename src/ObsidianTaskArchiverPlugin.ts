@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { Archiver } from "./features/Archiver";
 import { DateTreeResolver } from "./features/DateTreeResolver";
 import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
+import { PlaceholderResolver } from "./features/PlaceholderResolver";
 import { TaskListSorter } from "./features/TaskListSorter";
 import { TaskTester } from "./features/TaskTester";
 import { BlockParser } from "./parser/BlockParser";
@@ -30,8 +31,8 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.addSettingTab(new ArchiverSettingTab(this.app, this));
-        this.initializeDependencies();
+        const { placeholderResolver } = this.initializeDependencies();
+        this.addSettingTab(new ArchiverSettingTab(this.app, this, placeholderResolver));
         this.addCommands();
     }
 
@@ -110,6 +111,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         );
         const taskTester = new TaskTester(this.settings);
         const dateTreeResolver = new DateTreeResolver(this.settings);
+        const placeholderResolver = new PlaceholderResolver(this.app.workspace);
 
         this.archiver = new Archiver(
             this.app.vault,
@@ -117,6 +119,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             parser,
             dateTreeResolver,
             taskTester,
+            placeholderResolver,
             this.settings
         );
         this.taskListSorter = new TaskListSorter(parser, taskTester, this.settings);
@@ -124,6 +127,8 @@ export default class ObsidianTaskArchiver extends Plugin {
             parser,
             this.settings
         );
+
+        return { placeholderResolver };
     }
 
     private createCheckCallbackForPreviewAndEditView(

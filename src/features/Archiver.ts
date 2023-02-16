@@ -3,6 +3,7 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { cloneDeep, isEmpty } from "lodash";
 
 import { DateTreeResolver } from "./DateTreeResolver";
+import { PlaceholderResolver } from "./PlaceholderResolver";
 import { TaskTester } from "./TaskTester";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
@@ -14,7 +15,6 @@ import {
     deepExtractBlocks,
     detectHeadingUnderCursor,
     detectListItemUnderCursor,
-    detectListUnderCursor,
     findSectionRecursively,
     shallowExtractBlocks,
 } from "../Util";
@@ -45,9 +45,6 @@ interface TreeEditorCallback {
 }
 
 export class Archiver {
-    private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
-    private static readonly ACTIVE_FILE_PLACEHOLDER_NEW = "{{sourceFileName}}";
-    private static readonly DATE_PLACEHOLDER = "{{date}}";
     private readonly taskFilter: TreeFilter;
 
     constructor(
@@ -56,6 +53,7 @@ export class Archiver {
         private readonly parser: SectionParser,
         private readonly dateTreeResolver: DateTreeResolver,
         private readonly taskTester: TaskTester,
+        private readonly placeholderResolver: PlaceholderResolver,
         private readonly settings: Settings,
         private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
@@ -136,6 +134,21 @@ export class Archiver {
         });
     }
 
+    private appendMetadata(blocks: Block[]) {
+        const { metadata, dateFormat } =
+            this.settings.additionalMetadataBeforeArchiving;
+        const resolvedMetadata = this.placeholderResolver.resolvePlaceholders(
+            metadata,
+            dateFormat
+        );
+
+        return blocks.map((block) => {
+            const updatedBlock = cloneDeep(block);
+            updatedBlock.text = `${block.text} ${resolvedMetadata}`;
+            return updatedBlock;
+        });
+    }
+
     async deleteTasksInActiveFile(file: ActiveFile) {
         const tasks = await this.extractTasksFromActiveFile(file, shallowExtractBlocks);
         return isEmpty(tasks) ? "No tasks to delete" : `Deleted ${tasks.length} tasks`;
@@ -159,9 +172,12 @@ export class Archiver {
     }
 
     private async archiveTasks(tasks: Block[], file: ActiveFile) {
-        // todo: add transformers
+        // todo: add Mapper/Pipe
         if (this.settings.textReplacement.applyReplacement) {
             tasks = this.applyReplacementRecursively(tasks);
+        }
+        if (this.settings.additionalMetadataBeforeArchiving.addMetadata) {
+            tasks = this.appendMetadata(tasks);
         }
 
         const archiveFile = await this.getArchiveFile(file);
@@ -238,20 +254,14 @@ export class Archiver {
         return await this.getOrCreateFile(archiveFileName);
     }
 
-    private getActiveFileBaseName() {
-        return this.workspace.getActiveFile().basename;
-    }
-
     private buildArchiveFileName() {
-        // todo: to separate method
-        const archiveFileBaseName = this.settings.defaultArchiveFileName
-            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER, this.getActiveFileBaseName())
-            .replace(Archiver.ACTIVE_FILE_PLACEHOLDER_NEW, this.getActiveFileBaseName())
-            .replace(
-                Archiver.DATE_PLACEHOLDER,
-                window.moment().format(this.settings.dateFormat)
+        const { defaultArchiveFileName, dateFormat } = this.settings;
+        const fileNameWithResolvedPlaceholders =
+            this.placeholderResolver.resolvePlaceholders(
+                defaultArchiveFileName,
+                dateFormat
             );
-        return `${archiveFileBaseName}.md`;
+        return `${fileNameWithResolvedPlaceholders}.md`;
     }
 
     private async getOrCreateFile(name: string) {

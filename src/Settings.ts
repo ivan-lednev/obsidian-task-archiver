@@ -10,6 +10,12 @@ export interface TextReplacementSettings {
     replacementTest: string;
 }
 
+export interface AdditionalMetadataSettings {
+    addMetadata: boolean;
+    dateFormat: string;
+    metadata: string;
+}
+
 export interface Settings {
     dateFormat: string;
     archiveHeading: string;
@@ -26,6 +32,7 @@ export interface Settings {
     archiveAllCheckedTaskTypes: boolean;
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
+    additionalMetadataBeforeArchiving: AdditionalMetadataSettings;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -51,5 +58,10 @@ export const DEFAULT_SETTINGS: Settings = {
         regex: "#([A-Za-z-]+)",
         replacement: "@$1",
         replacementTest: "task #some-tag",
+    },
+    additionalMetadataBeforeArchiving: {
+        dateFormat: "YYYY-MM-DD",
+        addMetadata: false,
+        metadata: "(this was archived)",
     },
 };
