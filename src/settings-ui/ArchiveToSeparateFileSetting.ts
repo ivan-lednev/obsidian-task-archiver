@@ -30,41 +30,6 @@ export class ArchiveToSeparateFileSetting {
             });
 
         if (this.plugin.settings.archiveToSeparateFile) {
-            new Setting(this.containerEl).setName("{{date}} format").then((setting) => {
-                setting.addMomentFormat((momentFormat) => {
-                    setting.descEl.appendChild(
-                        createFragment((fragment) => {
-                            fragment.appendText("For more syntax, refer to ");
-                            fragment.createEl(
-                                "a",
-                                {
-                                    text: "format reference",
-                                    href: "https://momentjs.com/docs/#/displaying/format/",
-                                },
-                                (a) => {
-                                    a.setAttr("target", "_blank");
-                                }
-                            );
-                            fragment.createEl("br");
-                            fragment.appendText(
-                                "Your current syntax looks like this: "
-                            );
-                            momentFormat.setSampleEl(fragment.createEl("b"));
-                            fragment.createEl("br");
-                        })
-                    );
-
-                    momentFormat
-                        .setDefaultFormat(this.plugin.settings.dateFormat)
-                        .setPlaceholder(this.plugin.settings.dateFormat)
-                        .setValue(this.plugin.settings.dateFormat)
-                        .onChange(async (value) => {
-                            this.plugin.settings.dateFormat = value;
-                            await this.plugin.saveSettings();
-                        });
-                });
-            });
-
             new Setting(this.containerEl)
                 .setName("Archive file name")
                 .setDesc(
@@ -102,6 +67,41 @@ export class ArchiveToSeparateFileSetting {
                             await this.plugin.saveSettings();
                         });
                 });
+
+            new Setting(this.containerEl).setName("{{date}} format").then((setting) => {
+                setting.addMomentFormat((momentFormat) => {
+                    setting.descEl.appendChild(
+                        createFragment((fragment) => {
+                            fragment.appendText("For more syntax, refer to ");
+                            fragment.createEl(
+                                "a",
+                                {
+                                    text: "format reference",
+                                    href: "https://momentjs.com/docs/#/displaying/format/",
+                                },
+                                (a) => {
+                                    a.setAttr("target", "_blank");
+                                }
+                            );
+                            fragment.createEl("br");
+                            fragment.appendText(
+                                "Your current syntax looks like this: "
+                            );
+                            momentFormat.setSampleEl(fragment.createEl("b"));
+                            fragment.createEl("br");
+                        })
+                    );
+
+                    momentFormat
+                        .setDefaultFormat(this.plugin.settings.dateFormat)
+                        .setPlaceholder(this.plugin.settings.dateFormat)
+                        .setValue(this.plugin.settings.dateFormat)
+                        .onChange(async (value) => {
+                            this.plugin.settings.dateFormat = value;
+                            await this.plugin.saveSettings();
+                        });
+                });
+            });
         }
     }
 }
