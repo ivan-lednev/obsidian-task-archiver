@@ -2,14 +2,21 @@ import { Setting, TextAreaComponent } from "obsidian";
 
 export class TryOutComponent {
     private resultTextArea: TextAreaComponent;
+    private inputTextArea: TextAreaComponent;
 
     constructor(
         private readonly containerEl: HTMLElement,
-        private readonly initialInput: string,
-        private readonly initialOutput: string,
         private readonly onChange: (value: string) => void | Promise<void>
     ) {
         this.display();
+    }
+
+    setOutput(output: string) {
+        this.resultTextArea.setValue(output);
+    }
+
+    setInput(value: string) {
+        this.inputTextArea.setValue(value);
     }
 
     private display() {
@@ -19,8 +26,8 @@ export class TryOutComponent {
 
             setting.controlEl.appendText("Input: ");
             setting.addTextArea((input) => {
+                this.inputTextArea = input;
                 input.setPlaceholder("Input");
-                input.setValue(this.initialInput);
                 input.onChange(this.onChange);
             });
 
@@ -29,12 +36,7 @@ export class TryOutComponent {
                 this.resultTextArea = output;
                 output.setDisabled(true);
                 output.setPlaceholder("Output");
-                output.setValue(this.initialOutput);
             });
         });
-    }
-
-    displayOutput(output: string) {
-        this.resultTextArea.setValue(output);
     }
 }

@@ -6,7 +6,7 @@ import ObsidianTaskArchiver from "../ObsidianTaskArchiverPlugin";
 
 export class AdditionalTaskFilter {
     private tryOutComponent: TryOutComponent;
-    private tryOutInput = "Feed the cat #task";
+    private tryOutInput: string;
     private patternInput = this.plugin.settings.additionalTaskPattern;
 
     constructor(
@@ -44,16 +44,11 @@ export class AdditionalTaskFilter {
                     });
             });
 
-        this.tryOutComponent = new TryOutComponent(
-            this.containerEl,
-            this.tryOutInput,
-            "",
-            (value) => {
-                this.setTryOutInput(value);
-            }
+        this.tryOutComponent = new TryOutComponent(this.containerEl, (value) =>
+            this.setTryOutInput(value)
         );
 
-        this.displayTestResult();
+        this.setTryOutInput("Feed the cat #task");
     }
 
     private setPatternInput(value: string) {
@@ -63,11 +58,12 @@ export class AdditionalTaskFilter {
 
     private setTryOutInput(value: string) {
         this.tryOutInput = value;
+        this.tryOutComponent.setInput(value);
         this.displayTestResult();
     }
 
     private displayTestResult() {
-        this.tryOutComponent.displayOutput(this.getValidationMessage());
+        this.tryOutComponent.setOutput(this.getValidationMessage());
     }
 
     private getValidationMessage() {

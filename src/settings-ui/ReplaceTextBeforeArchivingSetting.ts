@@ -60,19 +60,22 @@ export class ReplaceTextBeforeArchivingSetting {
 
             this.tryOutComponent = new TryOutComponent(
                 this.containerEl,
-                this.plugin.settings.textReplacement.replacementTest,
-                this.getReplacementResult(),
                 async (value) => {
                     this.plugin.settings.textReplacement.replacementTest = value;
                     await this.plugin.saveSettings();
                     this.displayResult();
                 }
             );
+
+            this.tryOutComponent.setInput(
+                this.plugin.settings.textReplacement.replacementTest
+            );
+            this.displayResult();
         }
     }
 
     private displayResult() {
-        this.tryOutComponent.displayOutput(this.getReplacementResult());
+        this.tryOutComponent.setOutput(this.getReplacementResult());
     }
 
     private getReplacementResult() {
