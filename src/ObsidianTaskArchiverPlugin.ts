@@ -1,7 +1,6 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
 
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
-import { ArchiverSettingTab } from "./settings-ui/ArchiverSettingTab";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { Archiver } from "./features/Archiver";
 import { DateTreeResolver } from "./features/DateTreeResolver";
@@ -10,6 +9,7 @@ import { TaskListSorter } from "./features/TaskListSorter";
 import { TaskTester } from "./features/TaskTester";
 import { BlockParser } from "./parser/BlockParser";
 import { SectionParser } from "./parser/SectionParser";
+import { ArchiverSettingTab } from "./settings-ui/ArchiverSettingTab";
 
 async function withNotice(cb: () => Promise<string>) {
     try {
