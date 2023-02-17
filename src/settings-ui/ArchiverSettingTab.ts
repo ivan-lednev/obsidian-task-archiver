@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 
+import { AdditionalTaskFilter } from "./AdditionalTaskFilter";
 import { ArchiveToSeparateFileSetting } from "./ArchiveToSeparateFileSetting";
 import { DateTreeSetting } from "./DateTreeSetting";
 import { ReplaceTextBeforeArchivingSetting } from "./ReplaceTextBeforeArchivingSetting";
@@ -16,38 +17,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
         this.containerEl.empty();
         this.containerEl.createEl("h1", { text: "Archiver settings" });
 
-        new Setting(this.containerEl)
-            .setName("Additional task pattern")
-            .setDesc(
-                "Only archive tasks matching this pattern, typically '#task' but can be anything."
-            )
-            .addText((textComponent) => {
-                textComponent
-                    .setValue(this.plugin.settings.additionalTaskPattern)
-                    .onChange(async (value) => {
-                        const validation =
-                            this.containerEl.querySelector("#pattern-validation");
-                        validation.setText(getPatternValidation(value));
-
-                        this.plugin.settings.additionalTaskPattern = value;
-                        await this.plugin.saveSettings();
-                    });
-            })
-            .then((setting) => {
-                setting.descEl.appendChild(
-                    createFragment((fragment) => {
-                        fragment.createEl("br");
-                        fragment.createEl("b", {
-                            text: getPatternValidation(
-                                this.plugin.settings.additionalTaskPattern
-                            ),
-                            attr: {
-                                id: "pattern-validation",
-                            },
-                        });
-                    })
-                );
-            });
+        new AdditionalTaskFilter(this.containerEl.createDiv(), this.plugin);
 
         new Setting(this.containerEl)
             .setName("Archive all checked tasks")
@@ -222,20 +192,5 @@ export class ArchiverSettingTab extends PluginSettingTab {
             });
 
         new DateTreeSetting(this.containerEl.createDiv(), this.plugin);
-    }
-}
-
-function getPatternValidation(pattern: string) {
-    return validatePattern(pattern)
-        ? "✔️ The current pattern is valid"
-        : "❌ The current pattern is invalid";
-}
-
-function validatePattern(pattern: string) {
-    try {
-        new RegExp(pattern);
-        return true;
-    } catch (e) {
-        return false;
     }
 }

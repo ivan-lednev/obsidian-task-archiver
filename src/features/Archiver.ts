@@ -7,7 +7,15 @@ import { TaskTester } from "./TaskTester";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
 import { Settings } from "../Settings";
-import { addNewlinesToSection, buildHeadingPattern, buildIndentation, deepExtractBlocks, detectHeadingUnderCursor, findSectionRecursively, shallowExtractBlocks } from "../Util";
+import {
+    addNewlinesToSection,
+    buildHeadingPattern,
+    buildIndentation,
+    deepExtractBlocks,
+    detectHeadingUnderCursor,
+    findSectionRecursively,
+    shallowExtractBlocks,
+} from "../Util";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
