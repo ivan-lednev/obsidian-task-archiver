@@ -6,11 +6,9 @@ import {
 import { Settings } from "../Settings";
 
 export class TaskTester {
-    private readonly initialPattern: string;
     private compiledPattern: RegExp;
 
     constructor(private readonly settings: Settings) {
-        this.initialPattern = settings.additionalTaskPattern;
         this.compiledPattern = new RegExp(this.settings.additionalTaskPattern);
     }
 
@@ -37,15 +35,6 @@ export class TaskTester {
         if (!this.settings.additionalTaskPattern) {
             return true;
         }
-        this.refreshPattern();
         return this.compiledPattern.test(line);
-    }
-
-    // TODO: we don't need this any longer
-    private refreshPattern() {
-        if (this.initialPattern === this.settings.additionalTaskPattern) {
-            return;
-        }
-        this.compiledPattern = new RegExp(this.settings.additionalTaskPattern);
     }
 }

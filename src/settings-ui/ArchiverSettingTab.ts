@@ -17,8 +17,6 @@ export class ArchiverSettingTab extends PluginSettingTab {
         this.containerEl.empty();
         this.containerEl.createEl("h1", { text: "Archiver settings" });
 
-        new AdditionalTaskFilter(this.containerEl.createDiv(), this.plugin);
-
         new Setting(this.containerEl)
             .setName("Archive all checked tasks")
             .setDesc(
@@ -32,6 +30,8 @@ export class ArchiverSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     });
             });
+
+        new AdditionalTaskFilter(this.containerEl.createDiv(), this.plugin);
 
         // this.containerEl.createEl("h2", {
         //     text: "Adding text/metadata to top-level completed tasks",
@@ -160,8 +160,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
             });
 
         new Setting(this.containerEl)
-            .setName("Add newlines around the archive")
-            .setDesc("Add newlines around the contents of archive headings")
+            .setName("Add newlines around the archive heading")
             .addToggle((toggleComponent) => {
                 toggleComponent
                     .setValue(this.plugin.settings.addNewlinesAroundHeadings)
@@ -173,7 +172,6 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
         new Setting(this.containerEl)
             .setName("Depth of new archive headings")
-            .setDesc("New archives will be created by repeating '#' this many times")
             .addDropdown((dropdownComponent) => {
                 dropdownComponent
                     .addOptions({
