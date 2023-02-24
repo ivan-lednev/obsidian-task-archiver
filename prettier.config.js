@@ -6,4 +6,12 @@ module.exports = {
     importOrderSeparation: true,
     importOrderSortSpecifiers: true,
     endOfLine: "crlf",
+    overrides: [
+        {
+            files: ["*.tsx"],
+            options: {
+                tabWidth: 2,
+            },
+        },
+    ],
 };

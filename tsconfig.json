@@ -9,7 +9,9 @@
         "importHelpers": true,
         "lib": ["dom", "es5", "scripthost", "es2015"],
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "jsx": "preserve",
+        "jsxImportSource": "solid-js"
     },
     "include": ["**/*.ts"]
 }

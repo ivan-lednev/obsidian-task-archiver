@@ -1,7 +1,9 @@
 import { optimizeLodashImports } from "@optimize-lodash/rollup-plugin";
+import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
+import withSolid from "rollup-preset-solid";
 
 const isProd = process.env.BUILD === "production";
 
@@ -27,6 +29,7 @@ export default {
         }),
         nodeResolve({ browser: true }),
         commonjs(),
+        babel({ extensions: [".tsx"], babelHelpers: "bundled" }),
         optimizeLodashImports(),
     ],
 };

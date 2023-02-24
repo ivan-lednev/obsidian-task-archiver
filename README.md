@@ -212,17 +212,17 @@ Open the command palette and run one of the archiver [commands](#commands).
 
 ## Acknowledgements
 
-This plugin is a simple & incomplete (for now) implementation of the archiving features
-of [org-mode](https://orgmode.org/).
+This plugin is an implementation of some features of [org-mode](https://orgmode.org/) for Emacs.
 
 Also, I relied on the code from these excellent plugins:
-
-- [obsidian-kanban](https://github.com/mgmeyers/obsidian-kanban);
-- [obsidian-outliner](https://github.com/vslinko/obsidian-outliner).
+- [obsidian-kanban](https://github.com/mgmeyers/obsidian-kanban)
+- [obsidian-outliner](https://github.com/vslinko/obsidian-outliner)
+- [obsidian-commander](https://github.com/phibr0/obsidian-commander)
 
 ### Contributors
 
 - Richard Cook (wealthychef@gmail.com)
 
+## Development
 
-
+- [Solid.js](https://www.solidjs.com/) is used for the settings page.

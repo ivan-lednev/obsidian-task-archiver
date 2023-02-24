@@ -18,6 +18,7 @@ export interface Settings {
     useWeeks: boolean;
     dailyNoteFormat: string;
     useDays: boolean;
+    useAdditionalTaskPattern: boolean;
     additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
@@ -34,6 +35,7 @@ export const DEFAULT_SETTINGS: Settings = {
     useWeeks: true,
     dailyNoteFormat: "YYYY-MM-DD",
     useDays: false,
+    useAdditionalTaskPattern: false,
     additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
     archiveToSeparateFile: false,
