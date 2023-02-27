@@ -138,6 +138,67 @@ export function detectHeadingUnderCursor(editor: Editor) {
     return thisHeadingRange;
 }
 
+export function detectListItemUnderCursor(editor: Editor) {
+    let thisListStartLineNumber = null;
+
+    for (
+        let lookingAtLineNumber = editor.getCursor().line;
+        lookingAtLineNumber >= 0;
+        lookingAtLineNumber--
+    ) {
+        const lookingAtLine = editor.getLine(lookingAtLineNumber);
+        if (!isListItem(lookingAtLine) && !isIndentedLine(lookingAtLine)) {
+            break;
+        }
+        thisListStartLineNumber = lookingAtLineNumber;
+        // todo: tidy up
+        if (isListItem(lookingAtLine)) {
+            break;
+        }
+    }
+
+    if (thisListStartLineNumber === null) {
+        return null;
+    }
+
+    const spacesRegex = /^(\s*).*/;
+    const thisListItemIndentationLength = editor
+        .getLine(thisListStartLineNumber)
+        .replace(spacesRegex, "$1").length;
+    const thisListSubItemIndentationPattern = new RegExp(
+        `^\\s{${thisListItemIndentationLength + 1},}`
+    );
+    const lineBelowListStart = thisListStartLineNumber + 1;
+    let thisListLastLineNumber = thisListStartLineNumber;
+
+    for (
+        let lookingAtLineNumber = lineBelowListStart;
+        lookingAtLineNumber <= editor.lastLine();
+        lookingAtLineNumber++
+    ) {
+        const lookingAtLine = editor.getLine(lookingAtLineNumber);
+        if (!thisListSubItemIndentationPattern.test(lookingAtLine)) {
+            break;
+        }
+        thisListLastLineNumber = lookingAtLineNumber;
+    }
+
+    if (thisListLastLineNumber === null) {
+        return null;
+    }
+
+    const lineAfterListNumber = thisListLastLineNumber + 1;
+
+    const thisListRange: [EditorPosition, EditorPosition] = [
+        { line: thisListStartLineNumber, ch: 0 },
+        {
+            line: lineAfterListNumber,
+            ch: 0,
+        },
+    ];
+    return thisListRange;
+}
+
 export function detectListUnderCursor(editor: Editor) {
     let thisListStartLineNumber = null;
 

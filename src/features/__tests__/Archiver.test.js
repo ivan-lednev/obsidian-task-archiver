@@ -543,6 +543,32 @@ async function archiveHeading(
     return testDependencies;
 }
 
+async function archiveTaskUnderCursorAndCheckActiveFile(
+    activeFileState,
+    expectedActiveFileState,
+    cursor = { line: 0, ch: 0 },
+    settings = DEFAULT_SETTINGS_FOR_TESTS
+) {
+    const {
+        mockActiveFile: { state },
+    } = await archiveTaskUnderCursor(activeFileState, cursor, settings);
+    expect(state).toEqual(expectedActiveFileState);
+}
+
+async function archiveTaskUnderCursor(
+    activeFileState,
+    cursor = { line: 0, ch: 0 },
+    settings = DEFAULT_SETTINGS_FOR_TESTS
+) {
+    const testDependencies = new TestDependencies(activeFileState, settings);
+    const archiver = buildArchiver(testDependencies, settings);
+
+    testDependencies.mockEditor.cursor = cursor;
+    await archiver.archiveTaskUnderCursor(testDependencies.mockEditor);
+
+    return testDependencies;
+}
+
 describe("Archive heading under cursor", () => {
     test("Base case", async () => {
         await archiveHeadingAndCheckActiveFile(
@@ -554,14 +580,15 @@ describe("Archive heading under cursor", () => {
     test("Single line heading", async () => {
         await archiveHeadingAndCheckActiveFile(
             ["# h1", "# Archived", ""],
-            ["", "# Archived", "", "## h1"]
+            ["# Archived", "", "## h1"]
         );
     });
 
+    // TODO: add newlines around archive after archiving
     test("Nested heading", async () => {
         await archiveHeadingAndCheckActiveFile(
             ["# h1", "## h2", "text", "# Archived", ""],
-            ["# h1", "", "# Archived", "", "## h2", "text"],
+            ["# h1", "# Archived", "", "## h2", "text"],
             { line: 2, ch: 0 }
         );
     });
@@ -586,5 +613,30 @@ describe("Archive heading under cursor", () => {
             "# Archived",
             "## h1",
         ]);
+    });
+});
+
+describe("Archive list item under cursor", () => {
+    test("Base case", async () => {
+        await archiveTaskUnderCursorAndCheckActiveFile(
+            ["- [ ] task", "\t- sub-item", "- [x] completed task"],
+            [
+                "- [x] completed task",
+                "",
+                "# Archived",
+                "",
+                "- [x] task",
+                "\t- sub-item",
+                "",
+            ]
+        );
+    });
+
+    test("Cursor is not on the first task in the list", async () => {
+        await archiveTaskUnderCursorAndCheckActiveFile(
+            ["- [ ] 1", "- [ ] 2"],
+            ["- [ ] 1", "", "# Archived", "", "- [x] 2", ""],
+            { line: 1, ch: 0 }
+        );
     });
 });

@@ -31,9 +31,11 @@ export default class ObsidianTaskArchiver extends Plugin {
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new ArchiverSettingTab(this.app, this));
-
         this.initializeDependencies();
+        this.addCommands();
+    }
 
+    private addCommands() {
         this.addCommand({
             id: "archive-tasks",
             name: "Archive tasks in this file",
@@ -74,6 +76,14 @@ export default class ObsidianTaskArchiver extends Plugin {
             name: "Turn list items at this level into headings",
             editorCallback: (editor) => {
                 this.listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+            },
+        });
+
+        this.addCommand({
+            id: "toggle-done-and-archive",
+            name: "Toggle task done and archive it",
+            editorCallback: (editor) => {
+                this.archiver.archiveTaskUnderCursor(editor);
             },
         });
     }

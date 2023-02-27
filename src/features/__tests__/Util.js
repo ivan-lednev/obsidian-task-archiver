@@ -1,4 +1,5 @@
 import { TFile } from "obsidian";
+import { EditorPosition } from "obsidian";
 
 import { EditorFile } from "../../ActiveFile";
 import { BlockParser } from "../../parser/BlockParser";
@@ -107,11 +108,15 @@ class MockEditor {
     }
 
     replaceRange(replacement, from, to) {
-        const toLineExclusive = to.line - from.line + 1;
-        this.activeFile.state.splice(
-            from.line,
-            toLineExclusive,
-            ...replacement.split("\n")
-        );
+        const newLines = replacement === "" ? [] : replacement.split("\n");
+        const deletingWithNewline = to.ch === 0;
+        const deleteCount = deletingWithNewline
+            ? to.line - from.line
+            : to.line - from.line + 1;
+        this.activeFile.state.splice(from.line, deleteCount, ...newLines);
+    }
+
+    setCursor(pos) {
+        this.cursor = pos;
     }
 }

@@ -13,6 +13,8 @@ import {
     buildIndentation,
     deepExtractBlocks,
     detectHeadingUnderCursor,
+    detectListItemUnderCursor,
+    detectListUnderCursor,
     findSectionRecursively,
     shallowExtractBlocks,
 } from "../Util";
@@ -77,19 +79,40 @@ export class Archiver {
         return await this.archiveTasksInActiveFile(file, deepExtractBlocks);
     }
 
+    async archiveTaskUnderCursor(editor: Editor) {
+        const thisTaskRange = detectListItemUnderCursor(editor);
+
+        if (thisTaskRange === null) {
+            return;
+        }
+
+        const thisTaskLines = editor.getRange(...thisTaskRange).split("\n");
+
+        editor.replaceRange("", ...thisTaskRange);
+
+        const parsedTaskRoot = this.parser.parse(thisTaskLines);
+        const parsedTaskBlock = parsedTaskRoot.blockContent.children[0];
+        // todo: tidy up
+        parsedTaskBlock.text = this.completeTask(parsedTaskBlock.text);
+        const activeFile = new EditorFile(editor);
+
+        await this.archiveTasks([parsedTaskBlock], activeFile);
+
+        const [thisTaskStart] = thisTaskRange;
+        editor.setCursor(thisTaskStart);
+    }
+
+    private completeTask(task: string) {
+        return task.replace("[ ]", "[x]");
+    }
+
     private async archiveTasksInActiveFile(
         file: ActiveFile,
         extractor: BlockExtractor
     ) {
         let tasks = await this.extractTasksFromActiveFile(file, extractor);
-        if (this.settings.textReplacement.applyReplacement) {
-            tasks = this.applyReplacementRecursively(tasks);
-        }
-        const archiveFile = await this.getArchiveFile(file);
 
-        await this.editFileTree(archiveFile, (tree: Section) =>
-            this.archiveBlocksToRoot(tasks, tree)
-        );
+        tasks = await this.archiveTasks(tasks, file);
 
         return isEmpty(tasks)
             ? "No tasks to archive"
@@ -135,15 +158,19 @@ export class Archiver {
         await this.archiveSection(activeFile, parsedHeading);
     }
 
-    async archiveSection(activeFile: ActiveFile, section: Section) {
-        const archiveFile = await this.getArchiveFile(activeFile);
+    private async archiveTasks(tasks: Block[], file: ActiveFile) {
+        // todo: add transformers
+        if (this.settings.textReplacement.applyReplacement) {
+            tasks = this.applyReplacementRecursively(tasks);
+        }
 
-        await this.editFileTree(archiveFile, (tree) => {
-            const archiveSection = this.getArchiveSectionFromRoot(tree);
-            const archiveHeadingLevel = archiveSection.tokenLevel;
-            section.recalculateTokenLevels(archiveHeadingLevel + 1);
-            archiveSection.appendChild(section);
-        });
+        const archiveFile = await this.getArchiveFile(file);
+
+        await this.editFileTree(archiveFile, (tree: Section) =>
+            this.archiveBlocksToRoot(tasks, tree)
+        );
+
+        return tasks;
     }
 
     private async getArchiveFile(activeFile: ActiveFile) {
@@ -242,5 +269,16 @@ export class Archiver {
     private stringifyTree(tree: Section) {
         const indentation = buildIndentation(this.settings.indentationSettings);
         return tree.stringify(indentation);
+    }
+
+    private async archiveSection(activeFile: ActiveFile, section: Section) {
+        const archiveFile = await this.getArchiveFile(activeFile);
+
+        await this.editFileTree(archiveFile, (tree) => {
+            const archiveSection = this.getArchiveSectionFromRoot(tree);
+            const archiveHeadingLevel = archiveSection.tokenLevel;
+            section.recalculateTokenLevels(archiveHeadingLevel + 1);
+            archiveSection.appendChild(section);
+        });
     }
 }
