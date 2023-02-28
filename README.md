@@ -180,7 +180,7 @@ Turns into:
 ```markdown
 - [ ] Incomplete task
     - [ ] Incomplete subtask
-  
+
 # Archived
 
 - [x] Completed subtask
@@ -191,7 +191,7 @@ Turns into:
 <details>
 <summary>Toggle task under cursor done and archive it</summary>
 
-When the cursor is on a task, this command completes the task and archives it at once. 
+When the cursor is on a task, this command completes the task and archives it at once.
 
 </details>
 
@@ -206,6 +206,11 @@ The plugin lets you configure the following:
 - what text makes a heading an archive;
 - whether to add newlines around headings when moving stuff around;
 - moving tasks to the current file or to a separate file.
+- appending metadata to completed tasks before archiving (like current date or source file name)
+- there are placeholders available (`{{date}}`, `{{sourceFileName}}`), which makes the system more flexible:
+    - You can insert a link to a daily note or source file name after the task like
+      so: `[[{{date}}]]`, `[[{{sourceFileName]]`
+    - You can send completed tasks to daily notes
 
 ### Date tree
 
@@ -221,6 +226,7 @@ Open the command palette and run one of the archiver [commands](#commands).
 This plugin is an implementation of some features of [org-mode](https://orgmode.org/) for Emacs.
 
 Also, I relied on the code from these excellent plugins:
+
 - [obsidian-kanban](https://github.com/mgmeyers/obsidian-kanban)
 - [obsidian-outliner](https://github.com/vslinko/obsidian-outliner)
 - [obsidian-commander](https://github.com/phibr0/obsidian-commander)
