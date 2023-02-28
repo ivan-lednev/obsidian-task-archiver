@@ -188,6 +188,12 @@ Turns into:
 ```
 
 </details>
+<details>
+<summary>Toggle task under cursor done and archive it</summary>
+
+When the cursor is on a task, this command completes the task and archives it at once. 
+
+</details>
 
 ## Configuration
 
