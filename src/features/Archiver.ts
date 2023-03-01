@@ -117,6 +117,7 @@ export class Archiver {
             : `Archived ${tasks.length} tasks`;
     }
 
+    // todo: move to its own class
     private applyReplacementRecursively(blocks: Block[]) {
         const { regex, replacement } = this.settings.textReplacement;
         const compiledRegex = new RegExp(regex);
@@ -134,6 +135,7 @@ export class Archiver {
         });
     }
 
+    // todo: move to its own class
     private appendMetadata(blocks: Block[]) {
         const { metadata, dateFormat } =
             this.settings.additionalMetadataBeforeArchiving;

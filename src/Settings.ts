@@ -16,7 +16,13 @@ export interface AdditionalMetadataSettings {
     metadata: string;
 }
 
+export enum TaskSortOrder {
+    NEWEST_FIRST = "Newest first",
+    NEWEST_LAST = "Newest last",
+}
+
 export interface Settings {
+    taskSortOrder: TaskSortOrder;
     dateFormat: string;
     archiveHeading: string;
     archiveHeadingDepth: number;
@@ -36,6 +42,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+    taskSortOrder: TaskSortOrder.NEWEST_LAST,
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",

@@ -8,6 +8,10 @@ export abstract class MarkdownNode<C extends MarkdownNode<C>> {
         this.children = [];
     }
 
+    prependChild(child: C) {
+        this.children.unshift(child);
+    }
+
     appendChild(child: C) {
         this.children.push(child);
     }

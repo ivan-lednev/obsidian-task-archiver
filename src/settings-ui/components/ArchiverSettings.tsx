@@ -1,6 +1,5 @@
 import { moment } from "obsidian";
 
-import { add, invert, replace } from "lodash";
 import { JSX, Match, Show, Switch, createSignal } from "solid-js";
 
 import { DropDownSetting } from "./DropDownSetting";
@@ -9,7 +8,7 @@ import { TextSetting } from "./TextSetting";
 import { ToggleSetting } from "./ToggleSetting";
 
 import ObsidianTaskArchiver from "../../ObsidianTaskArchiverPlugin";
-import { Settings } from "../../Settings";
+import { Settings, TaskSortOrder } from "../../Settings";
 import { PlaceholderResolver } from "../../features/PlaceholderResolver";
 
 interface ArchiverSettingsProps {
@@ -119,6 +118,7 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
   const [metadataDateFormat, setMetadataDateFormat] = createSignal(
     props.settings.additionalMetadataBeforeArchiving.dateFormat
   );
+  const [sortOrder, setSortOrder] = createSignal(props.settings.taskSortOrder);
 
   const getValidationMessage = () => {
     if (!validatePattern(taskPattern())) {
@@ -161,7 +161,20 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
           await props.plugin.saveSettings();
         }}
         name="Depth of new archive headings"
+        options={["1", "2", "3", "4", "5", "6"]}
         value={String(headingDepth())}
+      />
+      <DropDownSetting
+        onInput={async ({ currentTarget: { value } }) => {
+          // todo: handle this without an assertion?
+          const asserted = value as TaskSortOrder;
+          setSortOrder(asserted);
+          props.settings.taskSortOrder = asserted;
+          await props.plugin.saveSettings();
+        }}
+        name={"Order archived tasks"}
+        options={[TaskSortOrder.NEWEST_LAST, TaskSortOrder.NEWEST_FIRST]}
+        value={sortOrder()}
       />
       <ToggleSetting
         onClick={async () => {

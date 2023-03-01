@@ -2,6 +2,7 @@ import { TFile } from "obsidian";
 import { EditorPosition } from "obsidian";
 
 import { EditorFile } from "../../ActiveFile";
+import { TaskSortOrder } from "../../Settings";
 import { BlockParser } from "../../parser/BlockParser";
 import { SectionParser } from "../../parser/SectionParser";
 import { DateTreeResolver } from "../DateTreeResolver";
@@ -9,6 +10,7 @@ import { PlaceholderResolver } from "../PlaceholderResolver";
 import { TaskTester } from "../TaskTester";
 
 export const DEFAULT_SETTINGS_FOR_TESTS = {
+    taskSortOrder: TaskSortOrder.NEWEST_LAST,
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",

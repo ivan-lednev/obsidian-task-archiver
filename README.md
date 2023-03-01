@@ -199,6 +199,7 @@ When the cursor is on a task, this command completes the task and archives it at
 
 The plugin lets you configure the following:
 
+- Archived task sort order (newest first, newest last)
 - additional patterns to detect completed tasks (say, only archive tasks with `#task`)
 - archive any checked tasks, not just completed ones (`[>]`, `[-]`, etc.)
 - a regular expression for replacing the contents of the task during archiving; this is useful if you want to strip tags

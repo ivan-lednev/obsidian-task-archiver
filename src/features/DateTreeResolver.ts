@@ -1,4 +1,4 @@
-import { IndentationSettings, Settings } from "../Settings";
+import { IndentationSettings, Settings, TaskSortOrder } from "../Settings";
 import {
     addSurroundingNewlines,
     findBlockRecursively,
@@ -33,7 +33,11 @@ export class DateTreeResolver {
     mergeNewBlocksWithDateTree(root: Block, newBlocks: Block[]) {
         root.children = stripSurroundingNewlines(root.children);
         const insertionPoint = this.getCurrentDateBlock(root);
-        insertionPoint.children = [...insertionPoint.children, ...newBlocks];
+        // todo: duplication
+        insertionPoint.children =
+            this.settings.taskSortOrder === TaskSortOrder.NEWEST_FIRST
+                ? [...newBlocks, ...insertionPoint.children]
+                : [...insertionPoint.children, ...newBlocks];
         if (this.settings.addNewlinesAroundHeadings) {
             root.children = addSurroundingNewlines(root.children);
         }
@@ -53,7 +57,10 @@ export class DateTreeResolver {
                 context = thisDateInArchive;
             } else {
                 const newBlock = new ListBlock(dateLine);
-                context.appendChild(newBlock);
+                // todo: duplication
+                this.settings.taskSortOrder === TaskSortOrder.NEWEST_FIRST
+                    ? context.prependChild(newBlock)
+                    : context.appendChild(newBlock);
                 context = newBlock;
             }
         }

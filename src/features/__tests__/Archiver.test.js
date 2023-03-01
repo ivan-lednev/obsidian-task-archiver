@@ -2,6 +2,7 @@ import moment from "moment";
 
 import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./Util";
 
+import { TaskSortOrder } from "../../Settings";
 import { Archiver } from "../Archiver";
 
 const WEEK = "2021-01-W-1";
@@ -689,6 +690,41 @@ describe("Adding metadata to tasks", () => {
                 "",
             ],
             settingsForTestingMetadata
+        );
+    });
+});
+
+describe("Sort orders", () => {
+    test("Newest tasks at the top", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "# Archived", "- [x] old task"],
+            ["# Archived", "", "- [x] foo", "- [x] old task", ""],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+            }
+        );
+    });
+
+    test("Newest tasks at the top with a date tree", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "# Archived", "- [[2020-01-01]]", "\t- [x] old task"],
+            [
+                "# Archived",
+                "",
+                "- [[2021-01-W-1]]",
+                "\t- [[2021-01-01]]",
+                "\t\t- [x] foo",
+                "- [[2020-01-01]]",
+                "\t- [x] old task",
+                "",
+            ],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+                useDays: true,
+                useWeeks: true,
+            }
         );
     });
 });
