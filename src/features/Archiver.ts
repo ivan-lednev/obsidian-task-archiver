@@ -1,6 +1,6 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { cloneDeep, isEmpty } from "lodash";
+import { cloneDeep, dropRight, isEmpty } from "lodash";
 
 import { DateTreeResolver } from "./DateTreeResolver";
 import { PlaceholderResolver } from "./PlaceholderResolver";
@@ -267,9 +267,16 @@ export class Archiver {
     }
 
     private async getOrCreateFile(name: string) {
-        const file =
-            this.vault.getAbstractFileByPath(name) ||
-            (await this.vault.create(name, ""));
+        let file = this.vault.getAbstractFileByPath(name);
+        if (!file) {
+            const pathSeparator = "/";
+            const pathNodes = name.split(pathSeparator);
+            if (pathNodes.length > 1) {
+                const folderPath = dropRight(pathNodes).join(pathSeparator);
+                await this.vault.createFolder(folderPath);
+            }
+            file = await this.vault.create(name, "");
+        }
 
         if (!(file instanceof TFile)) {
             throw new Error(`${name} is not a valid markdown file`);

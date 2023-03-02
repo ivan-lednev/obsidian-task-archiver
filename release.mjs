@@ -53,6 +53,6 @@ gitAdd.on("close", () => {
     });
 
     gitCommit.on("close", () => {
-        cp.spawn("git", ["tag", versionString], {stdio: "inherit"})
-    })
+        cp.spawn("git", ["tag", versionString], { stdio: "inherit" });
+    });
 });
