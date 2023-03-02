@@ -10,7 +10,11 @@ export interface ToggleSettingProps extends SettingProps<boolean> {
 
 export function ToggleSetting(props: ToggleSettingProps) {
   return (
-    <BaseSetting name={props.name} description={props.description} class="mod-toggle">
+    <BaseSetting
+      name={props.name}
+      description={props.description}
+      class={classNames("mod-toggle", props.class)}
+    >
       <div
         class={classNames("checkbox-container", { "is-enabled": props.value })}
         onClick={props.onClick}

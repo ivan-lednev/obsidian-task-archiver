@@ -34,6 +34,7 @@ export interface Settings {
     additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
+    archiveUnderHeading: boolean;
     defaultArchiveFileName: string;
     archiveAllCheckedTaskTypes: boolean;
     indentationSettings: IndentationSettings;
@@ -53,6 +54,7 @@ export const DEFAULT_SETTINGS: Settings = {
     additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
     archiveToSeparateFile: false,
+    archiveUnderHeading: true,
     defaultArchiveFileName: "% (archive)",
     archiveAllCheckedTaskTypes: false,
     dateFormat: "YYYY-MM-DD",

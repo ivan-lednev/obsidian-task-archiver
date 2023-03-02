@@ -9,7 +9,9 @@ import { DateTreeResolver } from "../DateTreeResolver";
 import { PlaceholderResolver } from "../PlaceholderResolver";
 import { TaskTester } from "../TaskTester";
 
+// todo: use TS here
 export const DEFAULT_SETTINGS_FOR_TESTS = {
+    archiveUnderHeading: true,
     taskSortOrder: TaskSortOrder.NEWEST_LAST,
     archiveHeading: "Archived",
     archiveHeadingDepth: 1,

@@ -337,6 +337,28 @@ describe("Separate files", () => {
             "",
         ]);
     });
+
+    test("Can archive to the root of a separate file", async () => {
+        const [testDependencies] = await archiveTasks(["- [x] foo"], {
+            ...DEFAULT_SETTINGS_FOR_TESTS,
+            archiveToSeparateFile: true,
+            archiveUnderHeading: false,
+        });
+
+        expect(testDependencies.mockArchiveFile.state).toEqual(["", "- [x] foo", ""]);
+    });
+
+    test("Still archives under a heading when not archiving to a separate file and archiving to root is enabled", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", "# Archived", "", "- [x] foo", ""],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveToSeparateFile: false,
+                archiveUnderHeading: false,
+            }
+        );
+    });
 });
 
 describe("Date tree", () => {

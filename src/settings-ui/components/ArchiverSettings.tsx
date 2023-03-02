@@ -84,6 +84,9 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
     props.settings.additionalMetadataBeforeArchiving.dateFormat
   );
   const [sortOrder, setSortOrder] = createSignal(props.settings.taskSortOrder);
+  const [archiveUnderHeading, setArchiveUnderHeading] = createSignal(
+    props.settings.archiveUnderHeading
+  );
 
   const getValidationMessage = () => {
     if (!validatePattern(taskPattern())) {
@@ -108,16 +111,6 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
   return (
     <>
       <h1>Archiver Settings</h1>
-      <TextSetting
-        onInput={async ({ currentTarget: { value } }) => {
-          setArchiveHeading(value);
-          props.plugin.settings.archiveHeading = value;
-          await props.plugin.saveSettings();
-        }}
-        name="Archive heading text"
-        description="A heading with this text will be used as an archive"
-        value={archiveHeading()}
-      />
       <DropDownSetting
         onInput={async ({ currentTarget: { value } }) => {
           const valueAsNumber = Number(value);
@@ -140,6 +133,16 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
         name={"Order archived tasks"}
         options={[TaskSortOrder.NEWEST_LAST, TaskSortOrder.NEWEST_FIRST]}
         value={sortOrder()}
+      />
+      <TextSetting
+        onInput={async ({ currentTarget: { value } }) => {
+          setArchiveHeading(value);
+          props.plugin.settings.archiveHeading = value;
+          await props.plugin.saveSettings();
+        }}
+        name="Archive heading text"
+        description="A heading with this text will be used as an archive"
+        value={archiveHeading()}
       />
       <ToggleSetting
         onClick={async () => {
@@ -261,7 +264,19 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
         value={archiveToSeparateFile()}
       />
       <Show when={archiveToSeparateFile()} keyed>
-        <TextSetting
+        <ToggleSetting
+          onClick={async () => {
+            const inverse = !archiveUnderHeading();
+            setArchiveUnderHeading(inverse);
+            props.settings.archiveUnderHeading = inverse;
+            await props.plugin.saveSettings();
+          }}
+          name="Use archive heading"
+          description="When disabled, no headings will get created"
+          value={archiveUnderHeading()}
+          class="archiver-setting-sub-item"
+        />
+        <TextAreaSetting
           onInput={async ({ currentTarget: { value } }) => {
             setDefaultArchiveFileName(value);
             props.settings.defaultArchiveFileName = value;

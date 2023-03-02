@@ -226,6 +226,11 @@ export class Archiver {
     }
 
     private getArchiveSectionFromRoot(section: Section) {
+        const shouldArchiveToRoot = !this.settings.archiveUnderHeading;
+        if (this.settings.archiveToSeparateFile && shouldArchiveToRoot) {
+            return section;
+        }
+
         const existingArchiveSection = findSectionRecursively(section, (section) =>
             this.archiveHeadingPattern.test(section.text)
         );
