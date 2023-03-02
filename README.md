@@ -208,9 +208,9 @@ The plugin lets you configure the following:
 - whether to add newlines around headings when moving stuff around;
 - moving tasks to the current file or to a separate file.
 - appending metadata to completed tasks before archiving (like current date or source file name)
-- there are placeholders available (`{{date}}`, `{{sourceFileName}}`), which makes the system more flexible:
-    - You can insert a link to a daily note or source file name after the task like
-      so: `[[{{date}}]]`, `[[{{sourceFileName]]`
+- there are placeholders available (`{{date}}`, `{{sourceFileName}}`, `{{sourceFilePath}}`), which makes the system more flexible:
+    - You can insert a link to a daily note or source file after the task like
+      so: `[[{{date}}]]`, `[[{{sourceFileName}}]]`
     - You can send completed tasks to daily notes
 
 ### Date tree
