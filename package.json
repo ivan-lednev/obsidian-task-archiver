@@ -9,7 +9,8 @@
         "test": "jest --collectCoverage",
         "lint": "eslint src && prettier src --check",
         "fixFormatting": "prettier src --write",
-        "build": "npm run fixFormatting && npm run compile && npm run test && npm run lint"
+        "build": "npm run fixFormatting && npm run compile && npm run test && npm run lint",
+        "prepare": "husky install"
     },
     "keywords": [],
     "author": "Ivan Lednev",
@@ -36,6 +37,7 @@
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-jest": "^26.1.4",
+        "husky": "^8.0.3",
         "install": "^0.13.0",
         "jest": "^27.0.6",
         "lodash": "^4.17.21",
