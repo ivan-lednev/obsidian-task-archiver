@@ -252,11 +252,11 @@ export class Archiver {
     }
 
     private async getOrCreateArchiveFile() {
-        const archiveFileName = this.buildArchiveFileName();
+        const archiveFileName = this.buildArchiveFilePath();
         return await this.getOrCreateFile(archiveFileName);
     }
 
-    private buildArchiveFileName() {
+    private buildArchiveFilePath() {
         const { defaultArchiveFileName, dateFormat } = this.settings;
         const fileNameWithResolvedPlaceholders =
             this.placeholderResolver.resolvePlaceholders(
@@ -266,20 +266,24 @@ export class Archiver {
         return `${fileNameWithResolvedPlaceholders}.md`;
     }
 
-    private async getOrCreateFile(name: string) {
-        let file = this.vault.getAbstractFileByPath(name);
+    private async getOrCreateFile(path: string) {
+        let file = this.vault.getAbstractFileByPath(path);
         if (!file) {
             const pathSeparator = "/";
-            const pathNodes = name.split(pathSeparator);
-            if (pathNodes.length > 1) {
+            const pathNodes = path.split(pathSeparator);
+            const pathContainsFolders = pathNodes.length > 1;
+            if (pathContainsFolders) {
                 const folderPath = dropRight(pathNodes).join(pathSeparator);
-                await this.vault.createFolder(folderPath);
+                const existingFolder = this.vault.getAbstractFileByPath(folderPath);
+                if (!existingFolder) {
+                    await this.vault.createFolder(folderPath);
+                }
             }
-            file = await this.vault.create(name, "");
+            file = await this.vault.create(path, "");
         }
 
         if (!(file instanceof TFile)) {
-            throw new Error(`${name} is not a valid markdown file`);
+            throw new Error(`${path} is not a valid markdown file`);
         }
 
         return file;

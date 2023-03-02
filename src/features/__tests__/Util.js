@@ -62,6 +62,7 @@ export class TestDependencies {
 function buildMockMarkdownTFile(fileState) {
     return Object.assign(new TFile(), {
         basename: "mock-file-base-name",
+        path: "folder/sub-folder/mock-file-base-name.md",
         state: fileState,
         extension: "md",
     });

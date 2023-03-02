@@ -644,9 +644,10 @@ describe("Archive list item under cursor", () => {
 });
 
 describe("Adding metadata to tasks", () => {
-    const metadata = "(completed: {{date}}; source: {{sourceFileName}})";
+    const metadata =
+        "(completed: {{date}}; source: {{sourceFileName}}; source path: {{sourceFilePath}})";
     const metadataWithResolvedPlaceholders =
-        "(completed: 2021-01-01; source: mock-file-base-name)";
+        "(completed: 2021-01-01; source: mock-file-base-name; source path: folder/sub-folder/mock-file-base-name)";
     const settingsForTestingMetadata = {
         ...DEFAULT_SETTINGS_FOR_TESTS,
         additionalMetadataBeforeArchiving: {

@@ -1,8 +1,8 @@
-import { moment } from "obsidian";
+import { Show, createSignal } from "solid-js";
 
-import { JSX, Match, Show, Switch, createSignal } from "solid-js";
-
+import { DateFormatDescription } from "./DateFormatDescription";
 import { DropDownSetting } from "./DropDownSetting";
+import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { TextAreaSetting } from "./TextAreaSetting";
 import { TextSetting } from "./TextSetting";
 import { ToggleSetting } from "./ToggleSetting";
@@ -10,12 +10,6 @@ import { ToggleSetting } from "./ToggleSetting";
 import ObsidianTaskArchiver from "../../ObsidianTaskArchiverPlugin";
 import { Settings, TaskSortOrder } from "../../Settings";
 import { PlaceholderResolver } from "../../features/PlaceholderResolver";
-
-interface ArchiverSettingsProps {
-  settings: Settings;
-  plugin: ObsidianTaskArchiver;
-  placeholderResolver: PlaceholderResolver;
-}
 
 function validatePattern(pattern: string) {
   try {
@@ -26,39 +20,10 @@ function validatePattern(pattern: string) {
   }
 }
 
-function PlaceholdersDescription() {
-  return (
-    <>
-      Special values are available here:
-      <ul>
-        <li>
-          <code>{"{{date}}"}</code> resolves to the date in the format specified above.
-          You can use this to archive tasks to daily notes
-        </li>
-        <li>
-          <code>{"{{sourceFileName}}"}</code> points to the active file name
-        </li>
-      </ul>
-    </>
-  );
-}
-
-interface DateFormatDescriptionProps {
-  dateFormat: string;
-}
-
-function DateFormatDescription(props: DateFormatDescriptionProps) {
-  return (
-    <>
-      For more syntax, refer to{" "}
-      <a href="https://momentjs.com/docs/#/displaying/format/" target="_blank">
-        format reference
-      </a>
-      <br />
-      Your current syntax looks like this:{" "}
-      <b>{window.moment().format(props.dateFormat)}</b>
-    </>
-  );
+interface ArchiverSettingsProps {
+  settings: Settings;
+  plugin: ObsidianTaskArchiver;
+  placeholderResolver: PlaceholderResolver;
 }
 
 export function ArchiverSettings(props: ArchiverSettingsProps) {
@@ -303,7 +268,9 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
             await props.plugin.saveSettings();
           }}
           name="Archive file name"
-          description={<PlaceholdersDescription />}
+          description={
+            <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
+          }
           value={defaultArchiveFileName()}
           class="archiver-setting-sub-item"
         />
@@ -344,7 +311,9 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
           name="Metadata to append"
           description={
             <>
-              <PlaceholdersDescription />
+              <PlaceholdersDescription
+                placeholderResolver={props.placeholderResolver}
+              />
               <br />
               Current result:{" "}
               <code>
