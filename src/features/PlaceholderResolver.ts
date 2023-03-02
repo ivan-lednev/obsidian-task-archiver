@@ -19,7 +19,7 @@ export class PlaceholderResolver {
         return this.getActiveFile().path.replace(extensionPattern, "");
     }
 
-    resolvePlaceholders(text: string, dateFormat: string) {
+    resolvePlaceholders(text: string, dateFormat: string, heading?: string) {
         return text
             .replace(
                 PlaceholderResolver.ACTIVE_FILE_PLACEHOLDER,
@@ -32,6 +32,10 @@ export class PlaceholderResolver {
             .replace(
                 PlaceholderResolver.ACTIVE_FILE_PATH_PLACEHOLDER,
                 this.getActiveFilePathWithoutExtension()
+            )
+            .replace(
+                PlaceholderResolver.HEADING_PLACEHOLDER,
+                heading?.trim() || this.getActiveFile().basename
             )
             .replace(
                 PlaceholderResolver.DATE_PLACEHOLDER,

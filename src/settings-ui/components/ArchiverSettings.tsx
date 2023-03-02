@@ -313,6 +313,12 @@ export function ArchiverSettings(props: ArchiverSettingsProps) {
             <>
               <PlaceholdersDescription
                 placeholderResolver={props.placeholderResolver}
+                extraPlaceholders={[
+                  [
+                    "{{heading}}",
+                    "resolves to the closest heading above the task; when there are none, defaults to file name",
+                  ],
+                ]}
               />
               <br />
               Current result:{" "}

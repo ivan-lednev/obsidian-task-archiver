@@ -139,13 +139,16 @@ export class Archiver {
     private appendMetadata(blocks: Block[]) {
         const { metadata, dateFormat } =
             this.settings.additionalMetadataBeforeArchiving;
-        const resolvedMetadata = this.placeholderResolver.resolvePlaceholders(
-            metadata,
-            dateFormat
-        );
 
         return blocks.map((block) => {
             const updatedBlock = cloneDeep(block);
+
+            const resolvedMetadata = this.placeholderResolver.resolvePlaceholders(
+                metadata,
+                dateFormat,
+                block.parentSection.text
+            );
+
             updatedBlock.text = `${block.text} ${resolvedMetadata}`;
             return updatedBlock;
         });

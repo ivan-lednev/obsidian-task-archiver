@@ -693,6 +693,36 @@ describe("Adding metadata to tasks", () => {
             settingsForTestingMetadata
         );
     });
+
+    describe("Heading placeholder", () => {
+        test("Base case", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["# Source heading", "- [x] foo", "# Archived"],
+                ["# Source heading", "# Archived", "", `- [x] foo Source heading`, ""],
+                {
+                    ...settingsForTestingMetadata,
+                    additionalMetadataBeforeArchiving: {
+                        ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                        metadata: "{{heading}}",
+                    },
+                }
+            );
+        });
+
+        test("Uses file name as fallback", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["- [x] foo", "# Archived"],
+                ["# Archived", "", `- [x] foo mock-file-base-name`, ""],
+                {
+                    ...settingsForTestingMetadata,
+                    additionalMetadataBeforeArchiving: {
+                        ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                        metadata: "{{heading}}",
+                    },
+                }
+            );
+        });
+    });
 });
 
 describe("Sort orders", () => {

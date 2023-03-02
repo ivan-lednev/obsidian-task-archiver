@@ -5,3 +5,7 @@ textarea {
 .archiver-setting-sub-item {
     padding-left: 2rem;
 }
+
+.archiver-placeholders-description {
+    vertical-align: top;
+}

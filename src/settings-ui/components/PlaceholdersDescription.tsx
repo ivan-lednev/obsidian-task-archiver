@@ -1,27 +1,28 @@
-import { For } from "solid-js";
+import { For, mergeProps } from "solid-js";
 
 import { PlaceholderResolver } from "../../features/PlaceholderResolver";
 
 interface PlaceholdersDescriptionProps {
   placeholderResolver: PlaceholderResolver;
+  extraPlaceholders?: [string, string][];
 }
 
 export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
+  const mergedProps = mergeProps({ extraPlaceholders: [] }, props);
   const defaultFormat = "YYYY-DD-MM";
-  const date = props.placeholderResolver.resolvePlaceholders("{{date}}", defaultFormat);
-  const sourceFileName = props.placeholderResolver.resolvePlaceholders(
+  const sourceFileName = mergedProps.placeholderResolver.resolvePlaceholders(
     "{{sourceFileName}}",
     defaultFormat
   );
-  const sourceFilePath = props.placeholderResolver.resolvePlaceholders(
+  const sourceFilePath = mergedProps.placeholderResolver.resolvePlaceholders(
     "{{sourceFilePath}}",
     defaultFormat
   );
 
   return (
     <>
-      Special values are available here:
-      <ul>
+      Placeholders you can use:
+      <table>
         <For
           each={[
             ["{{date}}", "resolves to the current date in any format"],
@@ -37,15 +38,19 @@ export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
                 for the currently open file it resolves to <b>{sourceFilePath}</b>
               </>,
             ],
+            ...mergedProps.extraPlaceholders,
           ]}
         >
           {([placeholder, description]) => (
-            <li>
-              <code>{placeholder}</code> - {description}
-            </li>
+            <tr>
+              <td class="archiver-placeholders-description">
+                <code>{placeholder}</code>
+              </td>
+              <td>{description}</td>
+            </tr>
           )}
         </For>
-      </ul>
+      </table>
     </>
   );
 }
