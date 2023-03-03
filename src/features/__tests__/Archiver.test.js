@@ -1,6 +1,6 @@
 import moment from "moment";
 
-import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./Util";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies, createTFile } from "./TestUtil";
 
 import { TaskSortOrder } from "../../Settings";
 import { Archiver } from "../Archiver";
@@ -20,12 +20,14 @@ function buildArchiver(testDependencies, settings) {
         testDependencies.dateTreeResolver,
         testDependencies.taskTester,
         testDependencies.placeholderResolver,
+        testDependencies.textReplacementService,
+        testDependencies.metadataService,
         settings
     );
 }
 
 async function archiveTasksAndCheckMessage(activeFileState, expectedMessage) {
-    const [, message] = await archiveTasks(activeFileState, DEFAULT_SETTINGS_FOR_TESTS);
+    const { message } = await archiveTasks(activeFileState, DEFAULT_SETTINGS_FOR_TESTS);
     expect(message).toEqual(expectedMessage);
 }
 
@@ -34,19 +36,23 @@ async function archiveTasksAndCheckActiveFile(
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const [testDependencies] = await archiveTasks(activeFileState, settings);
-    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
+    const { mockActiveFile } = await archiveTasks(activeFileState, settings);
+    expect(mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
-async function archiveTasks(activeFileState, settings) {
-    const testDependencies = new TestDependencies(activeFileState, settings);
+async function archiveTasks(activeFileState, settings, vaultFiles = []) {
+    const testDependencies = new TestDependencies(
+        activeFileState,
+        settings,
+        vaultFiles
+    );
     const archiver = buildArchiver(testDependencies, settings);
 
     const message = await archiver.archiveShallowTasksInActiveFile(
         testDependencies.editorFile
     );
 
-    return [testDependencies, message];
+    return { ...testDependencies, message };
 }
 
 async function archiveTasksRecursivelyAndCheckActiveFile(
@@ -54,8 +60,10 @@ async function archiveTasksRecursivelyAndCheckActiveFile(
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const [testDependencies] = await archiveTasksRecursively(activeFileState, settings);
-    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
+    const {
+        mockActiveFile: { state },
+    } = await archiveTasksRecursively(activeFileState, settings);
+    expect(state).toEqual(expectedActiveFileState);
 }
 
 async function archiveTasksRecursively(activeFileState, settings) {
@@ -66,14 +74,14 @@ async function archiveTasksRecursively(activeFileState, settings) {
         testDependencies.editorFile
     );
 
-    return [testDependencies, message];
+    return { ...testDependencies, message };
 }
 
 describe("Moving top-level tasks to the archive", () => {
-    test("Only normalizes whitespace when there are no completed tasks", async () => {
+    test("No-op when there are no completed tasks", async () => {
         await archiveTasksAndCheckActiveFile(
             ["foo", "bar", "# Archived"],
-            ["foo", "bar", "# Archived", ""]
+            ["foo", "bar", "# Archived"]
         );
     });
 
@@ -267,7 +275,7 @@ describe("Moving top-level tasks to the archive", () => {
         test("Ignores checked tasks by default", async () => {
             await archiveTasksAndCheckActiveFile(
                 ["- [-] foo", "# Archived"],
-                ["- [-] foo", "# Archived", ""]
+                ["- [-] foo", "# Archived"]
             );
         });
 
@@ -313,8 +321,8 @@ describe("Archived block transformation", () => {
 });
 
 describe("Moving top-level & inner tasks to the archive", () => {
-    test("Basic case", () => {
-        archiveTasksRecursivelyAndCheckActiveFile(
+    test("Basic case", async () => {
+        await archiveTasksRecursivelyAndCheckActiveFile(
             ["- List item", "\t- [x] Completed inner task"],
             ["- List item", "", "# Archived", "", "- [x] Completed inner task", ""]
         );
@@ -323,29 +331,26 @@ describe("Moving top-level & inner tasks to the archive", () => {
 
 describe("Separate files", () => {
     test("Creates a new archive in a separate file", async () => {
-        const [testDependencies] = await archiveTasks(["- [x] foo", "- [ ] bar"], {
-            ...DEFAULT_SETTINGS_FOR_TESTS,
-            archiveToSeparateFile: true,
-        });
+        const { mockActiveFile, mockArchiveFile } = await archiveTasks(
+            ["- [x] foo", "- [ ] bar"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveToSeparateFile: true,
+            }
+        );
 
-        expect(testDependencies.mockActiveFile.state).toEqual(["- [ ] bar"]);
-        expect(testDependencies.mockArchiveFile.state).toEqual([
-            "",
-            "# Archived",
-            "",
-            "- [x] foo",
-            "",
-        ]);
+        expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
+        expect(mockArchiveFile.state).toEqual(["", "# Archived", "", "- [x] foo", ""]);
     });
 
     test("Can archive to the root of a separate file", async () => {
-        const [testDependencies] = await archiveTasks(["- [x] foo"], {
+        const { mockArchiveFile } = await archiveTasks(["- [x] foo"], {
             ...DEFAULT_SETTINGS_FOR_TESTS,
             archiveToSeparateFile: true,
             archiveUnderHeading: false,
         });
 
-        expect(testDependencies.mockArchiveFile.state).toEqual(["", "- [x] foo", ""]);
+        expect(mockArchiveFile.state).toEqual(["", "- [x] foo", ""]);
     });
 
     test("Still archives under a heading when not archiving to a separate file and archiving to root is enabled", async () => {
@@ -524,8 +529,11 @@ async function deleteTasksAndCheckActiveFile(
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const [testDependencies] = await deleteTasks(activeFileState, settings);
-    expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
+    const {
+        mockActiveFile: { state },
+    } = await deleteTasks(activeFileState, settings);
+
+    expect(state).toEqual(expectedActiveFileState);
 }
 
 async function deleteTasks(activeFileState, settings) {
@@ -534,7 +542,7 @@ async function deleteTasks(activeFileState, settings) {
 
     const message = await archiver.deleteTasksInActiveFile(testDependencies.editorFile);
 
-    return [testDependencies, message];
+    return { ...testDependencies, message };
 }
 
 describe("Deleting completed tasks", () => {
@@ -779,5 +787,86 @@ describe("Sort orders", () => {
                 useWeeks: true,
             }
         );
+    });
+});
+
+describe("Rules", () => {
+    test("A single task gets archived to a different file", async () => {
+        const deferredArchive = createTFile({ state: [], path: "deferred.md" });
+
+        const { mockActiveFile } = await archiveTasks(
+            ["- [>] foo", "- [ ] bar"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                rules: [
+                    {
+                        statuses: ">",
+                        defaultArchiveFileName: "deferred",
+                        archiveToSeparateFile: true,
+                    },
+                ],
+            },
+            [deferredArchive]
+        );
+
+        expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
+        expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
+    });
+
+    test("Different files", async () => {
+        const deferredArchive = createTFile({ state: [], path: "deferred.md" });
+        const cancelledArchive = createTFile({ state: [], path: "cancelled.md" });
+
+        await archiveTasks(
+            ["- [>] foo", "- [-] cancelled", "- [-] another one cancelled"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                rules: [
+                    {
+                        statuses: ">",
+                        defaultArchiveFileName: "deferred",
+                        archiveToSeparateFile: true,
+                    },
+                    {
+                        statuses: "-",
+                        defaultArchiveFileName: "cancelled",
+                        archiveToSeparateFile: true,
+                    },
+                ],
+            },
+            [deferredArchive, cancelledArchive]
+        );
+
+        expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
+        expect(cancelledArchive.state).toEqual([
+            "",
+            "# Archived",
+            "",
+            "- [-] cancelled",
+            "- [-] another one cancelled",
+            "",
+        ]);
+    });
+
+    test("Custom date format in file name", async () => {
+        const deferredArchive = createTFile({ state: [], path: "2021-deferred.md" });
+
+        await archiveTasks(
+            ["- [>] foo", "- [ ] bar"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                rules: [
+                    {
+                        statuses: ">",
+                        archiveToSeparateFile: true,
+                        defaultArchiveFileName: "{{date}}-deferred",
+                        dateFormat: "YYYY",
+                    },
+                ],
+            },
+            [deferredArchive]
+        );
+
+        expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
     });
 });

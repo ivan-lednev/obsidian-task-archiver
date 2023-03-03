@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./Util";
+import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./TestUtil";
 
 import { TaskListSorter } from "../TaskListSorter";
 

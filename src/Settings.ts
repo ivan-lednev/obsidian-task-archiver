@@ -16,6 +16,11 @@ export interface AdditionalMetadataSettings {
     metadata: string;
 }
 
+export type Rule = Pick<
+    Settings,
+    "defaultArchiveFileName" | "dateFormat" | "archiveToSeparateFile"
+> & { statuses: string };
+
 export enum TaskSortOrder {
     NEWEST_FIRST = "Newest first",
     NEWEST_LAST = "Newest last",
@@ -40,6 +45,7 @@ export interface Settings {
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
     additionalMetadataBeforeArchiving: AdditionalMetadataSettings;
+    rules: Rule[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -58,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
     defaultArchiveFileName: "% (archive)",
     archiveAllCheckedTaskTypes: false,
     dateFormat: "YYYY-MM-DD",
+    rules: [],
     indentationSettings: {
         useTab: true,
         tabSize: 4,

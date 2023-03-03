@@ -9,3 +9,10 @@ textarea {
 .archiver-placeholders-description {
     vertical-align: top;
 }
+
+.archiver-rule-container {
+    border: 2px solid var(--interactive-accent);
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}

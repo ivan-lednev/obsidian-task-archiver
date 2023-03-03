@@ -40,6 +40,7 @@
         "husky": "^8.0.3",
         "install": "^0.13.0",
         "jest": "^27.0.6",
+        "lint-staged": "^13.1.2",
         "lodash": "^4.17.21",
         "moment": "^2.29.1",
         "obsidian": "^0.12.0",
@@ -53,5 +54,8 @@
     "dependencies": {
         "babel-preset-solid": "^1.6.10",
         "solid-js": "^1.6.11"
+    },
+    "lint-staged": {
+        "*": "prettier --ignore-unknown --write"
     }
 }

@@ -21,7 +21,7 @@ export class PlaceholderResolver {
         );
     }
 
-    resolvePlaceholders(text: string, dateFormat: string, heading?: string) {
+    resolve(text: string, dateFormat: string, heading?: string) {
         return text
             .replace(
                 PlaceholderResolver.ACTIVE_FILE_PLACEHOLDER,

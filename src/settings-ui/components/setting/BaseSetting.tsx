@@ -3,9 +3,9 @@ import { JSX } from "solid-js";
 
 interface BaseSettingProps {
   name: string | JSX.Element;
-  description: string | JSX.Element;
-  children: JSX.Element;
-  class: string;
+  description?: string | JSX.Element;
+  children?: JSX.Element;
+  class?: string;
 }
 
 export function BaseSetting(props: BaseSettingProps) {

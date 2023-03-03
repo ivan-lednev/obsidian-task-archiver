@@ -5,9 +5,11 @@ import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { Archiver } from "./features/Archiver";
 import { DateTreeResolver } from "./features/DateTreeResolver";
 import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
+import { MetadataService } from "./features/MetadataService";
 import { PlaceholderResolver } from "./features/PlaceholderResolver";
 import { TaskListSorter } from "./features/TaskListSorter";
 import { TaskTester } from "./features/TaskTester";
+import { TextReplacementService } from "./features/TextReplacementService";
 import { BlockParser } from "./parser/BlockParser";
 import { SectionParser } from "./parser/SectionParser";
 import { ArchiverSettingTab } from "./settings-ui/ArchiverSettingTab";
@@ -112,6 +114,8 @@ export default class ObsidianTaskArchiver extends Plugin {
         const taskTester = new TaskTester(this.settings);
         const dateTreeResolver = new DateTreeResolver(this.settings);
         const placeholderResolver = new PlaceholderResolver(this.app.workspace);
+        const textReplacementService = new TextReplacementService(this.settings);
+        const metadataService = new MetadataService(placeholderResolver, this.settings);
 
         this.archiver = new Archiver(
             this.app.vault,
@@ -120,6 +124,8 @@ export default class ObsidianTaskArchiver extends Plugin {
             dateTreeResolver,
             taskTester,
             placeholderResolver,
+            textReplacementService,
+            metadataService,
             this.settings
         );
         this.taskListSorter = new TaskListSorter(parser, taskTester, this.settings);

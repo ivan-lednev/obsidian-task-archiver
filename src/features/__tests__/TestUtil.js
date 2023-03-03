@@ -6,8 +6,10 @@ import { TaskSortOrder } from "../../Settings";
 import { BlockParser } from "../../parser/BlockParser";
 import { SectionParser } from "../../parser/SectionParser";
 import { DateTreeResolver } from "../DateTreeResolver";
+import { MetadataService } from "../MetadataService";
 import { PlaceholderResolver } from "../PlaceholderResolver";
 import { TaskTester } from "../TaskTester";
+import { TextReplacementService } from "../TextReplacementService";
 
 // todo: use TS here
 export const DEFAULT_SETTINGS_FOR_TESTS = {
@@ -26,7 +28,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
         tabSize: 4,
     },
     archiveToSeparateFile: false,
-    defaultArchiveFileName: "<filename> (archive)",
+    defaultArchiveFileName: "folder/sub-folder/mock-file-base-name",
     archiveAllCheckedTaskTypes: false,
     textReplacement: {
         applyReplacement: false,
@@ -39,43 +41,55 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
         metadata: "",
         dateFormat: "YYYY-MM-DD",
     },
+    rules: [],
 };
 
 export class TestDependencies {
-    constructor(activeFileState, settings) {
-        this.mockActiveFile = buildMockMarkdownTFile(activeFileState);
-        this.mockArchiveFile = buildMockMarkdownTFile([""]);
-        this.mockVault = new MockVault(this.mockArchiveFile);
+    constructor(activeFileState, settings, vaultFiles = []) {
+        this.mockActiveFile = createTFile({
+            state: activeFileState,
+            path: `${DEFAULT_SETTINGS_FOR_TESTS.defaultArchiveFileName}.md`,
+        });
+        this.mockArchiveFile = createTFile({
+            state: [""],
+            path: `${DEFAULT_SETTINGS_FOR_TESTS.defaultArchiveFileName}.md`,
+        });
+
+        this.mockVault = new MockVault([this.mockArchiveFile, ...vaultFiles]);
         this.mockWorkspace = {
             getActiveFile: () => this.mockActiveFile,
         };
         this.mockEditor = new MockEditor(this.mockActiveFile);
         this.editorFile = new EditorFile(this.mockEditor);
+
+        // todo: no need to initialize real deps in tests
         this.sectionParser = new SectionParser(
             new BlockParser(settings.indentationSettings)
         );
         this.dateTreeResolver = new DateTreeResolver(settings);
         this.taskTester = new TaskTester(settings);
         this.placeholderResolver = new PlaceholderResolver(this.mockWorkspace);
+        this.textReplacementService = new TextReplacementService(settings);
+        this.metadataService = new MetadataService(this.placeholderResolver, settings);
     }
 }
 
 // This is needed to pass `instanceof` checks
-function buildMockMarkdownTFile(fileState) {
+export function createTFile({ state, path }) {
     return Object.assign(new TFile(), {
+        // todo: move to variable
         basename: "mock-file-base-name",
-        path: "folder/sub-folder/mock-file-base-name.md",
-        state: fileState,
         extension: "md",
+        path,
+        state,
     });
 }
 
 class MockVault {
-    constructor(archiveFile) {
-        this.archiveFile = archiveFile;
+    constructor(files) {
+        this.files = files;
     }
 
-    // todo: this is not used for some reason
     read(file) {
         return file.state.join("\n");
     }
@@ -84,8 +98,12 @@ class MockVault {
         file.state = contents.split("\n");
     }
 
-    getAbstractFileByPath() {
-        return this.archiveFile;
+    getAbstractFileByPath(path) {
+        const found = this.files.find((file) => file.path === path);
+        if (!found) {
+            throw new Error("There is no file in the vault");
+        }
+        return found;
     }
 }
 

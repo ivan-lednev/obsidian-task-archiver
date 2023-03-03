@@ -25,10 +25,42 @@ export class TaskTester {
         );
     }
 
-    isCheckedTask(line: string) {
+    private isCheckedTask(line: string) {
         return (
             CHECKED_TASK_PATTERN.test(line) && this.doesMatchAdditionalTaskPattern(line)
         );
+    }
+
+    doesTaskNeedArchiving(text: string) {
+        if (!this.isCheckedTask(text)) {
+            return false;
+        }
+
+        if (this.isCompletedTask(text)) {
+            return true;
+        }
+
+        if (this.settings.archiveAllCheckedTaskTypes) {
+            return true;
+        }
+
+        return this.isTaskHandledByRule(text);
+    }
+
+    private isTaskHandledByRule(text: string) {
+        const taskStatus = this.getTaskStatus(text);
+        const statusesFromRules = this.settings.rules
+            .map((rule) => rule.statuses)
+            .join("");
+
+        return statusesFromRules.includes(taskStatus);
+    }
+
+    // todo: remove duplication
+    // todo: move to parsing
+    private getTaskStatus(text: string) {
+        const [, taskStatus] = text.match(/\[(.)]/);
+        return taskStatus;
     }
 
     private doesMatchAdditionalTaskPattern(line: string) {

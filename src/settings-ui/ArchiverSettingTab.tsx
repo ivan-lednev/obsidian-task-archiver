@@ -2,7 +2,8 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 
 import { render } from "solid-js/web";
 
-import { ArchiverSettings } from "./components/ArchiverSettings";
+import { ArchiverSettingsPage } from "./components/ArchiverSettingsPage";
+import { SettingsProvider } from "./components/context/SettingsProvider";
 
 import ObsidianTaskArchiver from "../ObsidianTaskArchiverPlugin";
 import { PlaceholderResolver } from "../features/PlaceholderResolver";
@@ -20,11 +21,13 @@ export class ArchiverSettingTab extends PluginSettingTab {
     this.containerEl.empty();
     render(
       () => (
-        <ArchiverSettings
-          settings={this.plugin.settings}
-          plugin={this.plugin}
-          placeholderResolver={this.placeholderResolver}
-        />
+        <SettingsProvider plugin={this.plugin}>
+          <ArchiverSettingsPage
+            settings={this.plugin.settings}
+            plugin={this.plugin}
+            placeholderResolver={this.placeholderResolver}
+          />
+        </SettingsProvider>
       ),
       this.containerEl
     );

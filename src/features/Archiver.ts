@@ -1,27 +1,33 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { cloneDeep, dropRight, isEmpty } from "lodash";
+import { dropRight, flow, isEmpty } from "lodash";
+import { forEach, groupBy, map, mapValues, reduce, toPairs } from "lodash/fp";
 
 import { DateTreeResolver } from "./DateTreeResolver";
+import { MetadataService } from "./MetadataService";
 import { PlaceholderResolver } from "./PlaceholderResolver";
 import { TaskTester } from "./TaskTester";
+import { TextReplacementService } from "./TextReplacementService";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { Settings } from "../Settings";
+import { Rule, Settings } from "../Settings";
+import { Block } from "../model/Block";
+import { RootBlock } from "../model/RootBlock";
+import { Section } from "../model/Section";
+import { SectionParser } from "../parser/SectionParser";
+import {
+    detectHeadingUnderCursor,
+    detectListItemUnderCursor,
+} from "../util/CodeMirrorUtil";
 import {
     addNewlinesToSection,
     buildHeadingPattern,
     buildIndentation,
     deepExtractBlocks,
-    detectHeadingUnderCursor,
-    detectListItemUnderCursor,
+    extractBlocksRecursively,
     findSectionRecursively,
     shallowExtractBlocks,
-} from "../Util";
-import { Block } from "../model/Block";
-import { RootBlock } from "../model/RootBlock";
-import { Section } from "../model/Section";
-import { SectionParser } from "../parser/SectionParser";
+} from "../util/Util";
 
 export interface BlockExtractor {
     (root: Block, filter: BlockFilter): Block[];
@@ -44,6 +50,11 @@ interface TreeEditorCallback {
     (tree: Section): void;
 }
 
+export interface BlockWithRule {
+    task: Block;
+    rule?: Rule;
+}
+
 export class Archiver {
     private readonly taskFilter: TreeFilter;
 
@@ -54,27 +65,29 @@ export class Archiver {
         private readonly dateTreeResolver: DateTreeResolver,
         private readonly taskTester: TaskTester,
         private readonly placeholderResolver: PlaceholderResolver,
+        private readonly textReplacementService: TextReplacementService,
+        private readonly metadataService: MetadataService,
         private readonly settings: Settings,
         private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
             settings.archiveHeading
         )
     ) {
-        const blockFilter = (block: Block) =>
-            settings.archiveAllCheckedTaskTypes
-                ? this.taskTester.isCheckedTask(block.text)
-                : this.taskTester.isCompletedTask(block.text);
         this.taskFilter = {
-            blockFilter,
+            blockFilter: (block: Block) =>
+                this.taskTester.doesTaskNeedArchiving(block.text),
             sectionFilter: (section: Section) => !this.isArchive(section.text),
         };
     }
 
     async archiveShallowTasksInActiveFile(file: ActiveFile) {
-        return await this.archiveTasksInActiveFile(file, shallowExtractBlocks);
+        return await this.extractAndArchiveTasksInActiveFile(
+            file,
+            shallowExtractBlocks
+        );
     }
 
     async archiveDeepTasksInActiveFile(file: ActiveFile) {
-        return await this.archiveTasksInActiveFile(file, deepExtractBlocks);
+        return await this.extractAndArchiveTasksInActiveFile(file, deepExtractBlocks);
     }
 
     async archiveTaskUnderCursor(editor: Editor) {
@@ -94,7 +107,10 @@ export class Archiver {
         parsedTaskBlock.text = this.completeTask(parsedTaskBlock.text);
         const activeFile = new EditorFile(editor);
 
-        await this.archiveTasks([parsedTaskBlock], activeFile);
+        await this.archiveTasks(
+            [{ task: parsedTaskBlock, rule: this.getDefaultRule() }],
+            activeFile
+        );
 
         const [thisTaskStart] = thisTaskRange;
         editor.setCursor(thisTaskStart);
@@ -104,54 +120,34 @@ export class Archiver {
         return task.replace("[ ]", "[x]");
     }
 
-    private async archiveTasksInActiveFile(
-        file: ActiveFile,
+    private getDefaultRule() {
+        return {
+            archiveToSeparateFile: this.settings.archiveToSeparateFile,
+            defaultArchiveFileName: this.settings.defaultArchiveFileName,
+            dateFormat: this.settings.additionalMetadataBeforeArchiving.dateFormat,
+            statuses: "", // todo: this belongs to a separate object
+        };
+    }
+
+    private async extractAndArchiveTasksInActiveFile(
+        activeFile: ActiveFile,
         extractor: BlockExtractor
     ) {
-        let tasks = await this.extractTasksFromActiveFile(file, extractor);
+        const tasks = (
+            await this.extractTasksFromActiveFile(activeFile, extractor)
+        ).map((task) => ({
+            task,
+            rule:
+                this.settings.rules.find((rule) =>
+                    rule.statuses.includes(this.getTaskStatus(task))
+                ) || this.getDefaultRule(),
+        }));
 
-        tasks = await this.archiveTasks(tasks, file);
+        await this.archiveTasks(tasks, activeFile);
 
         return isEmpty(tasks)
             ? "No tasks to archive"
             : `Archived ${tasks.length} tasks`;
-    }
-
-    // todo: move to its own class
-    private applyReplacementRecursively(blocks: Block[]) {
-        const { regex, replacement } = this.settings.textReplacement;
-        const compiledRegex = new RegExp(regex);
-        return blocks.map((originalBlock) => {
-            const blockTextWithReplacement = originalBlock.text.replace(
-                compiledRegex,
-                replacement
-            );
-            const updatedBlock = cloneDeep(originalBlock);
-            updatedBlock.text = blockTextWithReplacement;
-            updatedBlock.children = this.applyReplacementRecursively(
-                originalBlock.children
-            );
-            return updatedBlock;
-        });
-    }
-
-    // todo: move to its own class
-    private appendMetadata(blocks: Block[]) {
-        const { metadata, dateFormat } =
-            this.settings.additionalMetadataBeforeArchiving;
-
-        return blocks.map((block) => {
-            const updatedBlock = cloneDeep(block);
-
-            const resolvedMetadata = this.placeholderResolver.resolvePlaceholders(
-                metadata,
-                dateFormat,
-                block.parentSection.text
-            );
-
-            updatedBlock.text = `${block.text} ${resolvedMetadata}`;
-            return updatedBlock;
-        });
     }
 
     async deleteTasksInActiveFile(file: ActiveFile) {
@@ -176,31 +172,71 @@ export class Archiver {
         await this.archiveSection(activeFile, parsedHeading);
     }
 
-    private async archiveTasks(tasks: Block[], file: ActiveFile) {
-        // todo: add Mapper/Pipe
-        if (this.settings.textReplacement.applyReplacement) {
-            tasks = this.applyReplacementRecursively(tasks);
-        }
-        if (this.settings.additionalMetadataBeforeArchiving.addMetadata) {
-            tasks = this.appendMetadata(tasks);
-        }
+    private async archiveTasks(tasks: BlockWithRule[], activeFile: ActiveFile) {
+        await flow(
+            map(({ rule, task }) => ({
+                rule,
+                task: this.textReplacementService.replaceText(task),
+            })),
+            map((taskWithRule) => this.metadataService.appendMetadata(taskWithRule)),
+            map(({ rule, task }: BlockWithRule) => ({
+                task,
+                archivePath: rule.archiveToSeparateFile
+                    ? this.placeholderResolver.resolve(
+                          rule.defaultArchiveFileName,
+                          rule.dateFormat
+                      )
+                    : "current-file",
+            })),
+            groupBy((task) => task.archivePath),
+            mapValues((tasks) => tasks.map(({ task }) => task)),
+            toPairs,
+            map(async ([archivePath, tasks]) => {
+                const archiveFile =
+                    archivePath === "current-file"
+                        ? activeFile
+                        : await this.getDiskFile(archivePath); // todo: this may be an issue if the rule says to archive a task to this exact file
 
-        const archiveFile = await this.getArchiveFile(file);
+                await this.editFileTree(archiveFile, (tree: Section) =>
+                    this.archiveBlocksToRoot(tasks, tree)
+                );
+            }),
+            (promises) => Promise.all(promises)
+        )(tasks);
+    }
 
-        await this.editFileTree(archiveFile, (tree: Section) =>
-            this.archiveBlocksToRoot(tasks, tree)
-        );
-
-        return tasks;
+    // todo: move to parsing
+    private getTaskStatus(task: Block) {
+        const [, taskStatus] = task.text.match(/\[(.)]/);
+        return taskStatus;
     }
 
     private async getArchiveFile(activeFile: ActiveFile) {
-        return this.settings.archiveToSeparateFile
-            ? new DiskFile(await this.getOrCreateArchiveFile(), this.vault)
-            : activeFile;
+        if (!this.settings.archiveToSeparateFile) {
+            return activeFile;
+        }
+
+        return this.getDiskFileByPathWithPlaceholders(
+            this.settings.defaultArchiveFileName
+        );
+    }
+
+    private async getDiskFileByPathWithPlaceholders(path: string) {
+        return this.getDiskFile(this.preprocessPath(path));
+    }
+
+    private async getDiskFile(path: string) {
+        const tFile = await this.getOrCreateFile(`${path}.md`);
+        return new DiskFile(tFile, this.vault);
     }
 
     private async editFileTree(file: ActiveFile, cb: TreeEditorCallback) {
+        const tree = this.parser.parse(await file.readLines());
+        cb(tree);
+        await file.writeLines(this.stringifyTree(tree));
+    }
+
+    private async PURE_editFileTree(file: ActiveFile, cb: TreeEditorCallback) {
         const tree = this.parser.parse(await file.readLines());
         cb(tree);
         await file.writeLines(this.stringifyTree(tree));
@@ -211,8 +247,11 @@ export class Archiver {
         extractor: BlockExtractor
     ) {
         let tasks: Block[] = [];
-        await this.editFileTree(file, (tree) => {
-            tasks = tree.extractBlocksRecursively(this.taskFilter, extractor);
+        await this.editFileTree(file, (root) => {
+            tasks = extractBlocksRecursively(root, {
+                filter: this.taskFilter,
+                extractor,
+            });
         });
         return tasks;
     }
@@ -255,23 +294,19 @@ export class Archiver {
         );
     }
 
+    // todo: this is out of place
     private isArchive(line: string) {
         return this.archiveHeadingPattern.test(line);
     }
 
-    private async getOrCreateArchiveFile() {
-        const archiveFileName = this.buildArchiveFilePath();
-        return await this.getOrCreateFile(archiveFileName);
-    }
+    private preprocessPath(pathWithPlaceholders: string) {
+        const { dateFormat } = this.settings;
+        const fileNameWithResolvedPlaceholders = this.placeholderResolver.resolve(
+            pathWithPlaceholders,
+            dateFormat
+        );
 
-    private buildArchiveFilePath() {
-        const { defaultArchiveFileName, dateFormat } = this.settings;
-        const fileNameWithResolvedPlaceholders =
-            this.placeholderResolver.resolvePlaceholders(
-                defaultArchiveFileName,
-                dateFormat
-            );
-        return `${fileNameWithResolvedPlaceholders}.md`;
+        return fileNameWithResolvedPlaceholders;
     }
 
     private async getOrCreateFile(path: string) {

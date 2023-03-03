@@ -5,9 +5,10 @@ import { partition } from "lodash";
 import { TaskTester } from "./TaskTester";
 
 import { Settings } from "../Settings";
-import { buildIndentation, detectListUnderCursor } from "../Util";
 import { Block } from "../model/Block";
 import { SectionParser } from "../parser/SectionParser";
+import { detectListUnderCursor } from "../util/CodeMirrorUtil";
+import { buildIndentation } from "../util/Util";
 
 export class TaskListSorter {
     constructor(

@@ -10,11 +10,11 @@ interface PlaceholdersDescriptionProps {
 export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
   const mergedProps = mergeProps({ extraPlaceholders: [] }, props);
   const defaultFormat = "YYYY-DD-MM";
-  const sourceFileName = mergedProps.placeholderResolver.resolvePlaceholders(
+  const sourceFileName = mergedProps.placeholderResolver.resolve(
     "{{sourceFileName}}",
     defaultFormat
   );
-  const sourceFilePath = mergedProps.placeholderResolver.resolvePlaceholders(
+  const sourceFilePath = mergedProps.placeholderResolver.resolve(
     "{{sourceFilePath}}",
     defaultFormat
   );

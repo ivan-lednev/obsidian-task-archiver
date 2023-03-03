@@ -15,17 +15,6 @@ export class Section extends MarkdownNode<Section> {
         this.tokenLevel = tokenLevel;
     }
 
-    extractBlocksRecursively(filter: TreeFilter, extractor: BlockExtractor): Block[] {
-        const extracted = extractor(this.blockContent, filter.blockFilter);
-
-        for (const section of this.children) {
-            if (!filter.sectionFilter || filter.sectionFilter(section)) {
-                extracted.push(...section.extractBlocksRecursively(filter, extractor));
-            }
-        }
-        return extracted;
-    }
-
     recalculateTokenLevels(newLevel: number = this.tokenLevel) {
         this.tokenLevel = newLevel;
         for (const child of this.children) {
