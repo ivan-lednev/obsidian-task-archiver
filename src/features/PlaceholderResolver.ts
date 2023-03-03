@@ -16,18 +16,20 @@ export class PlaceholderResolver {
 
     private getActiveFilePathWithoutExtension() {
         const extensionPattern = /\.\w+$/;
-        return this.getActiveFile().path.replace(extensionPattern, "");
+        return (
+            this.getActiveFile()?.path?.replace(extensionPattern, "") || "No file open"
+        );
     }
 
     resolvePlaceholders(text: string, dateFormat: string, heading?: string) {
         return text
             .replace(
                 PlaceholderResolver.ACTIVE_FILE_PLACEHOLDER,
-                this.getActiveFile().basename
+                this.getActiveFile()?.basename || "No file open"
             )
             .replace(
                 PlaceholderResolver.ACTIVE_FILE_PLACEHOLDER_NEW,
-                this.getActiveFile().basename
+                this.getActiveFile()?.basename || "No file open"
             )
             .replace(
                 PlaceholderResolver.ACTIVE_FILE_PATH_PLACEHOLDER,
@@ -35,7 +37,7 @@ export class PlaceholderResolver {
             )
             .replace(
                 PlaceholderResolver.HEADING_PLACEHOLDER,
-                heading?.trim() || this.getActiveFile().basename
+                heading?.trim() || this.getActiveFile()?.basename || "No file open"
             )
             .replace(
                 PlaceholderResolver.DATE_PLACEHOLDER,
