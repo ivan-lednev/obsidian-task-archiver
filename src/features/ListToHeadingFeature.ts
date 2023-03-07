@@ -4,15 +4,15 @@ import { Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
-import { BlockParser } from "../parser/BlockParser";
-import { SectionParser } from "../parser/SectionParser";
+import { BlockParser } from "../services/parser/BlockParser";
+import { SectionParser } from "../services/parser/SectionParser";
 import {
     detectHeadingUnderCursor,
     detectListUnderCursor,
 } from "../util/CodeMirrorUtil";
 import { buildIndentation, normalizeNewlinesRecursively } from "../util/Util";
 
-export class ListToHeadingTransformer {
+export class ListToHeadingFeature {
     constructor(
         private readonly parser: SectionParser,
         private readonly settings: Settings

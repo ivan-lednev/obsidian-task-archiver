@@ -3,9 +3,9 @@ import { last } from "lodash";
 import { BlockParser } from "./BlockParser";
 import { TreeBuilder } from "./TreeBuilder";
 
-import { HEADING_PATTERN } from "../Patterns";
-import { Block } from "../model/Block";
-import { Section } from "../model/Section";
+import { HEADING_PATTERN } from "../../Patterns";
+import { Block } from "../../model/Block";
+import { Section } from "../../model/Section";
 
 interface RawSection {
     text: string;

@@ -9,7 +9,7 @@ import {
 
 type DateLevel = "years" | "months" | "weeks" | "days";
 
-export class DateTreeResolver {
+export class DateTreeService {
     private readonly dateFormats: Map<DateLevel, string>;
     private readonly dateLevels: DateLevel[];
     private readonly indentationSettings: IndentationSettings;

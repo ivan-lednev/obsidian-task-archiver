@@ -2,18 +2,17 @@ import { Editor } from "obsidian";
 
 import { partition } from "lodash";
 
-import { TaskTester } from "./TaskTester";
-
 import { Settings } from "../Settings";
 import { Block } from "../model/Block";
-import { SectionParser } from "../parser/SectionParser";
+import { TaskTestingService } from "../services/TaskTestingService";
+import { SectionParser } from "../services/parser/SectionParser";
 import { detectListUnderCursor } from "../util/CodeMirrorUtil";
 import { buildIndentation } from "../util/Util";
 
-export class TaskListSorter {
+export class TaskListSortFeature {
     constructor(
         private readonly parser: SectionParser,
-        private readonly taskTester: TaskTester,
+        private readonly taskTestingService: TaskTestingService,
         private readonly settings: Settings
     ) {}
 
@@ -36,10 +35,10 @@ export class TaskListSorter {
 
     private sortBlocksRecursively(root: Block) {
         const [tasks, nonTasks] = partition(root.children, (b) =>
-            this.taskTester.isTask(b.text)
+            this.taskTestingService.isTask(b.text)
         );
         const [complete, incomplete] = partition(tasks, (b) =>
-            this.taskTester.isCompletedTask(b.text)
+            this.taskTestingService.isCompletedTask(b.text)
         );
         root.children = [...nonTasks, ...incomplete, ...complete];
 

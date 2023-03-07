@@ -1,12 +1,12 @@
 import { TreeBuilder } from "./TreeBuilder";
 
-import { LIST_MARKER_PATTERN } from "../Patterns";
-import { IndentationSettings } from "../Settings";
-import { Block } from "../model/Block";
-import { ListBlock } from "../model/ListBlock";
-import { RootBlock } from "../model/RootBlock";
-import { TextBlock } from "../model/TextBlock";
-import { splitOnIndentation } from "../util/Util";
+import { LIST_MARKER_PATTERN } from "../../Patterns";
+import { IndentationSettings } from "../../Settings";
+import { Block } from "../../model/Block";
+import { ListBlock } from "../../model/ListBlock";
+import { RootBlock } from "../../model/RootBlock";
+import { TextBlock } from "../../model/TextBlock";
+import { splitOnIndentation } from "../../util/Util";
 
 export class BlockParser {
     constructor(private readonly settings: IndentationSettings) {}

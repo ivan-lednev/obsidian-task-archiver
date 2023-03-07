@@ -1,6 +1,6 @@
 import { Workspace } from "obsidian";
 
-export class PlaceholderResolver {
+export class PlaceholderService {
     /** @deprecated */
     private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
     private static readonly ACTIVE_FILE_PLACEHOLDER_NEW = "{{sourceFileName}}";
@@ -24,23 +24,23 @@ export class PlaceholderResolver {
     resolve(text: string, dateFormat: string, heading?: string) {
         return text
             .replace(
-                PlaceholderResolver.ACTIVE_FILE_PLACEHOLDER,
+                PlaceholderService.ACTIVE_FILE_PLACEHOLDER,
                 this.getActiveFile()?.basename || "No file open"
             )
             .replace(
-                PlaceholderResolver.ACTIVE_FILE_PLACEHOLDER_NEW,
+                PlaceholderService.ACTIVE_FILE_PLACEHOLDER_NEW,
                 this.getActiveFile()?.basename || "No file open"
             )
             .replace(
-                PlaceholderResolver.ACTIVE_FILE_PATH_PLACEHOLDER,
+                PlaceholderService.ACTIVE_FILE_PATH_PLACEHOLDER,
                 this.getActiveFilePathWithoutExtension()
             )
             .replace(
-                PlaceholderResolver.HEADING_PLACEHOLDER,
+                PlaceholderService.HEADING_PLACEHOLDER,
                 heading?.trim() || this.getActiveFile()?.basename || "No file open"
             )
             .replace(
-                PlaceholderResolver.DATE_PLACEHOLDER,
+                PlaceholderService.DATE_PLACEHOLDER,
                 window.moment().format(dateFormat)
             );
     }

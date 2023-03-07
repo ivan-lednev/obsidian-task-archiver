@@ -3,18 +3,17 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { dropRight, flow, isEmpty } from "lodash";
 import { groupBy, map, mapValues, toPairs } from "lodash/fp";
 
-import { DateTreeResolver } from "./DateTreeResolver";
-import { MetadataService } from "./MetadataService";
-import { PlaceholderResolver } from "./PlaceholderResolver";
-import { TaskTester } from "./TaskTester";
-import { TextReplacementService } from "./TextReplacementService";
-
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
 import { Rule, Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
-import { SectionParser } from "../parser/SectionParser";
+import { DateTreeService } from "../services/DateTreeService";
+import { MetadataService } from "../services/MetadataService";
+import { PlaceholderService } from "../services/PlaceholderService";
+import { TaskTestingService } from "../services/TaskTestingService";
+import { TextReplacementService } from "../services/TextReplacementService";
+import { SectionParser } from "../services/parser/SectionParser";
 import {
     detectHeadingUnderCursor,
     detectListItemUnderCursor,
@@ -55,16 +54,16 @@ export interface BlockWithRule {
     rule?: Rule;
 }
 
-export class Archiver {
+export class ArchiveFeature {
     private readonly taskFilter: TreeFilter;
 
     constructor(
         private readonly vault: Vault,
         private readonly workspace: Workspace,
         private readonly parser: SectionParser,
-        private readonly dateTreeResolver: DateTreeResolver,
-        private readonly taskTester: TaskTester,
-        private readonly placeholderResolver: PlaceholderResolver,
+        private readonly dateTreeService: DateTreeService,
+        private readonly taskTestingService: TaskTestingService,
+        private readonly placeholderService: PlaceholderService,
         private readonly textReplacementService: TextReplacementService,
         private readonly metadataService: MetadataService,
         private readonly settings: Settings,
@@ -74,7 +73,7 @@ export class Archiver {
     ) {
         this.taskFilter = {
             blockFilter: (block: Block) =>
-                this.taskTester.doesTaskNeedArchiving(block.text),
+                this.taskTestingService.doesTaskNeedArchiving(block.text),
             sectionFilter: (section: Section) => !this.isArchive(section.text),
         };
     }
@@ -182,7 +181,7 @@ export class Archiver {
             map(({ rule, task }: BlockWithRule) => ({
                 task,
                 archivePath: rule.archiveToSeparateFile
-                    ? this.placeholderResolver.resolve(
+                    ? this.placeholderService.resolve(
                           rule.defaultArchiveFileName,
                           rule.dateFormat
                       )
@@ -223,7 +222,7 @@ export class Archiver {
 
     private async getDiskFileByPathWithPlaceholders(path: string) {
         return this.getDiskFile(
-            this.placeholderResolver.resolve(path, this.settings.dateFormat)
+            this.placeholderService.resolve(path, this.settings.dateFormat)
         );
     }
 
@@ -254,7 +253,7 @@ export class Archiver {
 
     private archiveBlocksToRoot(tasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
-        this.dateTreeResolver.mergeNewBlocksWithDateTree(
+        this.dateTreeService.mergeNewBlocksWithDateTree(
             archiveSection.blockContent,
             tasks
         );

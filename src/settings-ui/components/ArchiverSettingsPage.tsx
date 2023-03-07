@@ -14,12 +14,12 @@ import { ToggleSetting } from "./setting/ToggleSetting";
 import { DEFAULT_DATE_FORMAT } from "../../Constants";
 import ObsidianTaskArchiver from "../../ObsidianTaskArchiverPlugin";
 import { Settings, TaskSortOrder } from "../../Settings";
-import { PlaceholderResolver } from "../../features/PlaceholderResolver";
+import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface ArchiverSettingsPageProps {
   settings: Settings;
   plugin: ObsidianTaskArchiver;
-  placeholderResolver: PlaceholderResolver;
+  placeholderService: PlaceholderService;
 }
 
 export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
@@ -141,7 +141,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           }}
           name="File name"
           description={
-            <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
+            <PlaceholdersDescription placeholderResolver={props.placeholderService} />
           }
           value={settings.defaultArchiveFileName}
           class="archiver-setting-sub-item"
@@ -181,7 +181,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           description={
             <>
               <PlaceholdersDescription
-                placeholderResolver={props.placeholderResolver}
+                placeholderResolver={props.placeholderService}
                 extraPlaceholders={[
                   [
                     "{{heading}}",
@@ -193,7 +193,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               Current result:{" "}
               <code>
                 - [x] water the cat #task{" "}
-                {props.placeholderResolver.resolve(
+                {props.placeholderService.resolve(
                   settings.additionalMetadataBeforeArchiving.metadata,
                   settings.additionalMetadataBeforeArchiving.dateFormat
                 )}
@@ -279,7 +279,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       </BaseSetting>
       <For each={settings.rules}>
         {(rule, index) => (
-          <Rule index={index} placeholderResolver={props.placeholderResolver} />
+          <Rule index={index} placeholderResolver={props.placeholderService} />
         )}
       </For>
     </>

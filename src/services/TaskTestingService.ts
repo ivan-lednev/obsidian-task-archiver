@@ -5,7 +5,7 @@ import {
 } from "../Patterns";
 import { Settings } from "../Settings";
 
-export class TaskTester {
+export class TaskTestingService {
     private compiledPattern: RegExp;
 
     constructor(private readonly settings: Settings) {

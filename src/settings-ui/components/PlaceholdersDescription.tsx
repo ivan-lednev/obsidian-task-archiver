@@ -1,9 +1,9 @@
 import { For, mergeProps } from "solid-js";
 
-import { PlaceholderResolver } from "../../features/PlaceholderResolver";
+import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface PlaceholdersDescriptionProps {
-  placeholderResolver: PlaceholderResolver;
+  placeholderResolver: PlaceholderService;
   extraPlaceholders?: [string, string][];
 }
 

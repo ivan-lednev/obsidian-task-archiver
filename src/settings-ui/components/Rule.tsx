@@ -8,10 +8,10 @@ import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 
 import { Rule as RuleType } from "../../Settings";
-import { PlaceholderResolver } from "../../features/PlaceholderResolver";
+import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface RuleProps {
-  placeholderResolver: PlaceholderResolver;
+  placeholderResolver: PlaceholderService;
   index: Accessor<number>;
 }
 

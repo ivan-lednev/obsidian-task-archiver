@@ -4,7 +4,7 @@ import { dropRightWhile, dropWhile } from "lodash/fp";
 
 import { INDENTATION_PATTERN } from "../Patterns";
 import { IndentationSettings } from "../Settings";
-import { BlockExtractor } from "../features/Archiver";
+import { BlockExtractor } from "../features/ArchiveFeature";
 import { Block } from "../model/Block";
 import { Section } from "../model/Section";
 import { TextBlock } from "../model/TextBlock";

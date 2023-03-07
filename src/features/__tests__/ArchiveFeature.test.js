@@ -3,7 +3,7 @@ import moment from "moment";
 import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies, createTFile } from "./TestUtil";
 
 import { TaskSortOrder } from "../../Settings";
-import { Archiver } from "../Archiver";
+import { ArchiveFeature } from "../ArchiveFeature";
 
 const WEEK = "2021-01-W-1";
 const DAY = "2021-01-01";
@@ -12,14 +12,14 @@ const TIME = "2021-01-01T00:01";
 window.moment = moment;
 Date.now = () => new Date(TIME).getTime();
 
-function buildArchiver(testDependencies, settings) {
-    return new Archiver(
+function buildArchiveFeature(testDependencies, settings) {
+    return new ArchiveFeature(
         testDependencies.mockVault,
         testDependencies.mockWorkspace,
         testDependencies.sectionParser,
-        testDependencies.dateTreeResolver,
-        testDependencies.taskTester,
-        testDependencies.placeholderResolver,
+        testDependencies.dateTreeService,
+        testDependencies.taskTestingService,
+        testDependencies.placeholderService,
         testDependencies.textReplacementService,
         testDependencies.metadataService,
         settings
@@ -46,9 +46,9 @@ async function archiveTasks(activeFileState, settings, vaultFiles = []) {
         settings,
         vaultFiles
     );
-    const archiver = buildArchiver(testDependencies, settings);
+    const archiveFeature = buildArchiveFeature(testDependencies, settings);
 
-    const message = await archiver.archiveShallowTasksInActiveFile(
+    const message = await archiveFeature.archiveShallowTasksInActiveFile(
         testDependencies.editorFile
     );
 
@@ -68,9 +68,9 @@ async function archiveTasksRecursivelyAndCheckActiveFile(
 
 async function archiveTasksRecursively(activeFileState, settings) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const archiver = buildArchiver(testDependencies, settings);
+    const archiveFeature = buildArchiveFeature(testDependencies, settings);
 
-    const message = await archiver.archiveDeepTasksInActiveFile(
+    const message = await archiveFeature.archiveDeepTasksInActiveFile(
         testDependencies.editorFile
     );
 
@@ -538,9 +538,11 @@ async function deleteTasksAndCheckActiveFile(
 
 async function deleteTasks(activeFileState, settings) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const archiver = buildArchiver(testDependencies, settings);
+    const archiveFeature = buildArchiveFeature(testDependencies, settings);
 
-    const message = await archiver.deleteTasksInActiveFile(testDependencies.editorFile);
+    const message = await archiveFeature.deleteTasksInActiveFile(
+        testDependencies.editorFile
+    );
 
     return { ...testDependencies, message };
 }
@@ -567,10 +569,10 @@ async function archiveHeading(
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const archiver = buildArchiver(testDependencies, settings);
+    const archiveFeature = buildArchiveFeature(testDependencies, settings);
 
     testDependencies.mockEditor.cursor = cursor;
-    await archiver.archiveHeadingUnderCursor(testDependencies.mockEditor);
+    await archiveFeature.archiveHeadingUnderCursor(testDependencies.mockEditor);
 
     return testDependencies;
 }
@@ -593,10 +595,10 @@ async function archiveTaskUnderCursor(
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const archiver = buildArchiver(testDependencies, settings);
+    const archiveFeature = buildArchiveFeature(testDependencies, settings);
 
     testDependencies.mockEditor.cursor = cursor;
-    await archiver.archiveTaskUnderCursor(testDependencies.mockEditor);
+    await archiveFeature.archiveTaskUnderCursor(testDependencies.mockEditor);
 
     return testDependencies;
 }

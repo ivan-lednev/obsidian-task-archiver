@@ -1,14 +1,14 @@
 import { cloneDeep } from "lodash";
 
-import { BlockWithRule } from "./Archiver";
-import { PlaceholderResolver } from "./PlaceholderResolver";
+import { PlaceholderService } from "./PlaceholderService";
 
 import { Settings } from "../Settings";
+import { BlockWithRule } from "../features/ArchiveFeature";
 import { Block } from "../model/Block";
 
 export class MetadataService {
     constructor(
-        private readonly placeholderResolver: PlaceholderResolver,
+        private readonly placeholderService: PlaceholderService,
         private readonly settings: Settings
     ) {}
 
@@ -22,7 +22,7 @@ export class MetadataService {
             ...rule,
         };
 
-        const resolvedMetadata = this.placeholderResolver.resolve(
+        const resolvedMetadata = this.placeholderService.resolve(
             metadata,
             dateFormat,
             task.parentSection.text

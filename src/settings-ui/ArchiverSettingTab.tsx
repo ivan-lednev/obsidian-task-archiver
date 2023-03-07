@@ -6,7 +6,7 @@ import { ArchiverSettingsPage } from "./components/ArchiverSettingsPage";
 import { SettingsProvider } from "./components/context/SettingsProvider";
 
 import ObsidianTaskArchiver from "../ObsidianTaskArchiverPlugin";
-import { PlaceholderResolver } from "../features/PlaceholderResolver";
+import { PlaceholderService } from "../services/PlaceholderService";
 
 export class ArchiverSettingTab extends PluginSettingTab {
   private dispose: () => void;
@@ -14,7 +14,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
   constructor(
     app: App,
     private plugin: ObsidianTaskArchiver,
-    private placeholderResolver: PlaceholderResolver
+    private placeholderService: PlaceholderService
   ) {
     super(app, plugin);
   }
@@ -29,7 +29,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
           <ArchiverSettingsPage
             settings={this.plugin.settings}
             plugin={this.plugin}
-            placeholderResolver={this.placeholderResolver}
+            placeholderService={this.placeholderService}
           />
         </SettingsProvider>
       ),

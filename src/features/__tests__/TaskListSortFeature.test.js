@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./TestUtil";
 
-import { TaskListSorter } from "../TaskListSorter";
+import { TaskListSortFeature } from "../TaskListSortFeature";
 
 function sortListUnderCursorAndCheckActiveFile(
     activeFileState,
@@ -8,9 +8,9 @@ function sortListUnderCursorAndCheckActiveFile(
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const sorter = new TaskListSorter(
+    const sorter = new TaskListSortFeature(
         testDependencies.sectionParser,
-        testDependencies.taskTester,
+        testDependencies.taskTestingService,
         settings
     );
 

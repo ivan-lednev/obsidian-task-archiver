@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./TestUtil";
 
-import { ListToHeadingTransformer } from "../ListToHeadingTransformer";
+import { ListToHeadingFeature } from "../ListToHeadingFeature";
 
 function turnListItemsIntoHeadingsAndCheckActiveFile(
     activeFileState,
@@ -9,13 +9,13 @@ function turnListItemsIntoHeadingsAndCheckActiveFile(
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
     const testDependencies = new TestDependencies(activeFileState, settings);
-    const transformer = new ListToHeadingTransformer(
+    const listToHeadingFeature = new ListToHeadingFeature(
         testDependencies.sectionParser,
         settings
     );
 
     testDependencies.mockEditor.cursor = cursor;
-    transformer.turnListItemsIntoHeadings(testDependencies.mockEditor);
+    listToHeadingFeature.turnListItemsIntoHeadings(testDependencies.mockEditor);
 
     expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }

@@ -3,13 +3,13 @@ import { EditorPosition } from "obsidian";
 
 import { EditorFile } from "../../ActiveFile";
 import { TaskSortOrder } from "../../Settings";
-import { BlockParser } from "../../parser/BlockParser";
-import { SectionParser } from "../../parser/SectionParser";
-import { DateTreeResolver } from "../DateTreeResolver";
-import { MetadataService } from "../MetadataService";
-import { PlaceholderResolver } from "../PlaceholderResolver";
-import { TaskTester } from "../TaskTester";
-import { TextReplacementService } from "../TextReplacementService";
+import { DateTreeService } from "../../services/DateTreeService";
+import { MetadataService } from "../../services/MetadataService";
+import { PlaceholderService } from "../../services/PlaceholderService";
+import { TaskTestingService } from "../../services/TaskTestingService";
+import { TextReplacementService } from "../../services/TextReplacementService";
+import { BlockParser } from "../../services/parser/BlockParser";
+import { SectionParser } from "../../services/parser/SectionParser";
 
 // todo: use TS here
 export const DEFAULT_SETTINGS_FOR_TESTS = {
@@ -66,11 +66,11 @@ export class TestDependencies {
         this.sectionParser = new SectionParser(
             new BlockParser(settings.indentationSettings)
         );
-        this.dateTreeResolver = new DateTreeResolver(settings);
-        this.taskTester = new TaskTester(settings);
-        this.placeholderResolver = new PlaceholderResolver(this.mockWorkspace);
+        this.dateTreeService = new DateTreeService(settings);
+        this.taskTestingService = new TaskTestingService(settings);
+        this.placeholderService = new PlaceholderService(this.mockWorkspace);
         this.textReplacementService = new TextReplacementService(settings);
-        this.metadataService = new MetadataService(this.placeholderResolver, settings);
+        this.metadataService = new MetadataService(this.placeholderService, settings);
     }
 }
 

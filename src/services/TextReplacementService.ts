@@ -1,8 +1,7 @@
 import { cloneDeep } from "lodash";
 
-import { BlockWithRule } from "./Archiver";
-
 import { Settings } from "../Settings";
+import { BlockWithRule } from "../features/ArchiveFeature";
 import { Block } from "../model/Block";
 
 export class TextReplacementService {

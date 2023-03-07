@@ -2,16 +2,16 @@ import { MarkdownView, Notice, Plugin } from "obsidian";
 
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
-import { Archiver } from "./features/Archiver";
-import { DateTreeResolver } from "./features/DateTreeResolver";
-import { ListToHeadingTransformer } from "./features/ListToHeadingTransformer";
-import { MetadataService } from "./features/MetadataService";
-import { PlaceholderResolver } from "./features/PlaceholderResolver";
-import { TaskListSorter } from "./features/TaskListSorter";
-import { TaskTester } from "./features/TaskTester";
-import { TextReplacementService } from "./features/TextReplacementService";
-import { BlockParser } from "./parser/BlockParser";
-import { SectionParser } from "./parser/SectionParser";
+import { ArchiveFeature } from "./features/ArchiveFeature";
+import { ListToHeadingFeature } from "./features/ListToHeadingFeature";
+import { TaskListSortFeature } from "./features/TaskListSortFeature";
+import { DateTreeService } from "./services/DateTreeService";
+import { MetadataService } from "./services/MetadataService";
+import { PlaceholderService } from "./services/PlaceholderService";
+import { TaskTestingService } from "./services/TaskTestingService";
+import { TextReplacementService } from "./services/TextReplacementService";
+import { BlockParser } from "./services/parser/BlockParser";
+import { SectionParser } from "./services/parser/SectionParser";
 import { ArchiverSettingTab } from "./settings-ui/ArchiverSettingTab";
 
 async function withNotice(cb: () => Promise<string>) {
@@ -27,14 +27,14 @@ async function withNotice(cb: () => Promise<string>) {
 
 export default class ObsidianTaskArchiver extends Plugin {
     settings: Settings;
-    private archiver: Archiver;
-    private taskListSorter: TaskListSorter;
-    private listToHeadingTransformer: ListToHeadingTransformer;
+    private archiveFeature: ArchiveFeature;
+    private taskListSortFeature: TaskListSortFeature;
+    private listToHeadingFeature: ListToHeadingFeature;
 
     async onload() {
         await this.loadSettings();
-        const { placeholderResolver } = this.initializeDependencies();
-        this.addSettingTab(new ArchiverSettingTab(this.app, this, placeholderResolver));
+        const { placeholderService } = this.initializeDependencies();
+        this.addSettingTab(new ArchiverSettingTab(this.app, this, placeholderService));
         this.addCommands();
     }
 
@@ -43,42 +43,42 @@ export default class ObsidianTaskArchiver extends Plugin {
             id: "archive-tasks",
             name: "Archive tasks in this file",
             checkCallback: this.createCheckCallbackForPreviewAndEditView((file) =>
-                this.archiver.archiveShallowTasksInActiveFile(file)
+                this.archiveFeature.archiveShallowTasksInActiveFile(file)
             ),
         });
         this.addCommand({
             id: "archive-tasks-deeply",
             name: "Archive tasks including nested tasks in this file",
             checkCallback: this.createCheckCallbackForPreviewAndEditView((file) =>
-                this.archiver.archiveDeepTasksInActiveFile(file)
+                this.archiveFeature.archiveDeepTasksInActiveFile(file)
             ),
         });
         this.addCommand({
             id: "delete-tasks",
             name: "Delete tasks in this file",
             checkCallback: this.createCheckCallbackForPreviewAndEditView((file) =>
-                this.archiver.deleteTasksInActiveFile(file)
+                this.archiveFeature.deleteTasksInActiveFile(file)
             ),
         });
         this.addCommand({
             id: "archive-heading-under-cursor",
             name: "Archive heading under cursor",
             editorCallback: (editor) => {
-                this.archiver.archiveHeadingUnderCursor(editor);
+                this.archiveFeature.archiveHeadingUnderCursor(editor);
             },
         });
         this.addCommand({
             id: "sort-tasks-in-list-under-cursor",
             name: "Sort tasks in list under cursor",
             editorCallback: (editor) => {
-                this.taskListSorter.sortListUnderCursor(editor);
+                this.taskListSortFeature.sortListUnderCursor(editor);
             },
         });
         this.addCommand({
             id: "turn-list-items-into-headings",
             name: "Turn list items at this level into headings",
             editorCallback: (editor) => {
-                this.listToHeadingTransformer.turnListItemsIntoHeadings(editor);
+                this.listToHeadingFeature.turnListItemsIntoHeadings(editor);
             },
         });
 
@@ -86,7 +86,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             id: "toggle-done-and-archive",
             name: "Toggle task done and archive it",
             editorCallback: (editor) => {
-                this.archiver.archiveTaskUnderCursor(editor);
+                this.archiveFeature.archiveTaskUnderCursor(editor);
             },
         });
     }
@@ -111,30 +111,31 @@ export default class ObsidianTaskArchiver extends Plugin {
         const parser = new SectionParser(
             new BlockParser(this.settings.indentationSettings)
         );
-        const taskTester = new TaskTester(this.settings);
-        const dateTreeResolver = new DateTreeResolver(this.settings);
-        const placeholderResolver = new PlaceholderResolver(this.app.workspace);
+        const taskTestingService = new TaskTestingService(this.settings);
+        const dateTreeService = new DateTreeService(this.settings);
+        const placeholderService = new PlaceholderService(this.app.workspace);
         const textReplacementService = new TextReplacementService(this.settings);
-        const metadataService = new MetadataService(placeholderResolver, this.settings);
+        const metadataService = new MetadataService(placeholderService, this.settings);
 
-        this.archiver = new Archiver(
+        this.archiveFeature = new ArchiveFeature(
             this.app.vault,
             this.app.workspace,
             parser,
-            dateTreeResolver,
-            taskTester,
-            placeholderResolver,
+            dateTreeService,
+            taskTestingService,
+            placeholderService,
             textReplacementService,
             metadataService,
             this.settings
         );
-        this.taskListSorter = new TaskListSorter(parser, taskTester, this.settings);
-        this.listToHeadingTransformer = new ListToHeadingTransformer(
+        this.taskListSortFeature = new TaskListSortFeature(
             parser,
+            taskTestingService,
             this.settings
         );
+        this.listToHeadingFeature = new ListToHeadingFeature(parser, this.settings);
 
-        return { placeholderResolver };
+        return { placeholderService };
     }
 
     private createCheckCallbackForPreviewAndEditView(

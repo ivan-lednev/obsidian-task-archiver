@@ -1,11 +1,11 @@
-import { TextBlock } from "../../model/TextBlock";
+import { TextBlock } from "../../../model/TextBlock";
 import {
     buildIndentation,
     deepExtractBlocks,
     extractBlocksRecursively,
     findBlockRecursively,
     shallowExtractBlocks,
-} from "../../util/Util";
+} from "../../../util/Util";
 import { BlockParser } from "../BlockParser";
 import { SectionParser } from "../SectionParser";
 
