@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { JSX } from "solid-js";
 
 interface BaseSettingProps {
-  name: string | JSX.Element;
+  name?: string | JSX.Element;
   description?: string | JSX.Element;
   children?: JSX.Element;
   class?: string;

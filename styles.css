@@ -15,4 +15,9 @@ textarea {
     border-radius: 10px;
     padding-left: 10px;
     padding-right: 10px;
+    margin-top: 0.75em;
+}
+
+.archiver-status-examples {
+    list-style: none;
 }

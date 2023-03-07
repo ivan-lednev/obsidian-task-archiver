@@ -34,34 +34,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
   return (
     <>
       <h1>Archiver Settings</h1>
-      <h2>Rules</h2>
-      <BaseSetting name={""}>
-        <button
-          onClick={() =>
-            setSettings("rules", (prev) => [
-              ...prev,
-              {
-                statuses: "",
-                defaultArchiveFileName: "",
-                dateFormat: DEFAULT_DATE_FORMAT,
-                archiveToSeparateFile: true,
-              },
-            ])
-          }
-        >
-          Add rule
-        </button>
-      </BaseSetting>
-      <For each={settings.rules}>
-        {({ statuses, defaultArchiveFileName }, index) => (
-          <Rule
-            statuses={statuses}
-            archivePath={defaultArchiveFileName}
-            index={index}
-            placeholderResolver={props.placeholderResolver}
-          />
-        )}
-      </For>
       <DropDownSetting
         onInput={async ({ currentTarget: { value } }) => {
           setSettings({ archiveHeadingDepth: Number(value) });
@@ -286,6 +258,30 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           class="archiver-setting-sub-item"
         />
       </Show>
+      <h2>Rules</h2>
+      <BaseSetting description="Define rules for handling tasks that match certain conditions">
+        <button
+          onClick={() =>
+            setSettings("rules", (prev) => [
+              ...prev,
+              // todo: same as getDefaultRule()
+              {
+                statuses: "",
+                defaultArchiveFileName: "",
+                dateFormat: DEFAULT_DATE_FORMAT,
+                archiveToSeparateFile: true,
+              },
+            ])
+          }
+        >
+          Add rule
+        </button>
+      </BaseSetting>
+      <For each={settings.rules}>
+        {(rule, index) => (
+          <Rule index={index} placeholderResolver={props.placeholderResolver} />
+        )}
+      </For>
     </>
   );
 }

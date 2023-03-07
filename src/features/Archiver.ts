@@ -1,7 +1,7 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
 import { dropRight, flow, isEmpty } from "lodash";
-import { forEach, groupBy, map, mapValues, reduce, toPairs } from "lodash/fp";
+import { groupBy, map, mapValues, toPairs } from "lodash/fp";
 
 import { DateTreeResolver } from "./DateTreeResolver";
 import { MetadataService } from "./MetadataService";
@@ -222,7 +222,9 @@ export class Archiver {
     }
 
     private async getDiskFileByPathWithPlaceholders(path: string) {
-        return this.getDiskFile(this.preprocessPath(path));
+        return this.getDiskFile(
+            this.placeholderResolver.resolve(path, this.settings.dateFormat)
+        );
     }
 
     private async getDiskFile(path: string) {
@@ -231,12 +233,6 @@ export class Archiver {
     }
 
     private async editFileTree(file: ActiveFile, cb: TreeEditorCallback) {
-        const tree = this.parser.parse(await file.readLines());
-        cb(tree);
-        await file.writeLines(this.stringifyTree(tree));
-    }
-
-    private async PURE_editFileTree(file: ActiveFile, cb: TreeEditorCallback) {
         const tree = this.parser.parse(await file.readLines());
         cb(tree);
         await file.writeLines(this.stringifyTree(tree));
@@ -297,16 +293,6 @@ export class Archiver {
     // todo: this is out of place
     private isArchive(line: string) {
         return this.archiveHeadingPattern.test(line);
-    }
-
-    private preprocessPath(pathWithPlaceholders: string) {
-        const { dateFormat } = this.settings;
-        const fileNameWithResolvedPlaceholders = this.placeholderResolver.resolve(
-            pathWithPlaceholders,
-            dateFormat
-        );
-
-        return fileNameWithResolvedPlaceholders;
     }
 
     private async getOrCreateFile(path: string) {

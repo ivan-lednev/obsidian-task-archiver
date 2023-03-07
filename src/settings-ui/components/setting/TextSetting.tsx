@@ -6,6 +6,7 @@ import { SettingProps } from "./SettingProps";
 
 interface TextSettingProps extends SettingProps<string> {
   onInput: JSX.EventHandler<HTMLInputElement, InputEvent>;
+  placeholder?: string;
 }
 
 export function TextSetting(props: TextSettingProps) {
@@ -20,6 +21,7 @@ export function TextSetting(props: TextSettingProps) {
         spellcheck={false}
         value={props.value}
         onInput={props.onInput}
+        placeholder={props.placeholder}
       />
     </BaseSetting>
   );
