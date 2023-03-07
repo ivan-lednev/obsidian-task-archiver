@@ -1,3 +1,6 @@
+import { sortBy } from "lodash";
+import { insert } from "solid-js/web";
+
 import { IndentationSettings, Settings, TaskSortOrder } from "../Settings";
 import { Block } from "../model/Block";
 import { ListBlock } from "../model/ListBlock";
@@ -38,6 +41,14 @@ export class DateTreeService {
             this.settings.taskSortOrder === TaskSortOrder.NEWEST_FIRST
                 ? [...newBlocks, ...insertionPoint.children]
                 : [...insertionPoint.children, ...newBlocks];
+
+        if (this.settings.sortAlphabetically) {
+            insertionPoint.children = sortBy(
+                insertionPoint.children,
+                (child) => child.text
+            );
+        }
+
         if (this.settings.addNewlinesAroundHeadings) {
             root.children = addSurroundingNewlines(root.children);
         }

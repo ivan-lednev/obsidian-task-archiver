@@ -52,6 +52,11 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         options={[TaskSortOrder.NEWEST_LAST, TaskSortOrder.NEWEST_FIRST]}
         value={settings.taskSortOrder}
       />
+      <ToggleSetting
+        onClick={() => setSettings("sortAlphabetically", (prev) => !prev)}
+        name="Sort top-level tasks alphabetically before archiving"
+        value={settings.sortAlphabetically}
+      />
       <TextSetting
         onInput={({ currentTarget: { value } }) => {
           setSettings({ archiveHeading: value });

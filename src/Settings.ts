@@ -42,6 +42,7 @@ export interface Settings {
     archiveUnderHeading: boolean;
     defaultArchiveFileName: string;
     archiveAllCheckedTaskTypes: boolean;
+    sortAlphabetically: boolean;
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
     additionalMetadataBeforeArchiving: AdditionalMetadataSettings;
@@ -63,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveUnderHeading: true,
     defaultArchiveFileName: "% (archive)",
     archiveAllCheckedTaskTypes: false,
+    sortAlphabetically: false,
     dateFormat: "YYYY-MM-DD",
     rules: [],
     indentationSettings: {

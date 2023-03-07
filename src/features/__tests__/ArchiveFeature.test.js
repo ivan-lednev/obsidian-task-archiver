@@ -790,6 +790,17 @@ describe("Sort orders", () => {
             }
         );
     });
+
+    test("Sort alphabetically", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] c", "# Archived", "- [x] b", "- [x] a"],
+            ["# Archived", "", "- [x] a", "- [x] b", "- [x] c", ""],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                sortAlphabetically: true,
+            }
+        );
+    });
 });
 
 describe("Rules", () => {

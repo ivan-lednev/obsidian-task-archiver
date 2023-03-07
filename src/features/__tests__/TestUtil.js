@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
     useDays: false,
     additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
+    sortAlphabetically: false,
     indentationSettings: {
         useTab: true,
         tabSize: 4,
