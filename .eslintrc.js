@@ -15,7 +15,7 @@ module.exports = {
         ecmaVersion: "latest",
         sourceType: "module",
     },
-    plugins: ["@typescript-eslint", "jest"],
+    plugins: ["@typescript-eslint", "jest", "unused-imports"],
     rules: {
         "jest/expect-expect": [
             "warn",
