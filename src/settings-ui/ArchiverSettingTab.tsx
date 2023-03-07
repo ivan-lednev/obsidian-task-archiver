@@ -9,6 +9,8 @@ import ObsidianTaskArchiver from "../ObsidianTaskArchiverPlugin";
 import { PlaceholderResolver } from "../features/PlaceholderResolver";
 
 export class ArchiverSettingTab extends PluginSettingTab {
+  private dispose: () => void;
+
   constructor(
     app: App,
     private plugin: ObsidianTaskArchiver,
@@ -19,7 +21,9 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
   display(): void {
     this.containerEl.empty();
-    render(
+    this.dispose?.();
+
+    this.dispose = render(
       () => (
         <SettingsProvider plugin={this.plugin}>
           <ArchiverSettingsPage
