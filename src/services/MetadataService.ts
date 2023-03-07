@@ -1,10 +1,7 @@
-import { cloneDeep } from "lodash";
-
 import { PlaceholderService } from "./PlaceholderService";
 
 import { Settings } from "../Settings";
 import { BlockWithRule } from "../features/ArchiveFeature";
-import { Block } from "../model/Block";
 
 export class MetadataService {
     constructor(

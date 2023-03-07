@@ -7,7 +7,7 @@
         "dev": "rollup --config rollup.config.mjs --watch",
         "compile": "rollup --config rollup.config.mjs --environment BUILD:production",
         "test": "jest --collectCoverage",
-        "lint": "eslint src && prettier src --check",
+        "lint": "eslint --fix src && prettier src --check",
         "fixFormatting": "prettier src --write",
         "build": "npm run fixFormatting && npm run compile && npm run test && npm run lint",
         "prepare": "husky install"

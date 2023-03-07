@@ -2,9 +2,6 @@ import { flatMap } from "lodash";
 
 import { Block } from "./Block";
 import { MarkdownNode } from "./MarkdownNode";
-import { TreeFilter } from "./TreeFilter";
-
-import { BlockExtractor } from "../features/ArchiveFeature";
 
 export class Section extends MarkdownNode<Section> {
     children: Section[];

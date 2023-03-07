@@ -1,5 +1,4 @@
 import { TFile } from "obsidian";
-import { EditorPosition } from "obsidian";
 
 import { EditorFile } from "../../ActiveFile";
 import { TaskSortOrder } from "../../Settings";
