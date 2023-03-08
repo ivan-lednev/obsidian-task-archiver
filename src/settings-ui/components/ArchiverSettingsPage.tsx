@@ -1,4 +1,5 @@
-import { For, Show } from "solid-js";
+import { noop } from "lodash";
+import { For, Index, Show } from "solid-js";
 
 import { DateFormatDescription } from "./DateFormatDescription";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
@@ -131,15 +132,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         value={settings.archiveToSeparateFile}
       />
       <Show when={settings.archiveToSeparateFile} keyed>
-        <ToggleSetting
-          onClick={() => {
-            setSettings("archiveUnderHeading", (prev) => !prev);
-          }}
-          name="Use archive heading"
-          description="When disabled, no headings will get created"
-          value={settings.archiveUnderHeading}
-          class="archiver-setting-sub-item"
-        />
         <TextAreaSetting
           onInput={async ({ currentTarget: { value } }) => {
             setSettings({ defaultArchiveFileName: value });
@@ -164,6 +156,69 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           value={settings.dateFormat}
           class="archiver-setting-sub-item"
         />
+      </Show>
+
+      <ToggleSetting
+        onClick={() => {
+          setSettings("archiveUnderHeading", (prev) => !prev);
+        }}
+        name="Archive under headings"
+        description="When disabled, no headings will get created"
+        value={settings.archiveUnderHeading}
+      />
+      <Show when={settings.archiveUnderHeading} keyed>
+        <Index each={settings.headings}>
+          {(heading, index) => (
+            <BaseSetting
+              name={`Heading text (level ${index + 1})`}
+              class="archiver-setting-sub-item"
+            >
+              <input
+                type="text"
+                value={heading()}
+                onInput={({ currentTarget: { value } }) =>
+                  setSettings("headings", index, value)
+                }
+              />
+              <button
+                onClick={() =>
+                  setSettings("headings", (prev) => prev.filter((h, i) => i !== index))
+                }
+              >
+                Delete
+              </button>
+            </BaseSetting>
+          )}
+        </Index>
+
+        <BaseSetting
+          name="Here's what it will look like:"
+          class="archiver-setting-sub-item"
+          description={
+            <>
+              {settings.headings.map((text, i) => {
+                const token = "#".repeat(i + 1);
+                return (
+                  <>
+                    <code>
+                      {token} {text}
+                    </code>
+                    <br />
+                  </>
+                );
+              })}
+              <p>
+                <code>- [x] task</code>
+              </p>
+            </>
+          }
+        />
+
+        <BaseSetting class="archiver-setting-sub-item">
+          <button onClick={() => setSettings("headings", (prev) => [...prev, ""])}>
+            Add heading
+          </button>
+        </BaseSetting>
       </Show>
 
       <ToggleSetting
