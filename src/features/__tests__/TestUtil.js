@@ -23,6 +23,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS = {
     additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
     sortAlphabetically: false,
+    headings: [],
     indentationSettings: {
         useTab: true,
         tabSize: 4,

@@ -883,3 +883,17 @@ describe("Rules", () => {
         expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
     });
 });
+
+describe("Building a heading chain", () => {
+    test("Single heading from config overrides the default", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", "# Custom 1", "## Custom 2", "### Custom 3", "- [x] foo"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                addNewlinesAroundHeadings: false,
+                headings: ["Custom 1", "Custom 2", "Custom 3"],
+            }
+        );
+    });
+});

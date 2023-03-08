@@ -43,9 +43,28 @@ function findBlockRecursivelyInCollection(
     return null;
 }
 
+interface SectionMatcher {
+    (section: Section): boolean;
+}
+
+export function findSection(root: Section, matcher: SectionMatcher): Section | null {
+    if (matcher(root)) {
+        return root;
+    }
+    if (isEmpty(root.children)) {
+        return null;
+    }
+    for (const child of root.children) {
+        if (matcher(child)) {
+            return child;
+        }
+    }
+    return null;
+}
+
 export function findSectionRecursively(
     root: Section,
-    matcher: (section: Section) => boolean
+    matcher: SectionMatcher
 ): Section | null {
     if (matcher(root)) {
         return root;

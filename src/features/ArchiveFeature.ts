@@ -24,6 +24,7 @@ import {
     buildIndentation,
     deepExtractBlocks,
     extractBlocksRecursively,
+    findSection,
     findSectionRecursively,
     shallowExtractBlocks,
 } from "../util/Util";
@@ -259,13 +260,44 @@ export class ArchiveFeature {
         );
     }
 
-    private getArchiveSectionFromRoot(section: Section) {
+    private getArchiveSectionFromRoot(root: Section) {
         const shouldArchiveToRoot = !this.settings.archiveUnderHeading;
         if (this.settings.archiveToSeparateFile && shouldArchiveToRoot) {
-            return section;
+            return root;
         }
 
-        const existingArchiveSection = findSectionRecursively(section, (section) =>
+        const { headings } = this.settings;
+        if (headings.length > 0) {
+            // special handling
+            let context = root;
+
+            for (let i = 0; i < headings.length; i++) {
+                const headingTextToSearchFor = headings[i];
+                const existingHeading = findSection(
+                    context,
+                    (section) => section.text === headingTextToSearchFor
+                );
+
+                if (existingHeading === null) {
+                    const tokenLevel = i + 1;
+                    const newSection = new Section(
+                        // todo: it's lame that we have to manage spaces manually
+                        " " + headingTextToSearchFor,
+                        tokenLevel,
+                        new RootBlock()
+                    );
+                    context.appendChild(newSection);
+                    context = newSection;
+                } else {
+                    context = existingHeading;
+                }
+            }
+
+            // our new section
+            return context;
+        }
+
+        const existingArchiveSection = findSectionRecursively(root, (section) =>
             this.archiveHeadingPattern.test(section.text)
         );
         if (existingArchiveSection) {
@@ -273,10 +305,10 @@ export class ArchiveFeature {
         }
 
         if (this.settings.addNewlinesAroundHeadings) {
-            addNewlinesToSection(section);
+            addNewlinesToSection(root);
         }
         const newArchiveSection = this.buildArchiveSection();
-        section.appendChild(newArchiveSection);
+        root.appendChild(newArchiveSection);
 
         return newArchiveSection;
     }

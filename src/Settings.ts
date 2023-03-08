@@ -46,6 +46,7 @@ export interface Settings {
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
     additionalMetadataBeforeArchiving: AdditionalMetadataSettings;
+    headings: string[];
     rules: Rule[];
 }
 
@@ -66,6 +67,7 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveAllCheckedTaskTypes: false,
     sortAlphabetically: false,
     dateFormat: "YYYY-MM-DD",
+    headings: [],
     rules: [],
     indentationSettings: {
         useTab: true,
