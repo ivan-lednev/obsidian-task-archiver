@@ -16,8 +16,7 @@ export function SettingsProvider(props: SettingsProviderProps) {
   createEffect(async () => {
     // todo: do we need unwrapping?
     // plugin.settings = unwrap(settings);
-    props.plugin.settings = settings;
-    await props.plugin.saveSettings();
+    await props.plugin.saveSettings(settings);
   });
 
   return (

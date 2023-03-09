@@ -102,8 +102,8 @@ export default class ObsidianTaskArchiver extends Plugin {
         };
     }
 
-    async saveSettings() {
-        await this.saveData(this.settings);
+    async saveSettings(newSettings: Settings) {
+        await this.saveData(newSettings);
         this.initializeDependencies();
     }
 

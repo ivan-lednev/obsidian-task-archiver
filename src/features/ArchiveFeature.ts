@@ -269,14 +269,10 @@ export class ArchiveFeature {
 
         const { headings, archiveHeadingDepth } = this.settings;
         const resolvedHeadings = headings.map((heading) =>
-            this.placeholderService.resolve(
-                heading.text,
-                heading.dateFormat || DEFAULT_DATE_FORMAT
-            )
+            this.placeholderService.resolve(heading.text, heading.dateFormat)
         );
 
         if (resolvedHeadings.length > 0) {
-            // special handling
             let context = root;
 
             for (
@@ -305,7 +301,6 @@ export class ArchiveFeature {
                 }
             }
 
-            // our new section
             return context;
         }
 

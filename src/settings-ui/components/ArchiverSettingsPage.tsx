@@ -1,4 +1,3 @@
-import { noop } from "lodash";
 import { For, Index, Show } from "solid-js";
 
 import { DateFormatDescription } from "./DateFormatDescription";
