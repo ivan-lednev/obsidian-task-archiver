@@ -1,5 +1,6 @@
-import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies } from "./TestUtil";
+import { TestDependencies } from "./test-util/TestUtil";
 
+import { DEFAULT_SETTINGS_FOR_TESTS } from "../../Settings";
 import { ListToHeadingFeature } from "../ListToHeadingFeature";
 
 function turnListItemsIntoHeadingsAndCheckActiveFile(

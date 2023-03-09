@@ -1,3 +1,5 @@
+import { DEFAULT_DATE_FORMAT } from "./Constants";
+
 export interface IndentationSettings {
     useTab: boolean;
     tabSize: number;
@@ -89,4 +91,39 @@ export const DEFAULT_SETTINGS: Settings = {
         addMetadata: false,
         metadata: "(this was archived)",
     },
+};
+export const DEFAULT_SETTINGS_FOR_TESTS: Settings = {
+    archiveUnderHeading: true,
+    taskSortOrder: TaskSortOrder.NEWEST_LAST,
+    dateFormat: DEFAULT_DATE_FORMAT,
+    useAdditionalTaskPattern: false,
+    archiveHeading: "Archived",
+    archiveHeadingDepth: 1,
+    weeklyNoteFormat: "YYYY-MM-[W]-w",
+    useWeeks: false,
+    dailyNoteFormat: "YYYY-MM-DD",
+    useDays: false,
+    additionalTaskPattern: "",
+    addNewlinesAroundHeadings: true,
+    sortAlphabetically: false,
+    headings: [],
+    indentationSettings: {
+        useTab: true,
+        tabSize: 4,
+    },
+    archiveToSeparateFile: false,
+    defaultArchiveFileName: "folder/sub-folder/mock-file-base-name",
+    archiveAllCheckedTaskTypes: false,
+    textReplacement: {
+        applyReplacement: false,
+        regex: "#([A-Za-z-]+)",
+        replacement: "@$1",
+        replacementTest: "task #some-tag",
+    },
+    additionalMetadataBeforeArchiving: {
+        addMetadata: false,
+        metadata: "",
+        dateFormat: "YYYY-MM-DD",
+    },
+    rules: [],
 };

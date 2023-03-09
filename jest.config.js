@@ -3,7 +3,7 @@ module.exports = {
     transformIgnorePatterns: [
         "<rootDir>/node_modules/(?!escape-string-regexp).+\\.js$",
     ],
-    testPathIgnorePatterns: ["Util\\.js"],
+    testPathIgnorePatterns: ["test-util/"],
     testEnvironment: "jsdom",
     coverageThreshold: {
         global: {

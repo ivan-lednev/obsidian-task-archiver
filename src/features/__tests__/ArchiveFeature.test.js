@@ -1,8 +1,8 @@
 import moment from "moment";
 
-import { DEFAULT_SETTINGS_FOR_TESTS, TestDependencies, createTFile } from "./TestUtil";
+import { TestDependencies, createTFile } from "./test-util/TestUtil";
 
-import { TaskSortOrder } from "../../Settings";
+import { DEFAULT_SETTINGS_FOR_TESTS, TaskSortOrder } from "../../Settings";
 import { ArchiveFeature } from "../ArchiveFeature";
 
 const WEEK = "2021-01-W-1";
