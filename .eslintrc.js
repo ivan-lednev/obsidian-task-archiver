@@ -8,6 +8,7 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:jest/recommended",
+        "plugin:solid/recommended",
         "prettier",
     ],
     parser: "@typescript-eslint/parser",
@@ -15,7 +16,7 @@ module.exports = {
         ecmaVersion: "latest",
         sourceType: "module",
     },
-    plugins: ["@typescript-eslint", "jest", "unused-imports"],
+    plugins: ["@typescript-eslint", "jest", "unused-imports", "solid"],
     rules: {
         "jest/expect-expect": [
             "warn",

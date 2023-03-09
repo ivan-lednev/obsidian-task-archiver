@@ -41,6 +41,7 @@
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-jest": "^26.1.4",
+        "eslint-plugin-solid": "^0.11.0",
         "eslint-plugin-unused-imports": "^2.0.0",
         "husky": "^8.0.3",
         "install": "^0.13.0",
