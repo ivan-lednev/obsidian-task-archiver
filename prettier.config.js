@@ -8,7 +8,7 @@ module.exports = {
     endOfLine: "crlf",
     overrides: [
         {
-            files: ["*.tsx"],
+            files: ["*.[jt]sx"],
             options: {
                 tabWidth: 2,
             },
