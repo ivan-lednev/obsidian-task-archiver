@@ -1,58 +1,72 @@
-import { fireEvent, render, screen } from "@solidjs/testing-library";
+import { render, screen } from "@solidjs/testing-library";
+import user from "@testing-library/user-event";
 
+import { DEFAULT_DATE_FORMAT } from "../../../Constants";
 import { DEFAULT_SETTINGS_FOR_TESTS } from "../../../Settings";
 import { PlaceholderService } from "../../../services/PlaceholderService";
 import { ArchiverSettingsPage } from "../ArchiverSettingsPage";
 import { SettingsProvider } from "../context/SettingsProvider";
 
-// function App() {
-//     const [store, setStore] = createStore({ count: 0 });
-//
-//     return (
-//         <>
-//             <p>Store count: {store.count}</p>
-//             <button onClick={() => setStore("count", store.count + 1)}>
-//                 Increment
-//             </button>
-//         </>
-//     );
-// }
+// todo: generalize mocks here
+function renderSettingsPage() {
+  const mockWorkspace = {
+    getActiveFile() {
+      return {
+        path: "path/to/file.md",
+        basename: "file",
+      };
+    },
+  };
+
+  const placeholderService = new PlaceholderService(mockWorkspace);
+
+  const setSettingsMock = jest.fn();
+
+  render(() => (
+    <SettingsProvider
+      initialSettings={{ ...DEFAULT_SETTINGS_FOR_TESTS }} // todo: looks like solid mutates this
+      setSettings={setSettingsMock}
+    >
+      <ArchiverSettingsPage placeholderService={placeholderService} />
+    </SettingsProvider>
+  ));
+
+  return { setSettingsMock };
+}
 
 describe("ArchiverSettingsPage", () => {
-    // todo: generalize mocks here
-    const mockPlugin = {
-        settings: DEFAULT_SETTINGS_FOR_TESTS,
-        async saveSettings() {
-            return jest.fn();
-        },
-    };
+  test("Default rules get saved", async () => {
+    const { setSettingsMock } = renderSettingsPage();
 
-    const mockWorkspace = {
-        getActiveFile() {
-            return {
-                path: "path/to/file.md",
-                basename: "file",
-            };
-        },
-    };
+    const addRule = screen.getByText("Add rule");
 
-    const placeholderService = new PlaceholderService(mockWorkspace);
+    await user.click(addRule);
 
-    test("Add and delete a rule", () => {
-        render(() => (
-            <SettingsProvider plugin={mockPlugin}>
-                <ArchiverSettingsPage placeholderService={placeholderService} />
-            </SettingsProvider>
-        ));
+    expect(setSettingsMock).toBeCalledWith(
+      expect.objectContaining({
+        rules: [
+          {
+            statuses: "",
+            defaultArchiveFileName: "",
+            dateFormat: DEFAULT_DATE_FORMAT,
+            archiveToSeparateFile: true,
+          },
+        ],
+      })
+    );
+  });
 
-        const addRule = screen.getByText(/add rule/i);
+  test("Add and delete a rule", async () => {
+    renderSettingsPage();
 
-        fireEvent.click(addRule);
+    const addRule = screen.getByText("Add rule");
 
-        expect(screen.getByText("Delete rule")).toBeEnabled();
+    await user.click(addRule);
 
-        fireEvent.click(screen.getByText("Delete rule"));
+    expect(screen.getByText("Delete rule")).toBeEnabled();
 
-        expect(screen.queryByText("Delete rule")).not.toBeInTheDocument();
-    });
+    await user.click(screen.getByText("Delete rule"));
+
+    expect(screen.queryByText("Delete rule")).not.toBeInTheDocument();
+  });
 });

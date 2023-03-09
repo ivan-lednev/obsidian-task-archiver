@@ -12,7 +12,6 @@ import { TextSetting } from "./setting/TextSetting";
 import { ToggleSetting } from "./setting/ToggleSetting";
 
 import { DEFAULT_DATE_FORMAT } from "../../Constants";
-import ObsidianTaskArchiver from "../../ObsidianTaskArchiverPlugin";
 import { Settings, TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
