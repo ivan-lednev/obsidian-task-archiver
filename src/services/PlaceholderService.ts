@@ -1,5 +1,7 @@
 import { Workspace } from "obsidian";
 
+import { DEFAULT_DATE_FORMAT } from "../Constants";
+
 export class PlaceholderService {
     /** @deprecated */
     private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
@@ -21,7 +23,7 @@ export class PlaceholderService {
         );
     }
 
-    resolve(text: string, dateFormat: string, heading?: string) {
+    resolve(text: string, dateFormat?: string, heading?: string) {
         return text
             .replace(
                 PlaceholderService.ACTIVE_FILE_PLACEHOLDER,
@@ -41,7 +43,7 @@ export class PlaceholderService {
             )
             .replace(
                 PlaceholderService.DATE_PLACEHOLDER,
-                window.moment().format(dateFormat)
+                window.moment().format(dateFormat || DEFAULT_DATE_FORMAT)
             );
     }
 }

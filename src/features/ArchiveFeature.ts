@@ -1,9 +1,10 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { dropRight, flow, isEmpty } from "lodash";
+import { dropRight, first, flow, isEmpty } from "lodash";
 import { groupBy, map, mapValues, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
+import { DEFAULT_DATE_FORMAT } from "../Constants";
 import { Rule, Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
@@ -266,20 +267,31 @@ export class ArchiveFeature {
             return root;
         }
 
-        const { headings } = this.settings;
-        if (headings.length > 0) {
+        const { headings, archiveHeadingDepth } = this.settings;
+        const resolvedHeadings = headings.map((heading) =>
+            this.placeholderService.resolve(
+                heading.text,
+                heading.dateFormat || DEFAULT_DATE_FORMAT
+            )
+        );
+
+        if (resolvedHeadings.length > 0) {
             // special handling
             let context = root;
 
-            for (let i = 0; i < headings.length; i++) {
-                const headingTextToSearchFor = headings[i];
-                const existingHeading = findSection(
+            for (
+                let headingIndex = 0;
+                headingIndex < resolvedHeadings.length;
+                headingIndex++
+            ) {
+                const headingTextToSearchFor = resolvedHeadings[headingIndex];
+                const existingHeading = findSectionRecursively(
                     context,
-                    (section) => section.text === headingTextToSearchFor
+                    (section) => section.text.includes(headingTextToSearchFor) // todo: this is a kludge for clunky newlines in section.text
                 );
 
                 if (existingHeading === null) {
-                    const tokenLevel = i + 1;
+                    const tokenLevel = headingIndex + archiveHeadingDepth;
                     const newSection = new Section(
                         // todo: it's lame that we have to manage spaces manually
                         " " + headingTextToSearchFor,
@@ -323,6 +335,17 @@ export class ArchiveFeature {
 
     // todo: this is out of place
     private isArchive(line: string) {
+        const firstHeading = this.settings.headings[0];
+        if (firstHeading) {
+            const resolvedHeadingText = this.placeholderService.resolve(
+                firstHeading.text,
+                firstHeading.dateFormat
+            );
+            // todo: this is defective; there should be a full match
+            if (line.includes(resolvedHeadingText)) {
+                return true;
+            }
+        }
         return this.archiveHeadingPattern.test(line);
     }
 

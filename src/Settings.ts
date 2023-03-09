@@ -26,6 +26,11 @@ export enum TaskSortOrder {
     NEWEST_LAST = "Newest last",
 }
 
+export interface HeadingConfig {
+    text: string;
+    dateFormat?: string;
+}
+
 export interface Settings {
     taskSortOrder: TaskSortOrder;
     dateFormat: string;
@@ -46,7 +51,7 @@ export interface Settings {
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
     additionalMetadataBeforeArchiving: AdditionalMetadataSettings;
-    headings: string[];
+    headings: HeadingConfig[];
     rules: Rule[];
 }
 

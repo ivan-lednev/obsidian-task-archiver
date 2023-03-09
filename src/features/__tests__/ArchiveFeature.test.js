@@ -892,7 +892,74 @@ describe("Building a heading chain", () => {
             {
                 ...DEFAULT_SETTINGS_FOR_TESTS,
                 addNewlinesAroundHeadings: false,
-                headings: ["Custom 1", "Custom 2", "Custom 3"],
+                headings: [
+                    { text: "Custom 1" },
+                    { text: "Custom 2" },
+                    { text: "Custom 3" },
+                ],
+            }
+        );
+    });
+
+    test("Placeholders get resolved", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", `# mock-file-base-name ${DAY}`, "- [x] foo"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                addNewlinesAroundHeadings: false,
+                headings: [{ text: "{{sourceFileName}} {{date}}" }],
+            }
+        );
+    });
+
+    test("Resolves custom date placeholder", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", "# 2021", "- [x] foo"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                addNewlinesAroundHeadings: false,
+                headings: [{ text: "{{date}}", dateFormat: "YYYY" }],
+            }
+        );
+    });
+
+    test("Respects the depth setting", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", "## 1", "### 2", "- [x] foo"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                addNewlinesAroundHeadings: false,
+                archiveHeadingDepth: 2,
+                headings: [{ text: "1" }, { text: "2" }],
+            }
+        );
+    });
+
+    test("Skips archive heading when extracting", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["# File name", "## 1", "- [x] foo"],
+            ["# File name", "## 1", "- [x] foo"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                addNewlinesAroundHeadings: false,
+                archiveHeadingDepth: 2,
+                headings: [{ text: "1" }],
+            }
+        );
+    });
+
+    test("Finds existing nested heading and merges with it", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["# File name", "- [x] foo", "## 1", "- [x] bar"],
+            ["# File name", "## 1", "- [x] bar", "### 2", "- [x] foo"],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                addNewlinesAroundHeadings: false,
+                archiveHeadingDepth: 2,
+                headings: [{ text: "1" }, { text: "2" }],
             }
         );
     });

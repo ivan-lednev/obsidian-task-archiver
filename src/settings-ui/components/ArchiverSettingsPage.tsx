@@ -37,14 +37,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       <h1>Archiver Settings</h1>
       <DropDownSetting
         onInput={async ({ currentTarget: { value } }) => {
-          setSettings({ archiveHeadingDepth: Number(value) });
-        }}
-        name="Depth of new archive headings"
-        options={["1", "2", "3", "4", "5", "6"]}
-        value={String(settings.archiveHeadingDepth)}
-      />
-      <DropDownSetting
-        onInput={async ({ currentTarget: { value } }) => {
           // todo: handle this without an assertion?
           const asserted = value as TaskSortOrder;
           setSettings("taskSortOrder", asserted);
@@ -167,41 +159,87 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         value={settings.archiveUnderHeading}
       />
       <Show when={settings.archiveUnderHeading} keyed>
-        <Index each={settings.headings}>
-          {(heading, index) => (
-            <BaseSetting
-              name={`Heading text (level ${index + 1})`}
-              class="archiver-setting-sub-item"
-            >
-              <input
-                type="text"
-                value={heading()}
-                onInput={({ currentTarget: { value } }) =>
-                  setSettings("headings", index, value)
-                }
-              />
-              <button
-                onClick={() =>
-                  setSettings("headings", (prev) => prev.filter((h, i) => i !== index))
-                }
-              >
-                Delete
-              </button>
-            </BaseSetting>
-          )}
-        </Index>
+        <DropDownSetting
+          onInput={async ({ currentTarget: { value } }) => {
+            setSettings({ archiveHeadingDepth: Number(value) });
+          }}
+          name="Start depth"
+          options={["1", "2", "3", "4", "5", "6"]}
+          value={String(settings.archiveHeadingDepth)}
+          class="archiver-setting-sub-item"
+        />
+        <For each={settings.headings}>
+          {(heading, index) => {
+            // indeed, we need this!
+            const headingLevel = () => index() + 1;
+            return (
+              <>
+                <BaseSetting
+                  name={`Heading text (level ${headingLevel()})`}
+                  class="archiver-setting-sub-item"
+                >
+                  <input
+                    type="text"
+                    value={heading.text}
+                    onInput={({ currentTarget: { value } }) =>
+                      setSettings("headings", index(), { text: value })
+                    }
+                  />
+                  <button
+                    onClick={() =>
+                      setSettings("headings", (prev) =>
+                        prev.filter((h, i) => i !== index())
+                      )
+                    }
+                  >
+                    Delete
+                  </button>
+                </BaseSetting>
+                <TextSetting
+                  onInput={async ({ currentTarget: { value } }) => {
+                    setSettings("headings", index(), { dateFormat: value });
+                  }}
+                  name={`Date format (level ${headingLevel()})`}
+                  placeholder={DEFAULT_DATE_FORMAT}
+                  description={
+                    <DateFormatDescription
+                      dateFormat={heading.dateFormat || DEFAULT_DATE_FORMAT}
+                    />
+                  }
+                  value={heading.dateFormat}
+                  class="archiver-setting-sub-item"
+                />
+              </>
+            );
+          }}
+        </For>
+
+        <BaseSetting class="archiver-setting-sub-item">
+          <button
+            onClick={() =>
+              setSettings("headings", (prev) => [...prev, { text: "", dateFormat: "" }])
+            }
+          >
+            Add heading
+          </button>
+        </BaseSetting>
 
         <BaseSetting
-          name="Here's what it will look like:"
+          name="Here's what the result looks like:"
           class="archiver-setting-sub-item"
           description={
             <>
-              {settings.headings.map((text, i) => {
-                const token = "#".repeat(i + 1);
+              {settings.headings.map((heading, i) => {
+                // todo: why does it work without a signal?
+                const token = "#".repeat(i + settings.archiveHeadingDepth);
                 return (
                   <>
                     <code>
-                      {token} {text}
+                      {token}{" "}
+                      {props.placeholderService.resolve(
+                        heading.text,
+                        heading.dateFormat || DEFAULT_DATE_FORMAT
+                      )}
                     </code>
                     <br />
                   </>
@@ -213,12 +251,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             </>
           }
         />
-
-        <BaseSetting class="archiver-setting-sub-item">
-          <button onClick={() => setSettings("headings", (prev) => [...prev, ""])}>
-            Add heading
-          </button>
-        </BaseSetting>
       </Show>
 
       <ToggleSetting
