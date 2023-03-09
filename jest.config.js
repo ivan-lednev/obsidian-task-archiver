@@ -3,6 +3,8 @@ module.exports = {
     transformIgnorePatterns: [
         "<rootDir>/node_modules/(?!escape-string-regexp).+\\.js$",
     ],
+    preset: "solid-jest/preset/browser",
+    setupFilesAfterEnv: ["<rootDir>/support/jest-setup.ts"],
     testPathIgnorePatterns: ["test-util/"],
     testEnvironment: "jsdom",
     coverageThreshold: {

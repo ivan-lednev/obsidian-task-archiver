@@ -11,7 +11,8 @@
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "jsx": "preserve",
-        "jsxImportSource": "solid-js"
+        "jsxImportSource": "solid-js",
+        "types": ["node", "jest", "@testing-library/jest-dom"]
     },
     "include": ["**/*.ts"]
 }
