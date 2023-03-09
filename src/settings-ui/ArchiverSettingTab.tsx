@@ -25,7 +25,10 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
     this.dispose = render(
       () => (
-        <SettingsProvider plugin={this.plugin}>
+        <SettingsProvider
+          initialSettings={this.plugin.settings}
+          setSettings={this.plugin.saveSettings.bind(this.plugin)}
+        >
           <ArchiverSettingsPage placeholderService={this.placeholderService} />
         </SettingsProvider>
       ),

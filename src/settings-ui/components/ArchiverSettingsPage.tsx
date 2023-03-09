@@ -17,8 +17,6 @@ import { Settings, TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface ArchiverSettingsPageProps {
-  settings: Settings;
-  plugin: ObsidianTaskArchiver;
   placeholderService: PlaceholderService;
 }
 
