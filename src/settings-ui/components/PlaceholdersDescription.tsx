@@ -1,5 +1,7 @@
 import { For, mergeProps } from "solid-js";
 
+import { DEFAULT_DATE_FORMAT } from "../../Constants";
+import { DEFAULT_SETTINGS } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface PlaceholdersDescriptionProps {
@@ -9,14 +11,13 @@ interface PlaceholdersDescriptionProps {
 
 export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
   const mergedProps = mergeProps({ extraPlaceholders: [] }, props);
-  const defaultFormat = "YYYY-DD-MM";
   const sourceFileName = mergedProps.placeholderResolver.resolve(
     "{{sourceFileName}}",
-    defaultFormat
+    DEFAULT_DATE_FORMAT
   );
   const sourceFilePath = mergedProps.placeholderResolver.resolve(
     "{{sourceFilePath}}",
-    defaultFormat
+    DEFAULT_DATE_FORMAT
   );
 
   return (
