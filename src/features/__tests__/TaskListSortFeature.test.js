@@ -8,7 +8,7 @@ function sortListUnderCursorAndCheckActiveFile(
     expectedActiveFileState,
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testDependencies = new TestDependencies(activeFileState, settings);
+    const testDependencies = new TestDependencies(activeFileState, { settings });
     const sorter = new TaskListSortFeature(
         testDependencies.sectionParser,
         testDependencies.taskTestingService,

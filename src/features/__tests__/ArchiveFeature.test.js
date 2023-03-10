@@ -157,8 +157,10 @@ describe("Moving top-level tasks to the archive", () => {
                 ["- [x] foo #task", "- [x] bar", "# Archived"],
                 ["- [x] bar", "# Archived", "", "- [x] foo #task", ""],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    additionalTaskPattern: "#task",
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        additionalTaskPattern: "#task",
+                    },
                 }
             );
         });
@@ -177,8 +179,10 @@ describe("Moving top-level tasks to the archive", () => {
                 ["- [x] foo", "Some text"],
                 ["Some text", "# Archived", "- [x] foo"],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    addNewlinesAroundHeadings: false,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        addNewlinesAroundHeadings: false,
+                    },
                 }
             );
         });
@@ -188,8 +192,10 @@ describe("Moving top-level tasks to the archive", () => {
                 ["- [x] foo"],
                 ["", "### Archived", "", "- [x] foo", ""],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    archiveHeadingDepth: 3,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        archiveHeadingDepth: 3,
+                    },
                 }
             );
         });
@@ -215,8 +221,10 @@ describe("Moving top-level tasks to the archive", () => {
                 ["- [-] foo", "# Archived"],
                 ["# Archived", "", "- [-] foo", ""],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    archiveAllCheckedTaskTypes: true,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        archiveAllCheckedTaskTypes: true,
+                    },
                 }
             );
         });
@@ -241,10 +249,12 @@ describe("Archived block transformation", () => {
                 "",
             ],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                textReplacement: {
-                    ...DEFAULT_SETTINGS_FOR_TESTS.textReplacement,
-                    applyReplacement: true,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    textReplacement: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS.textReplacement,
+                        applyReplacement: true,
+                    },
                 },
             }
         );
@@ -265,8 +275,10 @@ describe("Separate files", () => {
         const { mockActiveFile, mockArchiveFile } = await archiveTasks(
             ["- [x] foo", "- [ ] bar"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                archiveToSeparateFile: true,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveToSeparateFile: true,
+                },
             }
         );
 
@@ -276,9 +288,11 @@ describe("Separate files", () => {
 
     test("Can archive to the root of a separate file", async () => {
         const { mockArchiveFile } = await archiveTasks(["- [x] foo"], {
-            ...DEFAULT_SETTINGS_FOR_TESTS,
-            archiveToSeparateFile: true,
-            archiveUnderHeading: false,
+            settings: {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveToSeparateFile: true,
+                archiveUnderHeading: false,
+            },
         });
 
         expect(mockArchiveFile.state).toEqual(["", "- [x] foo", ""]);
@@ -289,9 +303,11 @@ describe("Separate files", () => {
             ["- [x] foo"],
             ["", "# Archived", "", "- [x] foo", ""],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                archiveToSeparateFile: false,
-                archiveUnderHeading: false,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveToSeparateFile: false,
+                    archiveUnderHeading: false,
+                },
             }
         );
     });
@@ -303,8 +319,10 @@ describe("Date tree", () => {
             ["- [x] foo", "- [ ] bar", "# Archived"],
             ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                useWeeks: true,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    useWeeks: true,
+                },
             }
         );
     });
@@ -314,11 +332,13 @@ describe("Date tree", () => {
             ["- [x] foo", "# Archived"],
             ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                useWeeks: true,
-                indentationSettings: {
-                    useTab: false,
-                    tabSize: 3,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    useWeeks: true,
+                    indentationSettings: {
+                        useTab: false,
+                        tabSize: 3,
+                    },
                 },
             }
         );
@@ -345,8 +365,10 @@ describe("Date tree", () => {
                 "",
             ],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                useWeeks: true,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    useWeeks: true,
+                },
             }
         );
     });
@@ -357,8 +379,10 @@ describe("Date tree", () => {
                 ["- [x] foo", "- [ ] bar", "# Archived"],
                 ["- [ ] bar", "# Archived", "", `- [[${DAY}]]`, "\t- [x] foo", ""],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useDays: true,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        useDays: true,
+                    },
                 }
             );
         });
@@ -378,9 +402,11 @@ describe("Date tree", () => {
                     "",
                 ],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useDays: true,
-                    useWeeks: true,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        useDays: true,
+                        useWeeks: true,
+                    },
                 }
             );
         });
@@ -398,9 +424,11 @@ describe("Date tree", () => {
                     "",
                 ],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useDays: true,
-                    useWeeks: true,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        useDays: true,
+                        useWeeks: true,
+                    },
                 }
             );
         });
@@ -425,9 +453,11 @@ describe("Date tree", () => {
                     "",
                 ],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useDays: true,
-                    useWeeks: true,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        useDays: true,
+                        useWeeks: true,
+                    },
                 }
             );
         });
@@ -446,9 +476,11 @@ describe("Date tree", () => {
                     "",
                 ],
                 {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useDays: true,
-                    useWeeks: true,
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        useDays: true,
+                        useWeeks: true,
+                    },
                 }
             );
         });
@@ -551,7 +583,7 @@ describe("Adding metadata to tasks", () => {
         await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "# Archived"],
             ["# Archived", "", `- [x] foo ${metadataWithResolvedPlaceholders}`, ""],
-            settingsForTestingMetadata
+            { settings: settingsForTestingMetadata }
         );
     });
 
@@ -565,7 +597,7 @@ describe("Adding metadata to tasks", () => {
                 "\t- [x] bar",
                 "",
             ],
-            settingsForTestingMetadata
+            { settings: settingsForTestingMetadata }
         );
     });
 
@@ -590,10 +622,12 @@ describe("Adding metadata to tasks", () => {
                 ["# Source heading", "- [x] foo", "# Archived"],
                 ["# Source heading", "# Archived", "", `- [x] foo Source heading`, ""],
                 {
-                    ...settingsForTestingMetadata,
-                    additionalMetadataBeforeArchiving: {
-                        ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
-                        metadata: "{{heading}}",
+                    settings: {
+                        ...settingsForTestingMetadata,
+                        additionalMetadataBeforeArchiving: {
+                            ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                            metadata: "{{heading}}",
+                        },
                     },
                 }
             );
@@ -604,10 +638,12 @@ describe("Adding metadata to tasks", () => {
                 ["- [x] foo", "# Archived"],
                 ["# Archived", "", `- [x] foo mock-file-base-name`, ""],
                 {
-                    ...settingsForTestingMetadata,
-                    additionalMetadataBeforeArchiving: {
-                        ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
-                        metadata: "{{heading}}",
+                    settings: {
+                        ...settingsForTestingMetadata,
+                        additionalMetadataBeforeArchiving: {
+                            ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                            metadata: "{{heading}}",
+                        },
                     },
                 }
             );
@@ -621,8 +657,10 @@ describe("Sort orders", () => {
             ["- [x] foo", "# Archived", "- [x] old task"],
             ["# Archived", "", "- [x] foo", "- [x] old task", ""],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+                },
             }
         );
     });
@@ -641,10 +679,12 @@ describe("Sort orders", () => {
                 "",
             ],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                taskSortOrder: TaskSortOrder.NEWEST_FIRST,
-                useDays: true,
-                useWeeks: true,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+                    useDays: true,
+                    useWeeks: true,
+                },
             }
         );
     });
@@ -654,8 +694,10 @@ describe("Sort orders", () => {
             ["- [x] c", "# Archived", "- [x] b", "- [x] a"],
             ["# Archived", "", "- [x] a", "- [x] b", "- [x] c", ""],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                sortAlphabetically: true,
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    sortAlphabetically: true,
+                },
             }
         );
     });
@@ -665,9 +707,8 @@ describe("Rules", () => {
     test("A single task gets archived to a different file", async () => {
         const deferredArchive = createTFile({ state: [], path: "deferred.md" });
 
-        const { mockActiveFile } = await archiveTasks(
-            ["- [>] foo", "- [ ] bar"],
-            {
+        const { mockActiveFile } = await archiveTasks(["- [>] foo", "- [ ] bar"], {
+            settings: {
                 ...DEFAULT_SETTINGS_FOR_TESTS,
                 rules: [
                     {
@@ -677,8 +718,8 @@ describe("Rules", () => {
                     },
                 ],
             },
-            [deferredArchive]
-        );
+            vaultFiles: [deferredArchive],
+        });
 
         expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
         expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
@@ -691,21 +732,23 @@ describe("Rules", () => {
         await archiveTasks(
             ["- [>] foo", "- [-] cancelled", "- [-] another one cancelled"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                rules: [
-                    {
-                        statuses: ">",
-                        defaultArchiveFileName: "deferred",
-                        archiveToSeparateFile: true,
-                    },
-                    {
-                        statuses: "-",
-                        defaultArchiveFileName: "cancelled",
-                        archiveToSeparateFile: true,
-                    },
-                ],
-            },
-            [deferredArchive, cancelledArchive]
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    rules: [
+                        {
+                            statuses: ">",
+                            defaultArchiveFileName: "deferred",
+                            archiveToSeparateFile: true,
+                        },
+                        {
+                            statuses: "-",
+                            defaultArchiveFileName: "cancelled",
+                            archiveToSeparateFile: true,
+                        },
+                    ],
+                },
+                vaultFiles: [deferredArchive, cancelledArchive],
+            }
         );
 
         expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
@@ -722,9 +765,8 @@ describe("Rules", () => {
     test("Custom date format in file name", async () => {
         const deferredArchive = createTFile({ state: [], path: "2021-deferred.md" });
 
-        await archiveTasks(
-            ["- [>] foo", "- [ ] bar"],
-            {
+        await archiveTasks(["- [>] foo", "- [ ] bar"], {
+            settings: {
                 ...DEFAULT_SETTINGS_FOR_TESTS,
                 rules: [
                     {
@@ -735,8 +777,8 @@ describe("Rules", () => {
                     },
                 ],
             },
-            [deferredArchive]
-        );
+            vaultFiles: [deferredArchive],
+        });
 
         expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
     });
@@ -758,12 +800,14 @@ describe("Building a heading chain", () => {
                 "",
             ],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                headings: [
-                    { text: "Custom 1" },
-                    { text: "Custom 2" },
-                    { text: "Custom 3" },
-                ],
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    headings: [
+                        { text: "Custom 1" },
+                        { text: "Custom 2" },
+                        { text: "Custom 3" },
+                    ],
+                },
             }
         );
     });
@@ -773,9 +817,11 @@ describe("Building a heading chain", () => {
             ["- [x] foo"],
             ["", `# mock-file-base-name ${DAY}`, "- [x] foo"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                addNewlinesAroundHeadings: false,
-                headings: [{ text: "{{sourceFileName}} {{date}}" }],
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    addNewlinesAroundHeadings: false,
+                    headings: [{ text: "{{sourceFileName}} {{date}}" }],
+                },
             }
         );
     });
@@ -785,9 +831,11 @@ describe("Building a heading chain", () => {
             ["- [x] foo"],
             ["", "# 2021", "- [x] foo"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                addNewlinesAroundHeadings: false,
-                headings: [{ text: "{{date}}", dateFormat: "YYYY" }],
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    addNewlinesAroundHeadings: false,
+                    headings: [{ text: "{{date}}", dateFormat: "YYYY" }],
+                },
             }
         );
     });
@@ -797,10 +845,12 @@ describe("Building a heading chain", () => {
             ["- [x] foo"],
             ["", "## 1", "### 2", "- [x] foo"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                addNewlinesAroundHeadings: false,
-                archiveHeadingDepth: 2,
-                headings: [{ text: "1" }, { text: "2" }],
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    addNewlinesAroundHeadings: false,
+                    archiveHeadingDepth: 2,
+                    headings: [{ text: "1" }, { text: "2" }],
+                },
             }
         );
     });
@@ -810,10 +860,12 @@ describe("Building a heading chain", () => {
             ["# File name", "## 1", "- [x] foo"],
             ["# File name", "## 1", "- [x] foo"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                addNewlinesAroundHeadings: false,
-                archiveHeadingDepth: 2,
-                headings: [{ text: "1" }],
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    addNewlinesAroundHeadings: false,
+                    archiveHeadingDepth: 2,
+                    headings: [{ text: "1" }],
+                },
             }
         );
     });
@@ -823,10 +875,12 @@ describe("Building a heading chain", () => {
             ["# File name", "- [x] foo", "## 1", "- [x] bar"],
             ["# File name", "## 1", "- [x] bar", "### 2", "- [x] foo"],
             {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                addNewlinesAroundHeadings: false,
-                archiveHeadingDepth: 2,
-                headings: [{ text: "1" }, { text: "2" }],
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    addNewlinesAroundHeadings: false,
+                    archiveHeadingDepth: 2,
+                    headings: [{ text: "1" }, { text: "2" }],
+                },
             }
         );
     });

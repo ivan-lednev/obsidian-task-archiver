@@ -9,7 +9,7 @@ function turnListItemsIntoHeadingsAndCheckActiveFile(
     cursor = { line: 0, ch: 0 },
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testDependencies = new TestDependencies(activeFileState, settings);
+    const testDependencies = new TestDependencies(activeFileState, { settings });
     const listToHeadingFeature = new ListToHeadingFeature(
         testDependencies.sectionParser,
         settings

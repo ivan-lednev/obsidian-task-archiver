@@ -14,7 +14,7 @@ import { BlockParser } from "../../../services/parser/BlockParser";
 import { SectionParser } from "../../../services/parser/SectionParser";
 
 export class TestDependencies {
-    constructor(activeFileState, settings, vaultFiles = []) {
+    constructor(activeFileState, { settings, vaultFiles = [] }) {
         this.mockActiveFile = createTFile({
             state: activeFileState,
             path: `${DEFAULT_SETTINGS_FOR_TESTS.defaultArchiveFileName}.md`,
@@ -40,6 +40,7 @@ export class TestDependencies {
         this.placeholderService = new PlaceholderService(this.mockWorkspace);
         this.textReplacementService = new TextReplacementService(settings);
         this.metadataService = new MetadataService(this.placeholderService, settings);
+        this.settings = settings;
     }
 }
 
