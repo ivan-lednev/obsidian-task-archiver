@@ -779,4 +779,19 @@ describe("Building a list item chain", () => {
             }
         );
     });
+
+    test("Respects the switch", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] new"],
+            ["", "# Archived", "", "- [x] new", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveUnderListItems: false,
+                    taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+                    listItems: [{ text: "Custom 1" }, { text: "Custom 2" }],
+                },
+            }
+        );
+    });
 });

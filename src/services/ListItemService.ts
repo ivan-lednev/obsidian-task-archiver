@@ -39,6 +39,10 @@ export class ListItemService {
     }
 
     private getArchiveLeaf(root: Block) {
+        if (!this.settings.archiveUnderListItems) {
+            return root;
+        }
+
         const resolvedListItems = this.settings.listItems.map((l) =>
             this.placeholderService.resolve(l.text, l.dateFormat)
         );
