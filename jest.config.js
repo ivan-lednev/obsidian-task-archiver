@@ -14,5 +14,11 @@ module.exports = {
             functions: 100,
             branches: 89,
         },
+        "./src/settings-ui": {
+            lines: 30,
+            statements: 30,
+            functions: 30,
+            branches: 30,
+        },
     },
 };
