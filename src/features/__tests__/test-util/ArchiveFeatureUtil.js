@@ -22,6 +22,7 @@ export async function archiveTasksAndCheckMessage(activeFileState, expectedMessa
     expect(message).toEqual(expectedMessage);
 }
 
+// todo: use functional composition
 export async function archiveTasksAndCheckActiveFile(
     activeFileState,
     expectedActiveFileState,

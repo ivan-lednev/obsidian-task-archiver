@@ -125,6 +125,7 @@ describe("Moving top-level tasks to the archive", () => {
                 "",
                 "# After archive",
                 "Other stuff",
+                "",
             ]
         );
     });
@@ -147,17 +148,6 @@ describe("Moving top-level tasks to the archive", () => {
         await archiveTasksAndCheckActiveFile(
             ["1. [x] foo", "# Archived"],
             ["# Archived", "", "1. [x] foo", ""]
-        );
-    });
-
-    test("Escapes regex characters in the archive heading value", async () => {
-        await archiveTasksAndCheckActiveFile(
-            ["- [x] foo", "- [ ] bar", "# [[Archived]]"],
-            ["- [ ] bar", "# [[Archived]]", "", "- [x] foo", ""],
-            {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                archiveHeading: "[[Archived]]",
-            }
         );
     });
 

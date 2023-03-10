@@ -92,14 +92,31 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     async loadSettings() {
+        const userData: Settings = await this.loadData();
+        const updatedUserData = this.replaceOldSettings(userData);
+
         this.settings = {
             ...DEFAULT_SETTINGS,
-            ...(await this.loadData()),
+            ...updatedUserData,
             indentationSettings: {
                 useTab: this.getConfig("useTab"),
                 tabSize: this.getConfig("tabSize"),
             },
         };
+    }
+
+    private replaceOldSettings(settings: Settings) {
+        if (settings.archiveHeading) {
+            const updated = {
+                ...settings,
+                headings: [{ text: settings.archiveHeading }],
+            };
+
+            delete updated.archiveHeading;
+            return updated;
+        }
+
+        return settings;
     }
 
     async saveSettings(newSettings: Settings) {

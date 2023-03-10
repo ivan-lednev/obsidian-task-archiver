@@ -1,4 +1,3 @@
-import escapeStringRegexp from "escape-string-regexp";
 import { flow, isEmpty, last, partition } from "lodash";
 import { dropRightWhile, dropWhile } from "lodash/fp";
 
@@ -94,11 +93,6 @@ export function addNewlinesToSection(section: Section) {
             lastSection.blockContent.appendChild(new TextBlock(""));
         }
     }
-}
-
-export function buildHeadingPattern(heading: string) {
-    const escapedArchiveHeading = escapeStringRegexp(heading);
-    return new RegExp(`\\s*${escapedArchiveHeading}$`);
 }
 
 export function normalizeNewlinesRecursively(root: Section) {

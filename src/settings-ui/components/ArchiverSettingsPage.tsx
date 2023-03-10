@@ -1,6 +1,7 @@
-import { For, Index, Show } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { DateFormatDescription } from "./DateFormatDescription";
+import { HeadingsSettings } from "./HeadingsSettings";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { Rule } from "./Rule";
 import { TaskPatternSettings } from "./TaskPatternSettings";
@@ -12,7 +13,7 @@ import { TextSetting } from "./setting/TextSetting";
 import { ToggleSetting } from "./setting/ToggleSetting";
 
 import { DEFAULT_DATE_FORMAT } from "../../Constants";
-import { Settings, TaskSortOrder } from "../../Settings";
+import { TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface ArchiverSettingsPageProps {
@@ -22,7 +23,7 @@ interface ArchiverSettingsPageProps {
 export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
   const [settings, setSettings] = useSettingsContext();
 
-  const getReplacementResult = () =>
+  const replacementResult = () =>
     settings.textReplacement.replacementTest.replace(
       new RegExp(settings.textReplacement.regex),
       settings.textReplacement.replacement
@@ -32,7 +33,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
     <>
       <h1>Archiver Settings</h1>
       <DropDownSetting
-        onInput={async ({ currentTarget: { value } }) => {
+        onInput={({ currentTarget: { value } }) => {
           // todo: handle this without an assertion?
           const asserted = value as TaskSortOrder;
           setSettings("taskSortOrder", asserted);
@@ -45,14 +46,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         onClick={() => setSettings("sortAlphabetically", (prev) => !prev)}
         name="Sort top-level tasks alphabetically before archiving"
         value={settings.sortAlphabetically}
-      />
-      <TextSetting
-        onInput={({ currentTarget: { value } }) => {
-          setSettings({ archiveHeading: value });
-        }}
-        name="Archive heading text"
-        description="A heading with this text will be used as an archive"
-        value={settings.archiveHeading}
       />
       <ToggleSetting
         onClick={() => {
@@ -82,7 +75,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       />
       <Show when={settings.textReplacement.applyReplacement} keyed>
         <TextSetting
-          onInput={async ({ currentTarget: { value } }) => {
+          onInput={({ currentTarget: { value } }) => {
             setSettings("textReplacement", "regex", value);
           }}
           name={"Regular expression"}
@@ -90,7 +83,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           class="archiver-setting-sub-item"
         />
         <TextSetting
-          onInput={async ({ currentTarget: { value } }) => {
+          onInput={({ currentTarget: { value } }) => {
             setSettings("textReplacement", "replacement", value);
           }}
           name="Replacement"
@@ -101,7 +94,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           name="Try out your replacement"
           description={
             <>
-              Replacement result: <b>{getReplacementResult()}</b>
+              Replacement result: <b>{replacementResult()}</b>
             </>
           }
           onInput={({ currentTarget: { value } }) => {
@@ -121,7 +114,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       />
       <Show when={settings.archiveToSeparateFile} keyed>
         <TextAreaSetting
-          onInput={async ({ currentTarget: { value } }) => {
+          onInput={({ currentTarget: { value } }) => {
             setSettings({ defaultArchiveFileName: value });
           }}
           name="File name"
@@ -135,11 +128,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           onInput={({ currentTarget: { value } }) => {
             setSettings({ dateFormat: value });
           }}
-          name={
-            <>
-              <code>{"{{date}}"}</code> format
-            </>
-          }
+          name="Date format"
           description={<DateFormatDescription dateFormat={settings.dateFormat} />}
           value={settings.dateFormat}
           class="archiver-setting-sub-item"
@@ -156,58 +145,16 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       />
       <Show when={settings.archiveUnderHeading} keyed>
         <DropDownSetting
-          onInput={async ({ currentTarget: { value } }) => {
+          onInput={({ currentTarget: { value } }) => {
             setSettings({ archiveHeadingDepth: Number(value) });
           }}
-          name="Start depth"
+          name="First heading depth"
           options={["1", "2", "3", "4", "5", "6"]}
           value={String(settings.archiveHeadingDepth)}
           class="archiver-setting-sub-item"
         />
         <For each={settings.headings}>
-          {(heading, index) => {
-            // indeed, we need this!
-            const headingLevel = () => index() + 1;
-            return (
-              <>
-                <BaseSetting
-                  name={`Heading text (level ${headingLevel()})`}
-                  class="archiver-setting-sub-item"
-                >
-                  <input
-                    type="text"
-                    value={heading.text}
-                    onInput={({ currentTarget: { value } }) =>
-                      setSettings("headings", index(), { text: value })
-                    }
-                  />
-                  <button
-                    onClick={() =>
-                      setSettings("headings", (prev) =>
-                        prev.filter((h, i) => i !== index())
-                      )
-                    }
-                  >
-                    Delete
-                  </button>
-                </BaseSetting>
-                <TextSetting
-                  onInput={async ({ currentTarget: { value } }) => {
-                    setSettings("headings", index(), { dateFormat: value });
-                  }}
-                  name={`Date format (level ${headingLevel()})`}
-                  placeholder={DEFAULT_DATE_FORMAT}
-                  description={
-                    <DateFormatDescription
-                      dateFormat={heading.dateFormat || DEFAULT_DATE_FORMAT}
-                    />
-                  }
-                  value={heading.dateFormat}
-                  class="archiver-setting-sub-item"
-                />
-              </>
-            );
-          }}
+          {(heading, index) => <HeadingsSettings heading={heading} index={index()} />}
         </For>
 
         <BaseSetting class="archiver-setting-sub-item">
@@ -250,7 +197,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       </Show>
 
       <ToggleSetting
-        onClick={async () => {
+        onClick={() => {
           setSettings(
             "additionalMetadataBeforeArchiving",
             "addMetadata",
@@ -262,7 +209,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       />
       <Show when={settings.additionalMetadataBeforeArchiving.addMetadata} keyed>
         <TextSetting
-          onInput={async ({ currentTarget: { value } }) => {
+          onInput={({ currentTarget: { value } }) => {
             setSettings("additionalMetadataBeforeArchiving", "metadata", value);
           }}
           name="Metadata to append"
@@ -292,7 +239,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           class="archiver-setting-sub-item"
         />
         <TextSetting
-          onInput={async ({ currentTarget: { value } }) => {
+          onInput={({ currentTarget: { value } }) => {
             setSettings("additionalMetadataBeforeArchiving", "dateFormat", value);
           }}
           name="Date format"
@@ -309,7 +256,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
       <h2>Date tree settings</h2>
 
       <ToggleSetting
-        onClick={async () => {
+        onClick={() => {
           setSettings("useWeeks", (prev) => !prev);
         }}
         name="Use weeks"

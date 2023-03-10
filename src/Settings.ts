@@ -36,7 +36,10 @@ export interface HeadingConfig {
 export interface Settings {
     taskSortOrder: TaskSortOrder;
     dateFormat: string;
-    archiveHeading: string;
+    /**
+     * @deprecated; use headings instead
+     */
+    archiveHeading?: string;
     archiveHeadingDepth: number;
     weeklyNoteFormat: string;
     useWeeks: boolean;
@@ -59,7 +62,6 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
     taskSortOrder: TaskSortOrder.NEWEST_LAST,
-    archiveHeading: "Archived",
     archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useWeeks: true,
@@ -97,7 +99,6 @@ export const DEFAULT_SETTINGS_FOR_TESTS: Settings = {
     taskSortOrder: TaskSortOrder.NEWEST_LAST,
     dateFormat: DEFAULT_DATE_FORMAT,
     useAdditionalTaskPattern: false,
-    archiveHeading: "Archived",
     archiveHeadingDepth: 1,
     weeklyNoteFormat: "YYYY-MM-[W]-w",
     useWeeks: false,
@@ -106,7 +107,7 @@ export const DEFAULT_SETTINGS_FOR_TESTS: Settings = {
     additionalTaskPattern: "",
     addNewlinesAroundHeadings: true,
     sortAlphabetically: false,
-    headings: [],
+    headings: [{ text: "Archived" }],
     indentationSettings: {
         useTab: true,
         tabSize: 4,

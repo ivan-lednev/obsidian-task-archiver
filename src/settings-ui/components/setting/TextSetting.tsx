@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { JSX, createSignal } from "solid-js";
+import { JSX } from "solid-js";
 
 import { BaseSetting } from "./BaseSetting";
 import { SettingProps } from "./SettingProps";
@@ -20,7 +20,7 @@ export function TextSetting(props: TextSettingProps) {
         type="text"
         spellcheck={false}
         value={props.value}
-        onInput={props.onInput}
+        onInput={(e) => props.onInput(e)}
         placeholder={props.placeholder}
       />
     </BaseSetting>

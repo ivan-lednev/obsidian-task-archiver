@@ -21,7 +21,6 @@ import {
 } from "../util/CodeMirrorUtil";
 import {
     addNewlinesToSection,
-    buildHeadingPattern,
     buildIndentation,
     deepExtractBlocks,
     extractBlocksRecursively,
@@ -69,14 +68,14 @@ export class ArchiveFeature {
         private readonly textReplacementService: TextReplacementService,
         private readonly metadataService: MetadataService,
         private readonly settings: Settings,
-        private readonly archiveHeadingPattern: RegExp = buildHeadingPattern(
-            settings.archiveHeading
-        )
+        /** @deprecated */
+        private readonly archiveHeadingPattern = settings.archiveHeading
     ) {
         this.taskFilter = {
             blockFilter: (block: Block) =>
                 this.taskTestingService.doesTaskNeedArchiving(block.text),
-            sectionFilter: (section: Section) => !this.isArchive(section.text),
+            sectionFilter: (section: Section) =>
+                !this.isTopArchiveHeading(section.text),
         };
     }
 
@@ -262,62 +261,59 @@ export class ArchiveFeature {
     }
 
     private getArchiveSectionFromRoot(root: Section) {
+        // todo: this might no longer be needed
         const shouldArchiveToRoot = !this.settings.archiveUnderHeading;
         if (this.settings.archiveToSeparateFile && shouldArchiveToRoot) {
             return root;
         }
 
-        const { headings, archiveHeadingDepth } = this.settings;
+        const { headings } = this.settings;
+
+        if (headings.length === 0) {
+            return root;
+        }
+
         const resolvedHeadings = headings.map((heading) =>
             this.placeholderService.resolve(heading.text, heading.dateFormat)
         );
 
-        if (resolvedHeadings.length > 0) {
-            let context = root;
-
-            for (
-                let headingIndex = 0;
-                headingIndex < resolvedHeadings.length;
-                headingIndex++
-            ) {
-                const headingTextToSearchFor = resolvedHeadings[headingIndex];
-                const existingHeading = findSectionRecursively(
-                    context,
-                    (section) => section.text.includes(headingTextToSearchFor) // todo: this is a kludge for clunky newlines in section.text
-                );
-
-                if (existingHeading === null) {
-                    const tokenLevel = headingIndex + archiveHeadingDepth;
-                    const newSection = new Section(
-                        // todo: it's lame that we have to manage spaces manually
-                        " " + headingTextToSearchFor,
-                        tokenLevel,
-                        new RootBlock()
-                    );
-                    context.appendChild(newSection);
-                    context = newSection;
-                } else {
-                    context = existingHeading;
-                }
-            }
-
-            return context;
-        }
-
-        const existingArchiveSection = findSectionRecursively(root, (section) =>
-            this.archiveHeadingPattern.test(section.text)
-        );
-        if (existingArchiveSection) {
-            return existingArchiveSection;
-        }
-
         if (this.settings.addNewlinesAroundHeadings) {
             addNewlinesToSection(root);
         }
-        const newArchiveSection = this.buildArchiveSection();
-        root.appendChild(newArchiveSection);
 
-        return newArchiveSection;
+        return this.findOrCreateArchiveLeaf(root, resolvedHeadings);
+    }
+
+    private findOrCreateArchiveLeaf(root: Section, resolvedHeadings: string[]) {
+        let context = root;
+
+        for (
+            let headingIndex = 0;
+            headingIndex < resolvedHeadings.length;
+            headingIndex++
+        ) {
+            const headingTextToSearchFor = resolvedHeadings[headingIndex];
+            const existingHeading = findSectionRecursively(
+                context,
+                (section) => section.text.trim() === headingTextToSearchFor // todo: no need for trim
+            );
+
+            if (existingHeading === null) {
+                const tokenLevel = headingIndex + this.settings.archiveHeadingDepth;
+                const newSection = new Section(
+                    " " + headingTextToSearchFor, // todo: do not manage spaces manually
+                    tokenLevel,
+                    new RootBlock()
+                );
+
+                context.appendChild(newSection);
+                context = newSection;
+            } else {
+                context = existingHeading;
+            }
+        }
+
+        return context;
     }
 
     private buildArchiveSection() {
@@ -329,7 +325,7 @@ export class ArchiveFeature {
     }
 
     // todo: this is out of place
-    private isArchive(line: string) {
+    private isTopArchiveHeading(line: string) {
         const firstHeading = this.settings.headings[0];
         if (firstHeading) {
             const resolvedHeadingText = this.placeholderService.resolve(
@@ -341,7 +337,7 @@ export class ArchiveFeature {
                 return true;
             }
         }
-        return this.archiveHeadingPattern.test(line);
+        return false;
     }
 
     private async getOrCreateFile(path: string) {
