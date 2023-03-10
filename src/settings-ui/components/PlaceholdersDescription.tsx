@@ -11,14 +11,10 @@ interface PlaceholdersDescriptionProps {
 
 export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
   const mergedProps = mergeProps({ extraPlaceholders: [] }, props);
-  const sourceFileName = mergedProps.placeholderResolver.resolve(
-    "{{sourceFileName}}",
-    DEFAULT_DATE_FORMAT
-  );
-  const sourceFilePath = mergedProps.placeholderResolver.resolve(
-    "{{sourceFilePath}}",
-    DEFAULT_DATE_FORMAT
-  );
+  const sourceFileName = () =>
+    mergedProps.placeholderResolver.resolve("{{sourceFileName}}", DEFAULT_DATE_FORMAT);
+  const sourceFilePath = () =>
+    mergedProps.placeholderResolver.resolve("{{sourceFilePath}}", DEFAULT_DATE_FORMAT);
 
   return (
     <>
@@ -30,13 +26,13 @@ export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
             [
               "{{sourceFileName}}",
               <>
-                for the currently open file it resolves to <b>{sourceFileName}</b>
+                for the currently open file it resolves to <b>{sourceFileName()}</b>
               </>,
             ],
             [
               "{{sourceFilePath}}",
               <>
-                for the currently open file it resolves to <b>{sourceFilePath}</b>
+                for the currently open file it resolves to <b>{sourceFilePath()}</b>
               </>,
             ],
             ...mergedProps.extraPlaceholders,
