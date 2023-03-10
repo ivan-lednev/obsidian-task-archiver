@@ -28,7 +28,7 @@ export enum TaskSortOrder {
     NEWEST_LAST = "Newest last",
 }
 
-export interface HeadingConfig {
+export interface TreeLevelConfig {
     text: string;
     dateFormat?: string;
 }
@@ -41,10 +41,22 @@ export interface Settings {
      */
     archiveHeading?: string;
     archiveHeadingDepth: number;
-    weeklyNoteFormat: string;
-    useWeeks: boolean;
-    dailyNoteFormat: string;
-    useDays: boolean;
+    /**
+     * @deprecated; use listItems instead
+     */
+    weeklyNoteFormat?: string;
+    /**
+     * @deprecated; use listItems instead
+     */
+    useWeeks?: boolean;
+    /**
+     * @deprecated; use listItems instead
+     */
+    dailyNoteFormat?: string;
+    /**
+     * @deprecated; use listItems instead
+     */
+    useDays?: boolean;
     useAdditionalTaskPattern: boolean;
     additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
@@ -56,7 +68,9 @@ export interface Settings {
     indentationSettings: IndentationSettings;
     textReplacement: TextReplacementSettings;
     additionalMetadataBeforeArchiving: AdditionalMetadataSettings;
-    headings: HeadingConfig[];
+    headings: TreeLevelConfig[];
+    archiveUnderListItems: boolean;
+    listItems: TreeLevelConfig[];
     rules: Rule[];
 }
 
@@ -72,10 +86,10 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveHeadingDepth: 1,
     archiveToSeparateFile: false,
     archiveUnderHeading: true,
-    dailyNoteFormat: DEFAULT_DATE_FORMAT,
     dateFormat: DEFAULT_DATE_FORMAT,
     defaultArchiveFileName: "{{sourceFileName}} (archive)",
     headings: [],
+    listItems: [],
     indentationSettings: {
         tabSize: 4,
         useTab: true,
@@ -90,9 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
         replacementTest: "task #some-tag",
     },
     useAdditionalTaskPattern: false,
-    useDays: false,
-    useWeeks: false,
-    weeklyNoteFormat: "YYYY-MM-[W]-w",
+    archiveUnderListItems: false,
 };
 
 export const DEFAULT_SETTINGS_FOR_TESTS: Settings = {

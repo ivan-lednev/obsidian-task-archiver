@@ -9,7 +9,7 @@ import { Rule, Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
-import { DateTreeService } from "../services/DateTreeService";
+import { ListItemService } from "../services/ListItemService";
 import { MetadataService } from "../services/MetadataService";
 import { PlaceholderService } from "../services/PlaceholderService";
 import { TaskTestingService } from "../services/TaskTestingService";
@@ -62,7 +62,7 @@ export class ArchiveFeature {
         private readonly vault: Vault,
         private readonly workspace: Workspace,
         private readonly parser: SectionParser,
-        private readonly dateTreeService: DateTreeService,
+        private readonly listItemService: ListItemService,
         private readonly taskTestingService: TaskTestingService,
         private readonly placeholderService: PlaceholderService,
         private readonly textReplacementService: TextReplacementService,
@@ -254,7 +254,7 @@ export class ArchiveFeature {
 
     private archiveBlocksToRoot(tasks: Block[], root: Section) {
         const archiveSection = this.getArchiveSectionFromRoot(root);
-        this.dateTreeService.mergeNewBlocksWithDateTree(
+        this.listItemService.mergeBlocksWithListItemTree(
             archiveSection.blockContent,
             tasks
         );

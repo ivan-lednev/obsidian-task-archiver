@@ -9,7 +9,7 @@ function buildArchiveFeature(activeFileState, settings) {
         deps.mockVault,
         deps.mockWorkspace,
         deps.sectionParser,
-        deps.dateTreeService,
+        deps.listItemService,
         deps.taskTestingService,
         deps.placeholderService,
         deps.textReplacementService,

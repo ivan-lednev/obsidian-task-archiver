@@ -5,7 +5,7 @@ import { MockVault } from "./MockVault";
 
 import { EditorFile } from "../../../ActiveFile";
 import { DEFAULT_SETTINGS_FOR_TESTS } from "../../../Settings";
-import { DateTreeService } from "../../../services/DateTreeService";
+import { ListItemService } from "../../../services/ListItemService";
 import { MetadataService } from "../../../services/MetadataService";
 import { PlaceholderService } from "../../../services/PlaceholderService";
 import { TaskTestingService } from "../../../services/TaskTestingService";
@@ -42,9 +42,9 @@ export class TestDependencies {
         this.sectionParser = new SectionParser(
             new BlockParser(settings.indentationSettings)
         );
-        this.dateTreeService = new DateTreeService(settings);
         this.taskTestingService = new TaskTestingService(settings);
         this.placeholderService = new PlaceholderService(this.mockWorkspace);
+        this.listItemService = new ListItemService(this.placeholderService, settings);
         this.textReplacementService = new TextReplacementService(settings);
         this.metadataService = new MetadataService(this.placeholderService, settings);
         this.settings = settings;

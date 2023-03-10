@@ -12,7 +12,6 @@ import { createTFile } from "./test-util/TestUtil";
 
 import { DEFAULT_SETTINGS_FOR_TESTS, TaskSortOrder } from "../../Settings";
 
-const WEEK = "2021-01-W-1";
 const DAY = "2021-01-01";
 const TIME = "2021-01-01T00:01";
 
@@ -313,180 +312,6 @@ describe("Separate files", () => {
     });
 });
 
-describe("Date tree", () => {
-    test("Archives tasks under a bullet with the current week", async () => {
-        await archiveTasksAndCheckActiveFile(
-            ["- [x] foo", "- [ ] bar", "# Archived"],
-            ["- [ ] bar", "# Archived", "", `- [[${WEEK}]]`, "\t- [x] foo", ""],
-            {
-                settings: {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useWeeks: true,
-                },
-            }
-        );
-    });
-
-    test("Uses indentation values from settings", async () => {
-        await archiveTasksAndCheckActiveFile(
-            ["- [x] foo", "# Archived"],
-            ["# Archived", "", `- [[${WEEK}]]`, "   - [x] foo", ""],
-            {
-                settings: {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useWeeks: true,
-                    indentationSettings: {
-                        useTab: false,
-                        tabSize: 3,
-                    },
-                },
-            }
-        );
-    });
-
-    test("Appends tasks under the current week bullet if it exists", async () => {
-        await archiveTasksAndCheckActiveFile(
-            [
-                "- [x] foo",
-                "# Archived",
-                "- [[old week]]",
-                "\t- [x] old task",
-                `- [[${WEEK}]]`,
-                "\t- [x] baz",
-            ],
-            [
-                "# Archived",
-                "",
-                "- [[old week]]",
-                "\t- [x] old task",
-                `- [[${WEEK}]]`,
-                "\t- [x] baz",
-                "\t- [x] foo",
-                "",
-            ],
-            {
-                settings: {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    useWeeks: true,
-                },
-            }
-        );
-    });
-
-    describe("Days", () => {
-        test("Archives tasks under a bullet with the current day", async () => {
-            await archiveTasksAndCheckActiveFile(
-                ["- [x] foo", "- [ ] bar", "# Archived"],
-                ["- [ ] bar", "# Archived", "", `- [[${DAY}]]`, "\t- [x] foo", ""],
-                {
-                    settings: {
-                        ...DEFAULT_SETTINGS_FOR_TESTS,
-                        useDays: true,
-                    },
-                }
-            );
-        });
-    });
-
-    describe("Combining dates", () => {
-        test("Creates & indents weekly & daily blocks", async () => {
-            await archiveTasksAndCheckActiveFile(
-                ["- [x] foo", "- [ ] bar", "# Archived"],
-                [
-                    "- [ ] bar",
-                    "# Archived",
-                    "",
-                    `- [[${WEEK}]]`,
-                    `\t- [[${DAY}]]`,
-                    "\t\t- [x] foo",
-                    "",
-                ],
-                {
-                    settings: {
-                        ...DEFAULT_SETTINGS_FOR_TESTS,
-                        useDays: true,
-                        useWeeks: true,
-                    },
-                }
-            );
-        });
-
-        test("The week is already in the tree", async () => {
-            await archiveTasksAndCheckActiveFile(
-                ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${WEEK}]]`],
-                [
-                    "- [ ] bar",
-                    "# Archived",
-                    "",
-                    `- [[${WEEK}]]`,
-                    `\t- [[${DAY}]]`,
-                    "\t\t- [x] foo",
-                    "",
-                ],
-                {
-                    settings: {
-                        ...DEFAULT_SETTINGS_FOR_TESTS,
-                        useDays: true,
-                        useWeeks: true,
-                    },
-                }
-            );
-        });
-
-        test("The week and the day are already in the tree", async () => {
-            await archiveTasksAndCheckActiveFile(
-                [
-                    "- [x] foo",
-                    "- [ ] bar",
-                    "# Archived",
-                    "",
-                    `- [[${WEEK}]]`,
-                    `\t- [[${DAY}]]`,
-                ],
-                [
-                    "- [ ] bar",
-                    "# Archived",
-                    "",
-                    `- [[${WEEK}]]`,
-                    `\t- [[${DAY}]]`,
-                    "\t\t- [x] foo",
-                    "",
-                ],
-                {
-                    settings: {
-                        ...DEFAULT_SETTINGS_FOR_TESTS,
-                        useDays: true,
-                        useWeeks: true,
-                    },
-                }
-            );
-        });
-
-        test("The day is there, but the week is not (the user has changed the configuration)", async () => {
-            await archiveTasksAndCheckActiveFile(
-                ["- [x] foo", "- [ ] bar", "# Archived", "", `- [[${DAY}]]`],
-                [
-                    "- [ ] bar",
-                    "# Archived",
-                    "",
-                    `- [[${DAY}]]`,
-                    `- [[${WEEK}]]`,
-                    `\t- [[${DAY}]]`,
-                    "\t\t- [x] foo",
-                    "",
-                ],
-                {
-                    settings: {
-                        ...DEFAULT_SETTINGS_FOR_TESTS,
-                        useDays: true,
-                        useWeeks: true,
-                    },
-                }
-            );
-        });
-    });
-});
-
 describe("Deleting completed tasks", () => {
     test("Deletes completed tasks", async () => {
         await deleteTasksAndCheckActiveFile(["- [x] foo", "- [ ] bar"], ["- [ ] bar"]);
@@ -660,30 +485,6 @@ describe("Sort orders", () => {
                 settings: {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     taskSortOrder: TaskSortOrder.NEWEST_FIRST,
-                },
-            }
-        );
-    });
-
-    test("Newest tasks at the top with a date tree", async () => {
-        await archiveTasksAndCheckActiveFile(
-            ["- [x] foo", "# Archived", "- [[2020-01-01]]", "\t- [x] old task"],
-            [
-                "# Archived",
-                "",
-                "- [[2021-01-W-1]]",
-                "\t- [[2021-01-01]]",
-                "\t\t- [x] foo",
-                "- [[2020-01-01]]",
-                "\t- [x] old task",
-                "",
-            ],
-            {
-                settings: {
-                    ...DEFAULT_SETTINGS_FOR_TESTS,
-                    taskSortOrder: TaskSortOrder.NEWEST_FIRST,
-                    useDays: true,
-                    useWeeks: true,
                 },
             }
         );
@@ -880,6 +681,100 @@ describe("Building a heading chain", () => {
                     addNewlinesAroundHeadings: false,
                     archiveHeadingDepth: 2,
                     headings: [{ text: "1" }, { text: "2" }],
+                },
+            }
+        );
+    });
+});
+
+describe("Building a list item chain", () => {
+    test("Builds a custom list item tree", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", "- Custom 1", "\t- Custom 2", "\t\t- [x] foo", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    headings: [],
+                    archiveUnderListItems: true,
+                    listItems: [{ text: "Custom 1" }, { text: "Custom 2" }],
+                },
+            }
+        );
+    });
+
+    test("Placeholders get resolved", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo"],
+            ["", "- mock-file-base-name", "\t- 2021", "\t\t- [x] foo", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    headings: [],
+                    archiveUnderListItems: true,
+                    listItems: [
+                        { text: "{{sourceFileName}}" },
+                        { text: "{{date}}", dateFormat: "YYYY" },
+                    ],
+                },
+            }
+        );
+    });
+
+    test("Merges with existing list item content", async () => {
+        await archiveTasksAndCheckActiveFile(
+            [
+                "- [x] foo",
+                "# Archived",
+                "",
+                "- Custom 1",
+                "\t- Custom 2",
+                "\t\t- [x] bar",
+            ],
+            [
+                "# Archived",
+                "",
+                "- Custom 1",
+                "\t- Custom 2",
+                "\t\t- [x] bar",
+                "\t\t- [x] foo",
+                "",
+            ],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveUnderListItems: true,
+                    listItems: [{ text: "Custom 1" }, { text: "Custom 2" }],
+                },
+            }
+        );
+    });
+
+    test("Respects different addition orders", async () => {
+        await archiveTasksAndCheckActiveFile(
+            [
+                "- [x] new",
+                "# Archived",
+                "",
+                "- Custom 1",
+                "\t- Custom 2",
+                "\t\t- [x] old",
+            ],
+            [
+                "# Archived",
+                "",
+                "- Custom 1",
+                "\t- Custom 2",
+                "\t\t- [x] new",
+                "\t\t- [x] old",
+                "",
+            ],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveUnderListItems: true,
+                    taskSortOrder: TaskSortOrder.NEWEST_FIRST,
+                    listItems: [{ text: "Custom 1" }, { text: "Custom 2" }],
                 },
             }
         );

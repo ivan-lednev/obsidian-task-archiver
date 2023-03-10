@@ -1,4 +1,4 @@
-import { Accessor } from "solid-js";
+import { partial } from "lodash";
 
 import { DateFormatDescription } from "./DateFormatDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
@@ -9,31 +9,30 @@ import { DEFAULT_DATE_FORMAT } from "../../Constants";
 import { TreeLevelConfig } from "../../Settings";
 
 interface HeadingsSettingsProps {
-  heading: TreeLevelConfig;
+  listItem: TreeLevelConfig;
   index: number;
 }
 
-export function HeadingsSettings(props: HeadingsSettingsProps) {
+export function ListItemsSettings(props: HeadingsSettingsProps) {
   const [, setSettings] = useSettingsContext();
 
-  // indeed, we need this to be a signal!
-  const headingLevel = () => props.index + 1;
+  const listItemLevel = () => props.index + 1;
   return (
     <>
       <BaseSetting
-        name={`Heading text (level ${headingLevel()})`}
+        name={`List item text (level ${listItemLevel()})`}
         class="archiver-setting-sub-item"
       >
         <input
           type="text"
-          value={props.heading.text}
+          value={props.listItem.text}
           onInput={({ currentTarget: { value } }) =>
-            setSettings("headings", props.index, { text: value })
+            setSettings("listItems", props.index, { text: value })
           }
         />
         <button
           onClick={() =>
-            setSettings("headings", (prev) => prev.filter((h, i) => i !== props.index))
+            setSettings("listItems", (prev) => prev.filter((h, i) => i !== props.index))
           }
         >
           Delete
@@ -41,16 +40,16 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
       </BaseSetting>
       <TextSetting
         onInput={({ currentTarget: { value } }) => {
-          setSettings("headings", props.index, { dateFormat: value });
+          setSettings("listItems", props.index, { dateFormat: value });
         }}
-        name={`Date format (level ${headingLevel()})`}
+        name={`Date format (level ${listItemLevel()})`}
         placeholder={DEFAULT_DATE_FORMAT}
         description={
           <DateFormatDescription
-            dateFormat={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
+            dateFormat={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
           />
         }
-        value={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
+        value={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
         class="archiver-setting-sub-item"
       />
     </>

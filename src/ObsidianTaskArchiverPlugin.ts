@@ -1,11 +1,12 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
 
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
+import { DEFAULT_DATE_FORMAT, DEFAULT_WEEK_FORMAT } from "./Constants";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { ArchiveFeature } from "./features/ArchiveFeature";
 import { ListToHeadingFeature } from "./features/ListToHeadingFeature";
 import { TaskListSortFeature } from "./features/TaskListSortFeature";
-import { DateTreeService } from "./services/DateTreeService";
+import { ListItemService } from "./services/ListItemService";
 import { MetadataService } from "./services/MetadataService";
 import { PlaceholderService } from "./services/PlaceholderService";
 import { TaskTestingService } from "./services/TaskTestingService";
@@ -106,17 +107,42 @@ export default class ObsidianTaskArchiver extends Plugin {
     }
 
     private replaceOldSettings(settings: Settings) {
-        if (settings.archiveHeading) {
-            const updated = {
-                ...settings,
-                headings: [{ text: settings.archiveHeading }],
-            };
+        const updated = { ...settings };
 
+        if (updated.archiveHeading) {
+            updated.headings = [{ text: updated.archiveHeading }];
             delete updated.archiveHeading;
-            return updated;
         }
 
-        return settings;
+        if (updated.useWeeks) {
+            updated.archiveUnderListItems = true;
+            updated.listItems = [
+                ...updated.listItems,
+                {
+                    text: "[[{{date}}]]",
+                    dateFormat: updated.weeklyNoteFormat || DEFAULT_WEEK_FORMAT,
+                },
+            ];
+
+            delete updated.useWeeks;
+            delete updated.weeklyNoteFormat;
+        }
+
+        if (updated.useDays) {
+            updated.archiveUnderListItems = true;
+            updated.listItems = [
+                ...updated.listItems,
+                {
+                    text: "[[{{date}}]]",
+                    dateFormat: updated.dailyNoteFormat || DEFAULT_DATE_FORMAT,
+                },
+            ];
+
+            delete updated.useDays;
+            delete updated.dailyNoteFormat;
+        }
+
+        return updated;
     }
 
     async saveSettings(newSettings: Settings) {
@@ -129,8 +155,8 @@ export default class ObsidianTaskArchiver extends Plugin {
             new BlockParser(this.settings.indentationSettings)
         );
         const taskTestingService = new TaskTestingService(this.settings);
-        const dateTreeService = new DateTreeService(this.settings);
         const placeholderService = new PlaceholderService(this.app.workspace);
+        const listItemService = new ListItemService(placeholderService, this.settings);
         const textReplacementService = new TextReplacementService(this.settings);
         const metadataService = new MetadataService(placeholderService, this.settings);
 
@@ -138,7 +164,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             this.app.vault,
             this.app.workspace,
             parser,
-            dateTreeService,
+            listItemService,
             taskTestingService,
             placeholderService,
             textReplacementService,

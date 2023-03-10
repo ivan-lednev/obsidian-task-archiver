@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 
 import { DateFormatDescription } from "./DateFormatDescription";
 import { HeadingsSettings } from "./HeadingsSettings";
+import { ListItemsSettings } from "./ListItemsSettings";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { Rule } from "./Rule";
 import { TaskPatternSettings } from "./TaskPatternSettings";
@@ -12,7 +13,7 @@ import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 import { ToggleSetting } from "./setting/ToggleSetting";
 
-import { DEFAULT_DATE_FORMAT } from "../../Constants";
+import { DEFAULT_DATE_FORMAT, NON_BREAKING_SPACE } from "../../Constants";
 import { TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
@@ -172,26 +173,81 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           class="archiver-setting-sub-item"
           description={
             <>
-              {settings.headings.map((heading, i) => {
-                // todo: why does it work without a signal?
-                const token = "#".repeat(i + settings.archiveHeadingDepth);
+              <For each={settings.headings}>
+                {(heading, i) => {
+                  const token = () => "#".repeat(i() + settings.archiveHeadingDepth);
+                  return (
+                    <>
+                      <code>
+                        {token()}{" "}
+                        {props.placeholderService.resolve(
+                          heading.text,
+                          heading.dateFormat || DEFAULT_DATE_FORMAT
+                        )}
+                      </code>
+                      <br />
+                    </>
+                  );
+                }}
+              </For>
+              <p>
+                <code>- [x] task</code>
+              </p>
+            </>
+          }
+        />
+      </Show>
+
+      <ToggleSetting
+        onClick={() => {
+          setSettings("archiveUnderListItems", (prev) => !prev);
+        }}
+        name="Archive under list items"
+        value={settings.archiveUnderListItems}
+      />
+      <Show when={settings.archiveUnderListItems} keyed>
+        <For each={settings.listItems}>
+          {(listItem, index) => (
+            <ListItemsSettings listItem={listItem} index={index()} />
+          )}
+        </For>
+
+        <BaseSetting class="archiver-setting-sub-item">
+          <button
+            onClick={() =>
+              setSettings("listItems", (prev) => [
+                ...prev,
+                { text: "[[{{date}}]]", dateFormat: "" },
+              ])
+            }
+          >
+            Add list level
+          </button>
+        </BaseSetting>
+
+        <BaseSetting
+          name="Here's what the result looks like:"
+          class="archiver-setting-sub-item"
+          description={
+            <For each={[...settings.listItems, { text: "[x] task" }]}>
+              {(listItem, i) => {
+                const indentationWithToken = () =>
+                  `${NON_BREAKING_SPACE.repeat(i() * 2)}- `;
+
                 return (
                   <>
                     <code>
-                      {token}{" "}
+                      {indentationWithToken()}
                       {props.placeholderService.resolve(
-                        heading.text,
-                        heading.dateFormat || DEFAULT_DATE_FORMAT
+                        listItem.text,
+                        listItem.dateFormat || DEFAULT_DATE_FORMAT
                       )}
                     </code>
                     <br />
                   </>
                 );
-              })}
-              <p>
-                <code>- [x] task</code>
-              </p>
-            </>
+              }}
+            </For>
           }
         />
       </Show>
@@ -253,47 +309,8 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         />
       </Show>
 
-      <h2>Date tree settings</h2>
-
-      <ToggleSetting
-        onClick={() => {
-          setSettings("useWeeks", (prev) => !prev);
-        }}
-        name="Use weeks"
-        description="Add completed tasks under a link to the current week"
-        value={settings.useWeeks}
-      />
-      <Show when={settings.useWeeks} keyed>
-        <TextSetting
-          onInput={({ currentTarget: { value } }) => {
-            setSettings({ weeklyNoteFormat: value });
-          }}
-          name="Weekly note pattern"
-          description={<DateFormatDescription dateFormat={settings.weeklyNoteFormat} />}
-          value={settings.weeklyNoteFormat}
-          class="archiver-setting-sub-item"
-        />
-      </Show>
-      <ToggleSetting
-        onClick={() => {
-          setSettings("useDays", (prev) => !prev);
-        }}
-        name="Use days"
-        description="Add completed tasks under a link to the current day"
-        value={settings.useDays}
-      />
-      <Show when={settings.useDays} keyed>
-        <TextSetting
-          onInput={({ currentTarget: { value } }) => {
-            setSettings({ dailyNoteFormat: value });
-          }}
-          name="Daily note pattern"
-          description={<DateFormatDescription dateFormat={settings.dailyNoteFormat} />}
-          value={settings.dailyNoteFormat}
-          class="archiver-setting-sub-item"
-        />
-      </Show>
       <h2>Rules</h2>
+
       <BaseSetting description="Define rules for handling tasks that match certain conditions">
         <button
           onClick={() =>
