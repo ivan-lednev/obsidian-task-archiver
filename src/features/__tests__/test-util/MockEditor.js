@@ -1,7 +1,7 @@
 export class MockEditor {
-    constructor(activeFile) {
+    constructor(activeFile, cursor) {
         this.activeFile = activeFile;
-        this.cursor = { line: 0, ch: 0 };
+        this.cursor = cursor;
     }
 
     getValue() {

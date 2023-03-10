@@ -560,7 +560,7 @@ describe("Archive list item under cursor", () => {
         await archiveTaskUnderCursorAndCheckActiveFile(
             ["- [ ] 1", "- [ ] 2"],
             ["- [ ] 1", "", "# Archived", "", "- [x] 2", ""],
-            { line: 1, ch: 0 }
+            { cursor: { line: 1, ch: 0 } }
         );
     });
 });

@@ -14,7 +14,14 @@ import { BlockParser } from "../../../services/parser/BlockParser";
 import { SectionParser } from "../../../services/parser/SectionParser";
 
 export class TestDependencies {
-    constructor(activeFileState, { settings, vaultFiles = [] }) {
+    constructor(
+        activeFileState,
+        {
+            settings = DEFAULT_SETTINGS_FOR_TESTS,
+            cursor = { line: 0, ch: 0 },
+            vaultFiles = [],
+        }
+    ) {
         this.mockActiveFile = createTFile({
             state: activeFileState,
             path: `${DEFAULT_SETTINGS_FOR_TESTS.defaultArchiveFileName}.md`,
@@ -28,7 +35,7 @@ export class TestDependencies {
         this.mockWorkspace = {
             getActiveFile: () => this.mockActiveFile,
         };
-        this.mockEditor = new MockEditor(this.mockActiveFile);
+        this.mockEditor = new MockEditor(this.mockActiveFile, cursor);
         this.editorFile = new EditorFile(this.mockEditor);
 
         // todo: no need to initialize real deps in tests

@@ -1,13 +1,11 @@
-import { flow } from "lodash";
-import { pipeWith } from "ramda";
-
 import { TestDependencies } from "./TestUtil";
 
 import { DEFAULT_SETTINGS_FOR_TESTS } from "../../../Settings";
 import { ArchiveFeature } from "../../ArchiveFeature";
 
-function buildArchiveFeature(deps) {
-    return new ArchiveFeature(
+function buildArchiveFeature(activeFileState, settings) {
+    const deps = new TestDependencies(activeFileState, settings);
+    const archiveFeature = new ArchiveFeature(
         deps.mockVault,
         deps.mockWorkspace,
         deps.sectionParser,
@@ -18,12 +16,20 @@ function buildArchiveFeature(deps) {
         deps.metadataService,
         deps.settings
     );
+    return {
+        testDependencies: deps,
+        vault: deps.mockVault,
+        activeFile: deps.mockActiveFile,
+        editorFile: deps.editorFile,
+        archiveFeature,
+    };
 }
 
 export async function archiveTasksAndCheckMessage(activeFileState, expectedMessage) {
     const { message } = await archiveTasks(activeFileState, {
         settings: DEFAULT_SETTINGS_FOR_TESTS,
     });
+
     expect(message).toEqual(expectedMessage);
 }
 
@@ -35,6 +41,7 @@ export async function archiveTasksAndCheckActiveFile(
     const { mockActiveFile } = await archiveTasks(activeFileState, {
         settings,
     });
+
     expect(mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
@@ -42,15 +49,15 @@ export async function archiveTasks(
     activeFileState,
     { settings = DEFAULT_SETTINGS_FOR_TESTS, vaultFiles = [] }
 ) {
-    const testDependencies = new TestDependencies(activeFileState, {
-        settings,
-        vaultFiles,
-    });
-    const archiveFeature = buildArchiveFeature(testDependencies);
-
-    const message = await archiveFeature.archiveShallowTasksInActiveFile(
-        testDependencies.editorFile
+    const { archiveFeature, editorFile, testDependencies } = buildArchiveFeature(
+        activeFileState,
+        {
+            settings,
+            vaultFiles,
+        }
     );
+
+    const message = await archiveFeature.archiveShallowTasksInActiveFile(editorFile);
 
     return { ...testDependencies, message };
 }
@@ -63,12 +70,14 @@ export async function archiveTasksRecursivelyAndCheckActiveFile(
     const {
         mockActiveFile: { state },
     } = await archiveTasksRecursively(activeFileState, settings);
+
     expect(state).toEqual(expectedActiveFileState);
 }
 
 async function archiveTasksRecursively(activeFileState, settings) {
-    const testDependencies = new TestDependencies(activeFileState, { settings });
-    const archiveFeature = buildArchiveFeature(testDependencies);
+    const { testDependencies, archiveFeature } = buildArchiveFeature(activeFileState, {
+        settings,
+    });
 
     const message = await archiveFeature.archiveDeepTasksInActiveFile(
         testDependencies.editorFile
@@ -90,8 +99,9 @@ export async function deleteTasksAndCheckActiveFile(
 }
 
 async function deleteTasks(activeFileState, settings) {
-    const testDependencies = new TestDependencies(activeFileState, { settings });
-    const archiveFeature = buildArchiveFeature(testDependencies);
+    const { testDependencies, archiveFeature } = buildArchiveFeature(activeFileState, {
+        settings,
+    });
 
     const message = await archiveFeature.deleteTasksInActiveFile(
         testDependencies.editorFile
@@ -107,6 +117,7 @@ export async function archiveHeadingAndCheckActiveFile(
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
     const testDependencies = await archiveHeading(activeFileState, cursor, settings);
+
     expect(testDependencies.mockActiveFile.state).toEqual(expectedActiveFileState);
 }
 
@@ -115,8 +126,9 @@ export async function archiveHeading(
     cursor = { line: 0, ch: 0 },
     settings = DEFAULT_SETTINGS_FOR_TESTS
 ) {
-    const testDependencies = new TestDependencies(activeFileState, { settings });
-    const archiveFeature = buildArchiveFeature(testDependencies);
+    const { testDependencies, archiveFeature } = buildArchiveFeature(activeFileState, {
+        settings,
+    });
 
     testDependencies.mockEditor.cursor = cursor;
     await archiveFeature.archiveHeadingUnderCursor(testDependencies.mockEditor);
@@ -127,24 +139,21 @@ export async function archiveHeading(
 export async function archiveTaskUnderCursorAndCheckActiveFile(
     activeFileState,
     expectedActiveFileState,
-    cursor = { line: 0, ch: 0 },
-    settings = DEFAULT_SETTINGS_FOR_TESTS
+    settings = {}
 ) {
     const {
         mockActiveFile: { state },
-    } = await archiveTaskUnderCursor(activeFileState, cursor, settings);
+    } = await archiveTaskUnderCursor(activeFileState, settings);
+
     expect(state).toEqual(expectedActiveFileState);
 }
 
-async function archiveTaskUnderCursor(
-    activeFileState,
-    cursor = { line: 0, ch: 0 },
-    settings = DEFAULT_SETTINGS_FOR_TESTS
-) {
-    const testDependencies = new TestDependencies(activeFileState, { settings });
-    const archiveFeature = buildArchiveFeature(testDependencies);
+async function archiveTaskUnderCursor(activeFileState, settings) {
+    const { testDependencies, archiveFeature } = buildArchiveFeature(
+        activeFileState,
+        settings
+    );
 
-    testDependencies.mockEditor.cursor = cursor;
     await archiveFeature.archiveTaskUnderCursor(testDependencies.mockEditor);
 
     return testDependencies;
