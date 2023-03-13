@@ -36,6 +36,8 @@
         "@typescript-eslint/parser": "^5.20.0",
         "classnames": "^2.3.2",
         "eslint": "^8.13.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-config-airbnb-typescript": "^17.0.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-jest": "^26.1.4",

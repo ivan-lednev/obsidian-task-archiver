@@ -6,6 +6,8 @@ module.exports = {
     },
     extends: [
         "eslint:recommended",
+        "airbnb-base",
+        "airbnb-typescript/base",
         "plugin:@typescript-eslint/recommended",
         "plugin:jest/recommended",
         "plugin:solid/recommended",
@@ -15,6 +17,7 @@ module.exports = {
     parserOptions: {
         ecmaVersion: "latest",
         sourceType: "module",
+        project: "./tsconfig.eslint.json",
     },
     plugins: ["@typescript-eslint", "jest", "unused-imports", "solid", "lodash-fp"],
     rules: {
