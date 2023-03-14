@@ -1,5 +1,3 @@
-import { partial } from "lodash";
-
 import { DateFormatDescription } from "./DateFormatDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";

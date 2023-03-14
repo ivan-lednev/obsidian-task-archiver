@@ -1,10 +1,8 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { dropRight, first, flow, isEmpty } from "lodash";
-import { groupBy, map, mapValues, toPairs } from "lodash/fp";
+import { dropRight, flow, groupBy, isEmpty, map, mapValues, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { DEFAULT_DATE_FORMAT } from "../Constants";
 import { Rule, Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
@@ -24,7 +22,6 @@ import {
     buildIndentation,
     deepExtractBlocks,
     extractBlocksRecursively,
-    findSection,
     findSectionRecursively,
     shallowExtractBlocks,
 } from "../util/Util";
@@ -55,6 +52,16 @@ export interface BlockWithRule {
     rule?: Rule;
 }
 
+// todo: move to parsing
+function getTaskStatus(task: Block) {
+    const [, taskStatus] = task.text.match(/\[(.)]/);
+    return taskStatus;
+}
+
+function completeTask(task: string) {
+    return task.replace("[ ]", "[x]");
+}
+
 export class ArchiveFeature {
     private readonly taskFilter: TreeFilter;
 
@@ -80,14 +87,11 @@ export class ArchiveFeature {
     }
 
     async archiveShallowTasksInActiveFile(file: ActiveFile) {
-        return await this.extractAndArchiveTasksInActiveFile(
-            file,
-            shallowExtractBlocks
-        );
+        return this.extractAndArchiveTasksInActiveFile(file, shallowExtractBlocks);
     }
 
     async archiveDeepTasksInActiveFile(file: ActiveFile) {
-        return await this.extractAndArchiveTasksInActiveFile(file, deepExtractBlocks);
+        return this.extractAndArchiveTasksInActiveFile(file, deepExtractBlocks);
     }
 
     async archiveTaskUnderCursor(editor: Editor) {
@@ -104,7 +108,7 @@ export class ArchiveFeature {
         const parsedTaskRoot = this.parser.parse(thisTaskLines);
         const parsedTaskBlock = parsedTaskRoot.blockContent.children[0];
         // todo: tidy up
-        parsedTaskBlock.text = this.completeTask(parsedTaskBlock.text);
+        parsedTaskBlock.text = completeTask(parsedTaskBlock.text);
         const activeFile = new EditorFile(editor);
 
         await this.archiveTasks(
@@ -114,10 +118,6 @@ export class ArchiveFeature {
 
         const [thisTaskStart] = thisTaskRange;
         editor.setCursor(thisTaskStart);
-    }
-
-    private completeTask(task: string) {
-        return task.replace("[ ]", "[x]");
     }
 
     private getDefaultRule() {
@@ -139,7 +139,7 @@ export class ArchiveFeature {
             task,
             rule:
                 this.settings.rules.find((rule) =>
-                    rule.statuses.includes(this.getTaskStatus(task))
+                    rule.statuses.includes(getTaskStatus(task))
                 ) || this.getDefaultRule(),
         }));
 
@@ -180,7 +180,7 @@ export class ArchiveFeature {
                         rule,
                         task: this.textReplacementService.replaceText(task),
                     }),
-                    (taskWithRule) => this.metadataService.appendMetadata(taskWithRule),
+                    this.metadataService.appendMetadata,
                     ({ rule, task }: BlockWithRule) => ({
                         task,
                         archivePath: rule.archiveToSeparateFile
@@ -209,12 +209,6 @@ export class ArchiveFeature {
         )(tasks);
     }
 
-    // todo: move to parsing
-    private getTaskStatus(task: Block) {
-        const [, taskStatus] = task.text.match(/\[(.)]/);
-        return taskStatus;
-    }
-
     private async getArchiveFile(activeFile: ActiveFile) {
         if (!this.settings.archiveToSeparateFile) {
             return activeFile;
@@ -238,6 +232,7 @@ export class ArchiveFeature {
 
     private async editFileTree(file: ActiveFile, cb: TreeEditorCallback) {
         const tree = this.parser.parse(await file.readLines());
+        // todo: mutation
         cb(tree);
         await file.writeLines(this.stringifyTree(tree));
     }
@@ -294,7 +289,7 @@ export class ArchiveFeature {
         for (
             let headingIndex = 0;
             headingIndex < resolvedHeadings.length;
-            headingIndex++
+            headingIndex += 1
         ) {
             const headingTextToSearchFor = resolvedHeadings[headingIndex];
             const existingHeading = findSectionRecursively(
@@ -305,7 +300,7 @@ export class ArchiveFeature {
             if (existingHeading === null) {
                 const tokenLevel = headingIndex + this.settings.archiveHeadingDepth;
                 const newSection = new Section(
-                    " " + headingTextToSearchFor, // todo: do not manage spaces manually
+                    ` ${headingTextToSearchFor}`, // todo: do not manage spaces manually
                     tokenLevel,
                     new RootBlock()
                 );
@@ -351,7 +346,7 @@ export class ArchiveFeature {
             const pathNodes = path.split(pathSeparator);
             const pathContainsFolders = pathNodes.length > 1;
             if (pathContainsFolders) {
-                const folderPath = dropRight(pathNodes).join(pathSeparator);
+                const folderPath = dropRight(1, pathNodes).join(pathSeparator);
                 const existingFolder = this.vault.getAbstractFileByPath(folderPath);
                 if (!existingFolder) {
                     await this.vault.createFolder(folderPath);

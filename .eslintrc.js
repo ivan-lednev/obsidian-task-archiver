@@ -76,5 +76,7 @@ module.exports = {
                     "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
             },
         ],
+        "import/prefer-default-export": "off",
+        "import/no-default-export": "error",
     },
 };

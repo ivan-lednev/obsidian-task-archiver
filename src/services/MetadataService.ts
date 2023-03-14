@@ -9,7 +9,7 @@ export class MetadataService {
         private readonly settings: Settings
     ) {}
 
-    appendMetadata({ task, rule }: BlockWithRule) {
+    appendMetadata = ({ task, rule }: BlockWithRule) => {
         if (!this.settings.additionalMetadataBeforeArchiving.addMetadata) {
             return { task, rule };
         }
@@ -27,5 +27,5 @@ export class MetadataService {
 
         task.text = `${task.text} ${resolvedMetadata}`;
         return { task, rule };
-    }
+    };
 }

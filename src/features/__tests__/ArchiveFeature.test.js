@@ -506,7 +506,7 @@ describe("Sort orders", () => {
 
 describe("Rules", () => {
     test("A single task gets archived to a different file", async () => {
-        const deferredArchive = createTFile({ state: [], path: "deferred.md" });
+        const deferredArchive = createTFile({ path: "deferred.md" });
 
         const { mockActiveFile } = await archiveTasks(["- [>] foo", "- [ ] bar"], {
             settings: {
@@ -527,8 +527,8 @@ describe("Rules", () => {
     });
 
     test("Different files", async () => {
-        const deferredArchive = createTFile({ state: [], path: "deferred.md" });
-        const cancelledArchive = createTFile({ state: [], path: "cancelled.md" });
+        const deferredArchive = createTFile({ path: "deferred.md" });
+        const cancelledArchive = createTFile({ path: "cancelled.md" });
 
         await archiveTasks(
             ["- [>] foo", "- [-] cancelled", "- [-] another one cancelled"],
@@ -564,7 +564,7 @@ describe("Rules", () => {
     });
 
     test("Custom date format in file name", async () => {
-        const deferredArchive = createTFile({ state: [], path: "2021-deferred.md" });
+        const deferredArchive = createTFile({ path: "2021-deferred.md" });
 
         await archiveTasks(["- [>] foo", "- [ ] bar"], {
             settings: {
@@ -790,6 +790,60 @@ describe("Building a list item chain", () => {
                     archiveUnderListItems: false,
                     taskSortOrder: TaskSortOrder.NEWEST_FIRST,
                     listItems: [{ text: "Custom 1" }, { text: "Custom 2" }],
+                },
+            }
+        );
+    });
+});
+
+describe("obsidian-tasks dates", () => {
+    test("Get resolved in headings", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo ✅ 2023-01-01"],
+            ["", "# 2023-01-01", "", "- [x] foo ✅ 2023-01-01", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    headings: [
+                        {
+                            text: "{{obsidianTasksCompletedDate}}",
+                            // obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
+                        },
+                    ],
+                },
+            }
+        );
+    });
+
+    test("Get resolved in file names", async () => {
+        const fileWithDate = createTFile({ path: "2023-01-01.md" });
+
+        const { vault } = await archiveTasks(["- [x] foo ✅ 2023-01-01"], {
+            settings: {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveUnderHeading: false,
+                archiveToSeparateFile: true,
+                defaultArchiveFileName: "{{obsidianTasksCompletedDate}}",
+            },
+            vaultFiles: [fileWithDate],
+        });
+
+        expect(fileWithDate.state).toEqual("", "- [x] foo ✅ 2023-01-01", "");
+    });
+
+    test("Work with custom formats", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo ✅ 2023-01-01"],
+            ["", "# 2023", "", "- [x] foo ✅ 2023-01-01", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    headings: [
+                        {
+                            text: "{{obsidianTasksCompletedDate}}",
+                            obsidianTasksCompletedDateFormat: "YYYY",
+                        },
+                    ],
                 },
             }
         );

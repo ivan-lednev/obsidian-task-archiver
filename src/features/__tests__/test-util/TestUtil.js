@@ -52,7 +52,7 @@ export class TestDependencies {
 }
 
 // This is needed to pass `instanceof` checks
-export function createTFile({ state, path }) {
+export function createTFile({ state = [], path }) {
     return Object.assign(new TFile(), {
         // todo: move to variable
         basename: "mock-file-base-name",

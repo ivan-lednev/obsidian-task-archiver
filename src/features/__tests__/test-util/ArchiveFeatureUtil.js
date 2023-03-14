@@ -36,10 +36,13 @@ export async function archiveTasksAndCheckMessage(activeFileState, expectedMessa
 export async function archiveTasksAndCheckActiveFile(
     activeFileState,
     expectedActiveFileState,
-    { settings = DEFAULT_SETTINGS_FOR_TESTS } = { settings: DEFAULT_SETTINGS_FOR_TESTS }
+    { settings = DEFAULT_SETTINGS_FOR_TESTS, vaultFiles = [] } = {
+        settings: DEFAULT_SETTINGS_FOR_TESTS,
+    }
 ) {
     const { mockActiveFile } = await archiveTasks(activeFileState, {
         settings,
+        vaultFiles,
     });
 
     expect(mockActiveFile.state).toEqual(expectedActiveFileState);
