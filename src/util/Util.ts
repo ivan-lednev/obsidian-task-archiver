@@ -102,9 +102,10 @@ export function normalizeNewlinesRecursively(root: Section) {
     }
 }
 
-export function stripSurroundingNewlines(blocks: Block[]) {
-    return flow(dropWhile(isEmptyBlock), dropRightWhile(isEmptyBlock))(blocks);
-}
+export const stripSurroundingNewlines = flow(
+    dropWhile(isEmptyBlock),
+    dropRightWhile(isEmptyBlock)
+);
 
 function isEmptyBlock(block: Block) {
     return block.text.trim().length === 0;

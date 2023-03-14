@@ -174,31 +174,35 @@ export class ArchiveFeature {
 
     private async archiveTasks(tasks: BlockWithRule[], activeFile: ActiveFile) {
         await flow(
-            map(({ rule, task }) => ({
-                rule,
-                task: this.textReplacementService.replaceText(task),
-            })),
-            map((taskWithRule) => this.metadataService.appendMetadata(taskWithRule)),
-            map(({ rule, task }: BlockWithRule) => ({
-                task,
-                archivePath: rule.archiveToSeparateFile
-                    ? this.placeholderService.resolve(
-                          rule.defaultArchiveFileName,
-                          rule.dateFormat
-                      )
-                    : "current-file",
-            })),
+            map(
+                flow(
+                    ({ rule, task }) => ({
+                        rule,
+                        task: this.textReplacementService.replaceText(task),
+                    }),
+                    (taskWithRule) => this.metadataService.appendMetadata(taskWithRule),
+                    ({ rule, task }: BlockWithRule) => ({
+                        task,
+                        archivePath: rule.archiveToSeparateFile
+                            ? this.placeholderService.resolve(
+                                  rule.defaultArchiveFileName,
+                                  rule.dateFormat
+                              )
+                            : "current-file",
+                    })
+                )
+            ),
             groupBy((task) => task.archivePath),
-            mapValues((tasks) => tasks.map(({ task }) => task)),
+            mapValues((tasksWithPaths) => tasksWithPaths.map(({ task }) => task)),
             toPairs,
-            map(async ([archivePath, tasks]) => {
+            map(async ([archivePath, tasksForPath]) => {
                 const archiveFile =
                     archivePath === "current-file"
                         ? activeFile
                         : await this.getDiskFile(archivePath); // todo: this may be an issue if the rule says to archive a task to this exact file
 
                 await this.editFileTree(archiveFile, (tree: Section) =>
-                    this.archiveBlocksToRoot(tasks, tree)
+                    this.archiveBlocksToRoot(tasksForPath, tree)
                 );
             }),
             (promises) => Promise.all(promises)
