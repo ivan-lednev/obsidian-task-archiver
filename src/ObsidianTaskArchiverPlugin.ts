@@ -1,5 +1,7 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
 
+import _ from "lodash";
+
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { DEFAULT_DATE_FORMAT, DEFAULT_WEEK_FORMAT } from "./Constants";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";

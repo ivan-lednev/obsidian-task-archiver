@@ -21,9 +21,13 @@ export class ListItemService {
         this.indentationSettings = settings.indentationSettings;
     }
 
-    mergeBlocksWithListItemTree(root: Block, newBlocks: Block[]) {
+    mergeBlocksWithListItemTree(
+        root: Block,
+        newBlocks: Block[],
+        resolvedListItems: string[]
+    ) {
         root.children = stripSurroundingNewlines(root.children);
-        const insertionPoint = this.getArchiveLeaf(root);
+        const insertionPoint = this.getArchiveLeaf(root, resolvedListItems);
         this.addChildren(insertionPoint, ...newBlocks);
 
         if (this.settings.sortAlphabetically) {
@@ -38,14 +42,10 @@ export class ListItemService {
         }
     }
 
-    private getArchiveLeaf(root: Block) {
+    private getArchiveLeaf(root: Block, resolvedListItems: string[]) {
         if (!this.settings.archiveUnderListItems) {
             return root;
         }
-
-        const resolvedListItems = this.settings.listItems.map((l) =>
-            this.placeholderService.resolve(l.text, l.dateFormat)
-        );
 
         let context = root;
         for (const listItem of resolvedListItems) {

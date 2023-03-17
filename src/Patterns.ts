@@ -17,3 +17,7 @@ export const DEFAULT_COMPLETED_TASK_PATTERN = new RegExp(
     `^${BULLET_SIGN} ${CHECKBOX_COMPLETED}`
 );
 export const CHECKED_TASK_PATTERN = new RegExp(`${BULLET_SIGN} ${CHECKBOX_CHECKED}`);
+
+export const OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN = /✅ (\d{4}-\d{2}-\d{2})/;
+
+export const FILE_EXTENSION_PATTERN = /\.\w+$/;

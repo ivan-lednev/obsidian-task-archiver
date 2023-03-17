@@ -12,9 +12,9 @@ interface PlaceholdersDescriptionProps {
 export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
   const mergedProps = mergeProps({ extraPlaceholders: [] }, props);
   const sourceFileName = () =>
-    mergedProps.placeholderResolver.resolve("{{sourceFileName}}", DEFAULT_DATE_FORMAT);
+    mergedProps.placeholderResolver.resolve("{{sourceFileName}}");
   const sourceFilePath = () =>
-    mergedProps.placeholderResolver.resolve("{{sourceFilePath}}", DEFAULT_DATE_FORMAT);
+    mergedProps.placeholderResolver.resolve("{{sourceFilePath}}");
 
   return (
     <>

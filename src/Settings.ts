@@ -31,6 +31,7 @@ export enum TaskSortOrder {
 export interface TreeLevelConfig {
     text: string;
     dateFormat?: string;
+    obsidianTasksCompletedDateFormat?: string;
 }
 
 export interface Settings {

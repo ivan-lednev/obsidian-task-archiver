@@ -180,10 +180,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
                     <>
                       <code>
                         {token()}{" "}
-                        {props.placeholderService.resolve(
-                          heading.text,
-                          heading.dateFormat || DEFAULT_DATE_FORMAT
-                        )}
+                        {props.placeholderService.resolve(heading.text, {
+                          dateFormat: heading.dateFormat,
+                        })}
                       </code>
                       <br />
                     </>
@@ -238,10 +237,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
                   <>
                     <code>
                       {indentationWithToken()}
-                      {props.placeholderService.resolve(
-                        listItem.text,
-                        listItem.dateFormat || DEFAULT_DATE_FORMAT
-                      )}
+                      {props.placeholderService.resolve(listItem.text, {
+                        dateFormat: listItem.dateFormat,
+                      })}
                     </code>
                     <br />
                   </>
@@ -286,7 +284,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
                 - [x] water the cat #task{" "}
                 {props.placeholderService.resolve(
                   settings.additionalMetadataBeforeArchiving.metadata,
-                  settings.additionalMetadataBeforeArchiving.dateFormat
+                  {
+                    dateFormat: settings.additionalMetadataBeforeArchiving.dateFormat,
+                  }
                 )}
               </code>
             </>

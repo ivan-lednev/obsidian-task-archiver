@@ -1,7 +1,7 @@
 import { PlaceholderService } from "./PlaceholderService";
 
 import { Settings } from "../Settings";
-import { BlockWithRule } from "../features/ArchiveFeature";
+import { BlockWithRule } from "../types/Types";
 
 export class MetadataService {
     constructor(
@@ -19,11 +19,10 @@ export class MetadataService {
             ...rule,
         };
 
-        const resolvedMetadata = this.placeholderService.resolve(
-            metadata,
+        const resolvedMetadata = this.placeholderService.resolve(metadata, {
             dateFormat,
-            task.parentSection.text
-        );
+            heading: task.parentSection.text,
+        });
 
         task.text = `${task.text} ${resolvedMetadata}`;
         return { task, rule };

@@ -1,9 +1,11 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { dropRight, flow, groupBy, isEmpty, map, mapValues, toPairs } from "lodash/fp";
+import { dropRight, flow, groupBy, isEmpty, map, orderBy, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { Rule, Settings } from "../Settings";
+import { DEFAULT_DATE_FORMAT } from "../Constants";
+import { OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN } from "../Patterns";
+import { Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
@@ -13,6 +15,12 @@ import { PlaceholderService } from "../services/PlaceholderService";
 import { TaskTestingService } from "../services/TaskTestingService";
 import { TextReplacementService } from "../services/TextReplacementService";
 import { SectionParser } from "../services/parser/SectionParser";
+import {
+    BlockExtractor,
+    BlockWithRule,
+    TreeEditorCallback,
+    TreeFilter,
+} from "../types/Types";
 import {
     detectHeadingUnderCursor,
     detectListItemUnderCursor,
@@ -25,32 +33,6 @@ import {
     findSectionRecursively,
     shallowExtractBlocks,
 } from "../util/Util";
-
-export interface BlockExtractor {
-    (root: Block, filter: BlockFilter): Block[];
-}
-
-interface BlockFilter {
-    (block: Block): boolean;
-}
-
-interface SectionFilter {
-    (section: Section): boolean;
-}
-
-interface TreeFilter {
-    blockFilter: BlockFilter;
-    sectionFilter: SectionFilter;
-}
-
-interface TreeEditorCallback {
-    (tree: Section): void;
-}
-
-export interface BlockWithRule {
-    task: Block;
-    rule?: Rule;
-}
 
 // todo: move to parsing
 function getTaskStatus(task: Block) {
@@ -141,7 +123,7 @@ export class ArchiveFeature {
                 this.settings.rules.find((rule) =>
                     rule.statuses.includes(getTaskStatus(task))
                 ) || this.getDefaultRule(),
-        }));
+        })); // todo: we can push this into the 'archiveTasks' flow
 
         await this.archiveTasks(tasks, activeFile);
 
@@ -173,37 +155,81 @@ export class ArchiveFeature {
     }
 
     private async archiveTasks(tasks: BlockWithRule[], activeFile: ActiveFile) {
+        const sortOrder =
+            this.settings.taskSortOrder === TaskSortOrder.NEWEST_LAST ? "asc" : "desc";
+        const now = window.moment().format(DEFAULT_DATE_FORMAT);
+        // todo: out of place
+        const getCompletionDate = (taskWithRule: BlockWithRule) => {
+            // todo: duplication
+            const match = taskWithRule.task?.text?.match?.(
+                OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN
+            );
+            if (match) {
+                const [, obsidianTasksCompletedDate] = match;
+                return obsidianTasksCompletedDate;
+            }
+
+            return now;
+        };
+
         await flow(
+            orderBy(getCompletionDate, sortOrder),
             map(
                 flow(
-                    ({ rule, task }) => ({
+                    ({ rule, task }: BlockWithRule) => ({
                         rule,
                         task: this.textReplacementService.replaceText(task),
                     }),
                     this.metadataService.appendMetadata,
-                    ({ rule, task }: BlockWithRule) => ({
-                        task,
-                        archivePath: rule.archiveToSeparateFile
-                            ? this.placeholderService.resolve(
-                                  rule.defaultArchiveFileName,
-                                  rule.dateFormat
-                              )
-                            : "current-file",
-                    })
+                    // todo: we don't need rules up until this point
+                    ({ rule, task }: BlockWithRule) => {
+                        const archivePath = rule.archiveToSeparateFile
+                            ? rule.defaultArchiveFileName
+                            : "current-file";
+
+                        const resolvedPath = this.placeholderService.resolve(
+                            archivePath,
+                            { dateFormat: rule.dateFormat, block: task }
+                        );
+
+                        const resolve = map(({ text, dateFormat }: TreeLevelConfig) =>
+                            this.placeholderService.resolve(text, {
+                                dateFormat,
+                                block: task,
+                            })
+                        );
+
+                        return {
+                            task,
+                            resolvedPath,
+                            resolvedHeadings: resolve(this.settings.headings),
+                            resolvedListItems: resolve(this.settings.listItems),
+                        };
+                    }
                 )
             ),
-            groupBy((task) => task.archivePath),
-            mapValues((tasksWithPaths) => tasksWithPaths.map(({ task }) => task)),
+            groupBy((task) => task.resolvedPath),
             toPairs,
-            map(async ([archivePath, tasksForPath]) => {
+            map(async ([resolvedPath, tasksForPath]) => {
                 const archiveFile =
-                    archivePath === "current-file"
+                    resolvedPath === "current-file"
                         ? activeFile
-                        : await this.getDiskFile(archivePath); // todo: this may be an issue if the rule says to archive a task to this exact file
+                        : await this.getDiskFile(resolvedPath); // todo: this may be an issue if the rule says to archive a task to this exact file
 
-                await this.editFileTree(archiveFile, (tree: Section) =>
-                    this.archiveBlocksToRoot(tasksForPath, tree)
-                );
+                await this.editFileTree(archiveFile, (tree: Section) => {
+                    for (const {
+                        task,
+                        resolvedHeadings,
+                        resolvedListItems,
+                    } of tasksForPath) {
+                        this.archiveBlocksToRoot(
+                            [task],
+                            tree,
+                            resolvedHeadings,
+                            resolvedListItems
+                        );
+                    }
+                });
             }),
             (promises) => Promise.all(promises)
         )(tasks);
@@ -221,7 +247,9 @@ export class ArchiveFeature {
 
     private async getDiskFileByPathWithPlaceholders(path: string) {
         return this.getDiskFile(
-            this.placeholderService.resolve(path, this.settings.dateFormat)
+            this.placeholderService.resolve(path, {
+                dateFormat: this.settings.dateFormat,
+            })
         );
     }
 
@@ -251,15 +279,21 @@ export class ArchiveFeature {
         return tasks;
     }
 
-    private archiveBlocksToRoot(tasks: Block[], root: Section) {
-        const archiveSection = this.getArchiveSectionFromRoot(root);
+    private archiveBlocksToRoot(
+        tasks: Block[],
+        root: Section,
+        resolvedHeadings: string[],
+        resolvedListItems: string[]
+    ) {
+        const archiveSection = this.getArchiveSectionFromRoot(root, resolvedHeadings);
         this.listItemService.mergeBlocksWithListItemTree(
             archiveSection.blockContent,
-            tasks
+            tasks,
+            resolvedListItems
         );
     }
 
-    private getArchiveSectionFromRoot(root: Section) {
+    private getArchiveSectionFromRoot(root: Section, resolvedHeadings?: string[]) {
         // todo: this might no longer be needed
         const shouldArchiveToRoot = !this.settings.archiveUnderHeading;
         if (this.settings.archiveToSeparateFile && shouldArchiveToRoot) {
@@ -272,9 +306,12 @@ export class ArchiveFeature {
             return root;
         }
 
-        const resolvedHeadings = headings.map((heading) =>
-            this.placeholderService.resolve(heading.text, heading.dateFormat)
-        );
+        if (!resolvedHeadings) {
+            resolvedHeadings = headings.map((heading) => {
+                const { dateFormat } = heading;
+                return this.placeholderService.resolve(heading.text, { dateFormat });
+            });
+        }
 
         if (this.settings.addNewlinesAroundHeadings) {
             addNewlinesToSection(root);
@@ -329,7 +366,7 @@ export class ArchiveFeature {
         if (firstHeading) {
             const resolvedHeadingText = this.placeholderService.resolve(
                 firstHeading.text,
-                firstHeading.dateFormat
+                { dateFormat: firstHeading.dateFormat }
             );
             // todo: this is defective; there should be a full match
             if (line.includes(resolvedHeadingText)) {
