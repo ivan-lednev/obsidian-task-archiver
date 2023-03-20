@@ -17,19 +17,6 @@ export function buildIndentation(settings: IndentationSettings) {
     return settings.useTab ? "\t" : " ".repeat(settings.tabSize);
 }
 
-export function findBlockRecursively(
-    blocksOrBlock: Block[] | Block,
-    matcher: (node: Block) => boolean
-): Block | null {
-    if (blocksOrBlock instanceof Block) {
-        if (matcher(blocksOrBlock)) {
-            return blocksOrBlock;
-        }
-        return findBlockRecursivelyInCollection(blocksOrBlock.children, matcher);
-    }
-    return findBlockRecursivelyInCollection(blocksOrBlock, matcher);
-}
-
 function findBlockRecursivelyInCollection(
     blocks: Block[],
     matcher: (node: Block) => boolean
@@ -46,23 +33,21 @@ function findBlockRecursivelyInCollection(
     return null;
 }
 
-interface SectionMatcher {
-    (section: Section): boolean;
+export function findBlockRecursively(
+    blocksOrBlock: Block[] | Block,
+    matcher: (node: Block) => boolean
+): Block | null {
+    if (blocksOrBlock instanceof Block) {
+        if (matcher(blocksOrBlock)) {
+            return blocksOrBlock;
+        }
+        return findBlockRecursivelyInCollection(blocksOrBlock.children, matcher);
+    }
+    return findBlockRecursivelyInCollection(blocksOrBlock, matcher);
 }
 
-export function findSection(root: Section, matcher: SectionMatcher): Section | null {
-    if (matcher(root)) {
-        return root;
-    }
-    if (isEmpty(root.children)) {
-        return null;
-    }
-    for (const child of root.children) {
-        if (matcher(child)) {
-            return child;
-        }
-    }
-    return null;
+interface SectionMatcher {
+    (section: Section): boolean;
 }
 
 export function findSectionRecursively(
