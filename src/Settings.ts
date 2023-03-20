@@ -62,6 +62,8 @@ export interface Settings {
     additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
+    // todo: this is related only to separate file names. These settings should be grouped together
+    obsidianTasksCompletedDateFormat: string;
     archiveUnderHeading: boolean;
     defaultArchiveFileName: string;
     archiveAllCheckedTaskTypes: boolean;
@@ -86,6 +88,7 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveAllCheckedTaskTypes: false,
     archiveHeadingDepth: 1,
     archiveToSeparateFile: false,
+    obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
     archiveUnderHeading: true,
     dateFormat: DEFAULT_DATE_FORMAT,
     defaultArchiveFileName: "{{sourceFileName}} (archive)",

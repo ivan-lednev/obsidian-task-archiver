@@ -189,7 +189,12 @@ export class ArchiveFeature {
 
                         const resolvedPath = this.placeholderService.resolve(
                             archivePath,
-                            { dateFormat: rule.dateFormat, block: task }
+                            {
+                                dateFormat: rule.dateFormat,
+                                block: task,
+                                obsidianTasksCompletedDateFormat:
+                                    this.settings.obsidianTasksCompletedDateFormat,
+                            }
                         );
 
                         const resolveWithTask = map(
