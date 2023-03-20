@@ -192,18 +192,24 @@ export class ArchiveFeature {
                             { dateFormat: rule.dateFormat, block: task }
                         );
 
-                        const resolve = map(({ text, dateFormat }: TreeLevelConfig) =>
-                            this.placeholderService.resolve(text, {
+                        const resolveWithTask = map(
+                            ({
+                                text,
                                 dateFormat,
-                                block: task,
-                            })
+                                obsidianTasksCompletedDateFormat,
+                            }: TreeLevelConfig) =>
+                                this.placeholderService.resolve(text, {
+                                    dateFormat,
+                                    obsidianTasksCompletedDateFormat,
+                                    block: task,
+                                })
                         );
 
                         return {
                             task,
                             resolvedPath,
-                            resolvedHeadings: resolve(this.settings.headings),
-                            resolvedListItems: resolve(this.settings.listItems),
+                            resolvedHeadings: resolveWithTask(this.settings.headings),
+                            resolvedListItems: resolveWithTask(this.settings.listItems),
                         };
                     }
                 )
