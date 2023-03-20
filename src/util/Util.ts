@@ -1,7 +1,11 @@
 import { flow, isEmpty, last, partition } from "lodash";
 import { dropRightWhile, dropWhile } from "lodash/fp";
 
-import { INDENTATION_PATTERN } from "../Patterns";
+import { DEFAULT_DATE_FORMAT } from "../Constants";
+import {
+    INDENTATION_PATTERN,
+    OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN,
+} from "../Patterns";
 import { IndentationSettings } from "../Settings";
 import { Block } from "../model/Block";
 import { Section } from "../model/Section";
@@ -161,4 +165,16 @@ export function extractBlocksRecursively(
         }
     }
     return extracted;
+}
+
+export function getTaskCompletionDate(text?: string) {
+    const now = window.moment().format(DEFAULT_DATE_FORMAT);
+
+    const match = text?.match?.(OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN);
+    if (match) {
+        const [, obsidianTasksCompletedDate] = match;
+        return obsidianTasksCompletedDate;
+    }
+
+    return now;
 }

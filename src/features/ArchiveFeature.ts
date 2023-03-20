@@ -3,8 +3,6 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { dropRight, flow, groupBy, isEmpty, map, orderBy, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { DEFAULT_DATE_FORMAT } from "../Constants";
-import { OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN } from "../Patterns";
 import { Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
@@ -31,6 +29,7 @@ import {
     deepExtractBlocks,
     extractBlocksRecursively,
     findSectionRecursively,
+    getTaskCompletionDate,
     shallowExtractBlocks,
 } from "../util/Util";
 
@@ -157,23 +156,9 @@ export class ArchiveFeature {
     private async archiveTasks(tasks: BlockWithRule[], activeFile: ActiveFile) {
         const sortOrder =
             this.settings.taskSortOrder === TaskSortOrder.NEWEST_LAST ? "asc" : "desc";
-        const now = window.moment().format(DEFAULT_DATE_FORMAT);
-        // todo: out of place
-        const getCompletionDate = (taskWithRule: BlockWithRule) => {
-            // todo: duplication
-            const match = taskWithRule.task?.text?.match?.(
-                OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN
-            );
-            if (match) {
-                const [, obsidianTasksCompletedDate] = match;
-                return obsidianTasksCompletedDate;
-            }
-
-            return now;
-        };
 
         await flow(
-            orderBy(getCompletionDate, sortOrder),
+            orderBy(({ task: { text } }) => getTaskCompletionDate(text), sortOrder),
             map(
                 flow(
                     ({ rule, task }: BlockWithRule) => ({

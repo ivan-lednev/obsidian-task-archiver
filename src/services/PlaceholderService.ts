@@ -6,6 +6,7 @@ import {
     OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN,
 } from "../Patterns";
 import { Block } from "../model/Block";
+import { getTaskCompletionDate } from "../util/Util";
 
 interface PlaceholderContext {
     block?: Block;
@@ -53,13 +54,6 @@ export class PlaceholderService {
             obsidianTasksCompletedDateFormat = DEFAULT_DATE_FORMAT, // todo: this can be read from settings
         }: PlaceholderContext = {}
     ) {
-        let obsidianTasksCompletedDate = window.moment().format(DEFAULT_DATE_FORMAT);
-
-        const match = block?.text?.match?.(OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN);
-        if (match) {
-            [, obsidianTasksCompletedDate] = match;
-        }
-
         return text
             .replace(
                 PlaceholderService.ACTIVE_FILE_PLACEHOLDER,
@@ -86,7 +80,7 @@ export class PlaceholderService {
             .replace(
                 PlaceholderService.OBSIDIAN_TASKS_COMPLETED_DATE_PLACEHOLDER,
                 window
-                    .moment(obsidianTasksCompletedDate)
+                    .moment(getTaskCompletionDate(block?.text))
                     .format(obsidianTasksCompletedDateFormat)
             );
     }

@@ -13,6 +13,17 @@ import { TextReplacementService } from "../../../services/TextReplacementService
 import { BlockParser } from "../../../services/parser/BlockParser";
 import { SectionParser } from "../../../services/parser/SectionParser";
 
+// This is needed to pass `instanceof` checks
+export function createTFile({ state = [], path }) {
+    return Object.assign(new TFile(), {
+        // todo: move to variable
+        basename: "mock-file-base-name",
+        extension: "md",
+        path,
+        state,
+    });
+}
+
 export class TestDependencies {
     constructor(
         activeFileState,
@@ -49,15 +60,4 @@ export class TestDependencies {
         this.metadataService = new MetadataService(this.placeholderService, settings);
         this.settings = settings;
     }
-}
-
-// This is needed to pass `instanceof` checks
-export function createTFile({ state = [], path }) {
-    return Object.assign(new TFile(), {
-        // todo: move to variable
-        basename: "mock-file-base-name",
-        extension: "md",
-        path,
-        state,
-    });
 }

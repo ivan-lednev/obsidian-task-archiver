@@ -1,11 +1,16 @@
 import { TreeBuilder } from "./TreeBuilder";
 
-import { LIST_MARKER_PATTERN } from "../../Patterns";
+import { DEFAULT_DATE_FORMAT } from "../../Constants";
+import {
+    LIST_MARKER_PATTERN,
+    OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN,
+} from "../../Patterns";
 import { IndentationSettings } from "../../Settings";
 import { Block } from "../../model/Block";
 import { ListBlock } from "../../model/ListBlock";
 import { RootBlock } from "../../model/RootBlock";
 import { TextBlock } from "../../model/TextBlock";
+import { BlockWithRule } from "../../types/Types";
 import { splitOnIndentation } from "../../util/Util";
 
 export class BlockParser {
