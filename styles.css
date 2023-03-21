@@ -21,3 +21,17 @@ textarea {
 .archiver-status-examples {
     list-style: none;
 }
+
+.archiver-accordion {
+    width: 100%;
+}
+
+.archiver-panel {
+    display: none;
+    padding-top: 0.75em;
+    transition: max-height 0.2s ease-out;
+}
+
+.archiver-active {
+    display: block;
+}

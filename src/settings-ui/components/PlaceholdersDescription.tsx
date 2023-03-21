@@ -35,6 +35,10 @@ export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
                 for the currently open file it resolves to <b>{sourceFilePath()}</b>
               </>,
             ],
+            [
+              "{{obsidianTasksCompletedDate}}",
+              "obsidian-tasks completed date (✅ 2023-03-20); if the task doesn't have one, defaults to today",
+            ],
             ...mergedProps.extraPlaceholders,
           ]}
         >

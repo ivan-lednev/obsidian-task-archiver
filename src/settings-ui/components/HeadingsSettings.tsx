@@ -1,5 +1,6 @@
 import { Accessor } from "solid-js";
 
+import { Accordion } from "./Accordion";
 import { DateFormatDescription } from "./DateFormatDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
@@ -39,20 +40,40 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           Delete
         </button>
       </BaseSetting>
-      <TextSetting
-        onInput={({ currentTarget: { value } }) => {
-          setSettings("headings", props.index, { dateFormat: value });
-        }}
-        name={`Date format (level ${headingLevel()})`}
-        placeholder={DEFAULT_DATE_FORMAT}
-        description={
-          <DateFormatDescription
-            dateFormat={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
-          />
-        }
-        value={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
-        class="archiver-setting-sub-item"
-      />
+      <Accordion>
+        <TextSetting
+          onInput={({ currentTarget: { value } }) => {
+            setSettings("headings", props.index, { dateFormat: value });
+          }}
+          name={`Date format (level ${headingLevel()})`}
+          placeholder={DEFAULT_DATE_FORMAT}
+          description={
+            <DateFormatDescription
+              dateFormat={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
+            />
+          }
+          value={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
+          class="archiver-setting-sub-item"
+        />
+        <TextSetting
+          onInput={({ currentTarget: { value } }) => {
+            setSettings("headings", props.index, {
+              obsidianTasksCompletedDateFormat: value,
+            });
+          }}
+          name={`obsidian-tasks completed date format (level ${headingLevel()})`}
+          placeholder={DEFAULT_DATE_FORMAT}
+          description={
+            <DateFormatDescription
+              dateFormat={
+                props.heading.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT
+              }
+            />
+          }
+          value={props.heading.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
+          class="archiver-setting-sub-item"
+        />
+      </Accordion>
     </>
   );
 }

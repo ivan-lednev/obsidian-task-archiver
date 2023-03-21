@@ -1,13 +1,18 @@
-import { For, Show } from "solid-js";
+import classNames from "classnames";
+import { For, Show, createSignal } from "solid-js";
 
+import { Accordion } from "./Accordion";
 import { DateFormatDescription } from "./DateFormatDescription";
+import { HeadingTreeDemo } from "./HeadingTreeDemo";
 import { HeadingsSettings } from "./HeadingsSettings";
+import { ListItemTreeDemo } from "./ListItemTreeDemo";
 import { ListItemsSettings } from "./ListItemsSettings";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { Rule } from "./Rule";
 import { TaskPatternSettings } from "./TaskPatternSettings";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
+import { ButtonSetting } from "./setting/ButtonSetting";
 import { DropDownSetting } from "./setting/DropDownSetting";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
@@ -23,6 +28,7 @@ interface ArchiverSettingsPageProps {
 
 export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
   const [settings, setSettings] = useSettingsContext();
+  const [active, setActive] = createSignal(false);
 
   const replacementResult = () =>
     settings.textReplacement.replacementTest.replace(
@@ -125,15 +131,30 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           value={settings.defaultArchiveFileName}
           class="archiver-setting-sub-item"
         />
-        <TextSetting
-          onInput={({ currentTarget: { value } }) => {
-            setSettings({ dateFormat: value });
-          }}
-          name="Date format"
-          description={<DateFormatDescription dateFormat={settings.dateFormat} />}
-          value={settings.dateFormat}
-          class="archiver-setting-sub-item"
-        />
+        <Accordion>
+          <TextSetting
+            onInput={({ currentTarget: { value } }) => {
+              setSettings({ dateFormat: value });
+            }}
+            name="Date format"
+            description={<DateFormatDescription dateFormat={settings.dateFormat} />}
+            value={settings.dateFormat}
+            class="archiver-setting-sub-item"
+          />
+          <TextSetting
+            onInput={({ currentTarget: { value } }) => {
+              setSettings({ obsidianTasksCompletedDateFormat: value });
+            }}
+            name="obsidian-tasks completed date format"
+            description={
+              <DateFormatDescription
+                dateFormat={settings.obsidianTasksCompletedDateFormat}
+              />
+            }
+            value={settings.obsidianTasksCompletedDateFormat}
+            class="archiver-setting-sub-item"
+          />
+        </Accordion>
       </Show>
 
       <ToggleSetting
@@ -158,43 +179,14 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           {(heading, index) => <HeadingsSettings heading={heading} index={index()} />}
         </For>
 
-        <BaseSetting class="archiver-setting-sub-item">
-          <button
-            onClick={() =>
-              setSettings("headings", (prev) => [...prev, { text: "", dateFormat: "" }])
-            }
-          >
-            Add heading
-          </button>
-        </BaseSetting>
-
-        <BaseSetting
-          name="Here's what the result looks like:"
-          class="archiver-setting-sub-item"
-          description={
-            <>
-              <For each={settings.headings}>
-                {(heading, i) => {
-                  const token = () => "#".repeat(i() + settings.archiveHeadingDepth);
-                  return (
-                    <>
-                      <code>
-                        {token()}{" "}
-                        {props.placeholderService.resolve(heading.text, {
-                          dateFormat: heading.dateFormat,
-                        })}
-                      </code>
-                      <br />
-                    </>
-                  );
-                }}
-              </For>
-              <p>
-                <code>- [x] task</code>
-              </p>
-            </>
+        <ButtonSetting
+          onClick={() =>
+            setSettings("headings", (prev) => [...prev, { text: "", dateFormat: "" }])
           }
+          buttonText="Add heading"
         />
+
+        <HeadingTreeDemo placeholderService={props.placeholderService} />
       </Show>
 
       <ToggleSetting
@@ -211,43 +203,17 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           )}
         </For>
 
-        <BaseSetting class="archiver-setting-sub-item">
-          <button
-            onClick={() =>
-              setSettings("listItems", (prev) => [
-                ...prev,
-                { text: "[[{{date}}]]", dateFormat: "" },
-              ])
-            }
-          >
-            Add list level
-          </button>
-        </BaseSetting>
-
-        <BaseSetting
-          name="Here's what the result looks like:"
-          class="archiver-setting-sub-item"
-          description={
-            <For each={[...settings.listItems, { text: "[x] task" }]}>
-              {(listItem, i) => {
-                const indentationWithToken = () =>
-                  `${NON_BREAKING_SPACE.repeat(i() * 2)}- `;
-
-                return (
-                  <>
-                    <code>
-                      {indentationWithToken()}
-                      {props.placeholderService.resolve(listItem.text, {
-                        dateFormat: listItem.dateFormat,
-                      })}
-                    </code>
-                    <br />
-                  </>
-                );
-              }}
-            </For>
+        <ButtonSetting
+          onClick={() =>
+            setSettings("listItems", (prev) => [
+              ...prev,
+              { text: "[[{{date}}]]", dateFormat: "" },
+            ])
           }
+          buttonText="Add list level"
         />
+
+        <ListItemTreeDemo placeholderService={props.placeholderService} />
       </Show>
 
       <ToggleSetting
