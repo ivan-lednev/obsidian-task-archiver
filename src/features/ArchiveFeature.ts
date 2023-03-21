@@ -34,14 +34,13 @@ import {
     shallowExtractBlocks,
 } from "../util/Util";
 
-// todo: move to parsing
 function getTaskStatus(task: Block) {
     const [, taskStatus] = task.text.match(/\[(.)]/);
     return taskStatus;
 }
 
-function completeTask(task: string) {
-    return task.replace("[ ]", "[x]");
+function completeTask(text: string) {
+    return text.replace("[ ]", "[x]");
 }
 
 export class ArchiveFeature {
@@ -89,14 +88,10 @@ export class ArchiveFeature {
 
         const parsedTaskRoot = this.parser.parse(thisTaskLines);
         const parsedTaskBlock = parsedTaskRoot.blockContent.children[0];
-        // todo: tidy up
         parsedTaskBlock.text = completeTask(parsedTaskBlock.text);
         const activeFile = new EditorFile(editor);
 
-        await this.archiveTasks(
-            [{ task: parsedTaskBlock, rule: this.getDefaultRule() }],
-            activeFile
-        );
+        await this.archiveTasks([parsedTaskBlock], activeFile);
 
         const [thisTaskStart] = thisTaskRange;
         editor.setCursor(thisTaskStart);
@@ -116,15 +111,7 @@ export class ArchiveFeature {
         activeFile: ActiveFile,
         extractor: BlockExtractor
     ) {
-        const tasks = (
-            await this.extractTasksFromActiveFile(activeFile, extractor)
-        ).map((task) => ({
-            task,
-            rule:
-                this.settings.rules.find((rule) =>
-                    rule.statuses.includes(getTaskStatus(task))
-                ) || this.getDefaultRule(),
-        })); // todo: we can push this into the 'archiveTasks' flow
+        const tasks = await this.extractTasksFromActiveFile(activeFile, extractor);
 
         await this.archiveTasks(tasks, activeFile);
 
@@ -155,55 +142,58 @@ export class ArchiveFeature {
         await this.archiveSection(activeFile, parsedHeading);
     }
 
-    private async archiveTasks(tasks: BlockWithRule[], activeFile: ActiveFile) {
+    private findRuleForTask(task: Block) {
+        return (
+            this.settings.rules.find((rule) =>
+                rule.statuses.includes(getTaskStatus(task))
+            ) || this.getDefaultRule()
+        );
+    }
+
+    private addDestinationToTask = ({ task, rule }: BlockWithRule) => {
+        const archivePath = rule.archiveToSeparateFile
+            ? rule.defaultArchiveFileName
+            : "current-file";
+
+        const resolvedPath = this.placeholderService.resolve(archivePath, {
+            dateFormat: rule.dateFormat,
+            block: task,
+            obsidianTasksCompletedDateFormat:
+                this.settings.obsidianTasksCompletedDateFormat,
+        });
+
+        const resolveWithTask = map(
+            ({ text, dateFormat, obsidianTasksCompletedDateFormat }: TreeLevelConfig) =>
+                this.placeholderService.resolve(text, {
+                    dateFormat,
+                    obsidianTasksCompletedDateFormat,
+                    block: task,
+                })
+        );
+
+        return {
+            task,
+            resolvedPath,
+            resolvedHeadings: resolveWithTask(this.settings.headings),
+            resolvedListItems: resolveWithTask(this.settings.listItems),
+        };
+    };
+
+    private async archiveTasks(tasks: Block[], activeFile: ActiveFile) {
         const sortOrder =
             this.settings.taskSortOrder === TaskSortOrder.NEWEST_LAST ? "asc" : "desc";
 
         await flow(
-            orderBy(({ task: { text } }) => getTaskCompletionDate(text), sortOrder),
+            orderBy(({ text }) => getTaskCompletionDate(text), sortOrder),
             map(
                 flow(
-                    ({ rule, task }: BlockWithRule) => ({
-                        rule,
-                        task: this.textReplacementService.replaceText(task),
+                    this.textReplacementService.replaceText,
+                    (task) => ({
+                        task,
+                        rule: this.findRuleForTask(task),
                     }),
                     this.metadataService.appendMetadata,
-                    // todo: we don't need rules up until this point
-                    ({ rule, task }: BlockWithRule) => {
-                        const archivePath = rule.archiveToSeparateFile
-                            ? rule.defaultArchiveFileName
-                            : "current-file";
-
-                        const resolvedPath = this.placeholderService.resolve(
-                            archivePath,
-                            {
-                                dateFormat: rule.dateFormat,
-                                block: task,
-                                obsidianTasksCompletedDateFormat:
-                                    this.settings.obsidianTasksCompletedDateFormat,
-                            }
-                        );
-
-                        const resolveWithTask = map(
-                            ({
-                                text,
-                                dateFormat,
-                                obsidianTasksCompletedDateFormat,
-                            }: TreeLevelConfig) =>
-                                this.placeholderService.resolve(text, {
-                                    dateFormat,
-                                    obsidianTasksCompletedDateFormat,
-                                    block: task,
-                                })
-                        );
-
-                        return {
-                            task,
-                            resolvedPath,
-                            resolvedHeadings: resolveWithTask(this.settings.headings),
-                            resolvedListItems: resolveWithTask(this.settings.listItems),
-                        };
-                    }
+                    this.addDestinationToTask
                 )
             ),
             groupBy((task) => task.resolvedPath),
@@ -283,6 +273,7 @@ export class ArchiveFeature {
         resolvedHeadings: string[],
         resolvedListItems: string[]
     ) {
+        // todo: these two are similar, they should have similar APIs
         const archiveSection = this.getArchiveSectionFromRoot(root, resolvedHeadings);
         this.listItemService.mergeBlocksWithListItemTree(
             archiveSection.blockContent,
@@ -292,7 +283,6 @@ export class ArchiveFeature {
     }
 
     private getArchiveSectionFromRoot(root: Section, resolvedHeadings?: string[]) {
-        // todo: this might no longer be needed
         const shouldArchiveToRoot = !this.settings.archiveUnderHeading;
         if (this.settings.archiveToSeparateFile && shouldArchiveToRoot) {
             return root;

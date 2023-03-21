@@ -4,12 +4,12 @@ import { Block } from "../model/Block";
 export class TextReplacementService {
     constructor(private readonly settings: Settings) {}
 
-    replaceText(block: Block) {
+    replaceText = (block: Block) => {
         if (this.settings.textReplacement.applyReplacement) {
             return this.replaceTextDeep(block);
         }
         return block;
-    }
+    };
 
     private replaceTextDeep(block: Block) {
         const { regex, replacement } = this.settings.textReplacement;
