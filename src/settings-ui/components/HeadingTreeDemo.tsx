@@ -25,6 +25,8 @@ export function HeadingTreeDemo(props: HeadingTreeDemoProps) {
                   <code>
                     {token()}{" "}
                     {props.placeholderService.resolve(heading.text, {
+                      obsidianTasksCompletedDateFormat:
+                        heading.obsidianTasksCompletedDateFormat,
                       dateFormat: heading.dateFormat,
                     })}
                   </code>

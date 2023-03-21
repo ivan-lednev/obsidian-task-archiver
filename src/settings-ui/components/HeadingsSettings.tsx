@@ -1,7 +1,7 @@
 import { Accessor } from "solid-js";
 
-import { Accordion } from "./Accordion";
 import { DateFormatDescription } from "./DateFormatDescription";
+import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
 import { TextSetting } from "./setting/TextSetting";
@@ -17,7 +17,6 @@ interface HeadingsSettingsProps {
 export function HeadingsSettings(props: HeadingsSettingsProps) {
   const [, setSettings] = useSettingsContext();
 
-  // indeed, we need this to be a signal!
   const headingLevel = () => props.index + 1;
   return (
     <>
@@ -37,7 +36,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           Delete
         </button>
       </BaseSetting>
-      <Accordion>
+      <PlaceholderAccordion>
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings("headings", props.index, { dateFormat: value });
@@ -68,7 +67,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           }
           value={props.heading.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
         />
-      </Accordion>
+      </PlaceholderAccordion>
     </>
   );
 }

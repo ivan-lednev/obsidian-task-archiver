@@ -27,6 +27,8 @@ export function ListItemTreeDemo(props: ListItemTreeDemoProps) {
                 <code>
                   {indentationWithToken()}
                   {props.placeholderService.resolve(listItem.text, {
+                    obsidianTasksCompletedDateFormat:
+                      listItem.obsidianTasksCompletedDateFormat,
                     dateFormat: listItem.dateFormat,
                   })}
                 </code>

@@ -1,4 +1,5 @@
 import { DateFormatDescription } from "./DateFormatDescription";
+import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
 import { TextSetting } from "./setting/TextSetting";
@@ -33,19 +34,38 @@ export function ListItemsSettings(props: HeadingsSettingsProps) {
           Delete
         </button>
       </BaseSetting>
-      <TextSetting
-        onInput={({ currentTarget: { value } }) => {
-          setSettings("listItems", props.index, { dateFormat: value });
-        }}
-        name={`Date format (level ${listItemLevel()})`}
-        placeholder={DEFAULT_DATE_FORMAT}
-        description={
-          <DateFormatDescription
-            dateFormat={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
-          />
-        }
-        value={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
-      />
+      <PlaceholderAccordion>
+        <TextSetting
+          onInput={({ currentTarget: { value } }) => {
+            setSettings("listItems", props.index, { dateFormat: value });
+          }}
+          name={`Date format (level ${listItemLevel()})`}
+          placeholder={DEFAULT_DATE_FORMAT}
+          description={
+            <DateFormatDescription
+              dateFormat={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
+            />
+          }
+          value={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
+        />
+        <TextSetting
+          onInput={({ currentTarget: { value } }) => {
+            setSettings("listItems", props.index, {
+              obsidianTasksCompletedDateFormat: value,
+            });
+          }}
+          name={`obsidian-tasks completed date format (level ${listItemLevel()})`}
+          placeholder={DEFAULT_DATE_FORMAT}
+          description={
+            <DateFormatDescription
+              dateFormat={
+                props.listItem.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT
+              }
+            />
+          }
+          value={props.listItem.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
+        />
+      </PlaceholderAccordion>
     </>
   );
 }

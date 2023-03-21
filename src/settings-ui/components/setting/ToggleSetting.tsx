@@ -24,7 +24,7 @@ export function ToggleSetting(props: ToggleSettingProps) {
           <input type="checkbox" tabindex="0" />
         </div>
       </BaseSetting>
-      <Show when={props.value} keyed>
+      <Show when={props.children && props.value} keyed>
         <div class="archiver-setting-sub-item">{props.children}</div>
       </Show>
     </>
