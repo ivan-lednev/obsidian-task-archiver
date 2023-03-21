@@ -20,7 +20,10 @@ export interface AdditionalMetadataSettings {
 
 export type Rule = Pick<
     Settings,
-    "defaultArchiveFileName" | "dateFormat" | "archiveToSeparateFile"
+    | "defaultArchiveFileName"
+    | "dateFormat"
+    | "archiveToSeparateFile"
+    | "obsidianTasksCompletedDateFormat"
 > & { statuses: string };
 
 export enum TaskSortOrder {

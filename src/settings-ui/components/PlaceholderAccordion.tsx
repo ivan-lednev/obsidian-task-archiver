@@ -5,7 +5,7 @@ interface AccordionProps {
   children: JSX.Element;
 }
 
-export function Accordion(props: AccordionProps) {
+export function PlaceholderAccordion(props: AccordionProps) {
   const [active, setActive] = createSignal(false);
 
   return (

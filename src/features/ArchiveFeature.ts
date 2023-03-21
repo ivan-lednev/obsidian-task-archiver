@@ -3,6 +3,7 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { dropRight, flow, groupBy, isEmpty, map, orderBy, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
+import { DEFAULT_DATE_FORMAT } from "../Constants";
 import { Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
@@ -106,6 +107,7 @@ export class ArchiveFeature {
             archiveToSeparateFile: this.settings.archiveToSeparateFile,
             defaultArchiveFileName: this.settings.defaultArchiveFileName,
             dateFormat: this.settings.additionalMetadataBeforeArchiving.dateFormat,
+            obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
             statuses: "", // todo: this belongs to a separate object
         };
     }

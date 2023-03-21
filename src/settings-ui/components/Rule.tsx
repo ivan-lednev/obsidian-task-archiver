@@ -1,6 +1,7 @@
 import { Accessor, For } from "solid-js";
 
 import { DateFormatDescription } from "./DateFormatDescription";
+import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
@@ -8,6 +9,7 @@ import { ButtonSetting } from "./setting/ButtonSetting";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 
+import { DEFAULT_DATE_FORMAT } from "../../Constants";
 import { Rule as RuleType } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
@@ -85,13 +87,15 @@ export function Rule(props: RuleProps) {
         value={archivePath()}
         class="archiver-setting-sub-item"
       />
-      <TextSetting
-        onInput={({ currentTarget: { value } }) => updateRule({ dateFormat: value })}
-        name="Date format"
-        description={<DateFormatDescription dateFormat={dateFormat()} />}
-        value={dateFormat()}
-        class="archiver-setting-sub-item"
-      />
+      <PlaceholderAccordion>
+        <TextSetting
+          onInput={({ currentTarget: { value } }) => updateRule({ dateFormat: value })}
+          name="Date format"
+          description={<DateFormatDescription dateFormat={dateFormat()} />}
+          value={dateFormat()}
+          class="archiver-setting-sub-item"
+        />
+      </PlaceholderAccordion>
       <ButtonSetting onClick={deleteRule} buttonText="Delete rule" />
     </div>
   );

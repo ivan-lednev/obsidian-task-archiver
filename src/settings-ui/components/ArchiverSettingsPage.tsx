@@ -1,12 +1,11 @@
-import classNames from "classnames";
 import { For, Show, createSignal } from "solid-js";
 
-import { Accordion } from "./Accordion";
 import { DateFormatDescription } from "./DateFormatDescription";
 import { HeadingTreeDemo } from "./HeadingTreeDemo";
 import { HeadingsSettings } from "./HeadingsSettings";
 import { ListItemTreeDemo } from "./ListItemTreeDemo";
 import { ListItemsSettings } from "./ListItemsSettings";
+import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { Rule } from "./Rule";
 import { TaskPatternSettings } from "./TaskPatternSettings";
@@ -131,7 +130,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           }
           value={settings.defaultArchiveFileName}
         />
-        <Accordion>
+        <PlaceholderAccordion>
           <TextSetting
             onInput={({ currentTarget: { value } }) => {
               setSettings({ dateFormat: value });
@@ -152,7 +151,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             }
             value={settings.obsidianTasksCompletedDateFormat}
           />
-        </Accordion>
+        </PlaceholderAccordion>
       </ToggleSetting>
 
       <ToggleSetting
@@ -278,6 +277,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               statuses: "",
               defaultArchiveFileName: "",
               dateFormat: DEFAULT_DATE_FORMAT,
+              obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
               archiveToSeparateFile: true,
             },
           ])
