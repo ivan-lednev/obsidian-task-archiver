@@ -49,6 +49,7 @@ describe("ArchiverSettingsPage", () => {
             statuses: "",
             defaultArchiveFileName: "",
             dateFormat: DEFAULT_DATE_FORMAT,
+            obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
             archiveToSeparateFile: true,
           },
         ],
