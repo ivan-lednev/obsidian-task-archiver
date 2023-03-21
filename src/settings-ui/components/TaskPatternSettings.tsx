@@ -40,42 +40,37 @@ export function TaskPatternSettings() {
   };
 
   return (
-    <>
-      <ToggleSetting
-        name="Use additional task filter"
-        description="Only archive tasks matching this pattern, typically '#task' but can be anything."
-        onClick={() => {
-          setSettings({ useAdditionalTaskPattern: !settings.useAdditionalTaskPattern });
-        }}
-        value={settings.useAdditionalTaskPattern}
-      />
-      <Show when={settings.useAdditionalTaskPattern} keyed>
-        <TextSetting
-          name="Additional task filter"
-          onInput={async ({ currentTarget: { value } }) => {
-            setTaskPatternInput(value);
-            if (validatePattern(value)) {
-              setSettings({ additionalTaskPattern: value });
-            }
-          }}
-          description={
-            validatePattern(taskPatternInput())
-              ? "The pattern is valid"
-              : `🕱 Invalid pattern`
+    <ToggleSetting
+      name="Use additional task filter"
+      description="Only archive tasks matching this pattern, typically '#task' but can be anything."
+      onClick={() => {
+        setSettings({ useAdditionalTaskPattern: !settings.useAdditionalTaskPattern });
+      }}
+      value={settings.useAdditionalTaskPattern}
+    >
+      <TextSetting
+        name="Additional task filter"
+        onInput={({ currentTarget: { value } }) => {
+          setTaskPatternInput(value);
+          if (validatePattern(value)) {
+            setSettings({ additionalTaskPattern: value });
           }
-          value={taskPatternInput()}
-          class="archiver-setting-sub-item"
-        />
-        <TextAreaSetting
-          name="Try out your task filter"
-          description={getValidationMessage()}
-          onInput={({ currentTarget: { value } }) => {
-            setTaskPatternTest(value);
-          }}
-          value={taskPatternTest()}
-          class="archiver-setting-sub-item"
-        />
-      </Show>
-    </>
+        }}
+        description={
+          validatePattern(taskPatternInput())
+            ? "The pattern is valid"
+            : `🕱 Invalid pattern`
+        }
+        value={taskPatternInput()}
+      />
+      <TextAreaSetting
+        name="Try out your task filter"
+        description={getValidationMessage()}
+        onInput={({ currentTarget: { value } }) => {
+          setTaskPatternTest(value);
+        }}
+        value={taskPatternTest()}
+      />
+    </ToggleSetting>
   );
 }

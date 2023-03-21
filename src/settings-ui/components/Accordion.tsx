@@ -13,7 +13,11 @@ export function Accordion(props: AccordionProps) {
       <button class="archiver-accordion" onClick={() => setActive(!active())}>
         {active() ? "Hide variables" : "Configure variables"}
       </button>
-      <div class={classNames("archiver-panel", { "archiver-active": active() })}>
+      <div
+        class={classNames("archiver-panel", "archiver-setting-sub-item", {
+          "archiver-active": active(),
+        })}
+      >
         {props.children}
       </div>
     </>

@@ -28,7 +28,6 @@ interface ArchiverSettingsPageProps {
 
 export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
   const [settings, setSettings] = useSettingsContext();
-  const [active, setActive] = createSignal(false);
 
   const replacementResult = () =>
     settings.textReplacement.replacementTest.replace(
@@ -39,6 +38,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
   return (
     <>
       <h1>Archiver Settings</h1>
+
       <DropDownSetting
         onInput={({ currentTarget: { value } }) => {
           // todo: handle this without an assertion?
@@ -49,11 +49,13 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         options={[TaskSortOrder.NEWEST_LAST, TaskSortOrder.NEWEST_FIRST]}
         value={settings.taskSortOrder}
       />
+
       <ToggleSetting
         onClick={() => setSettings("sortAlphabetically", (prev) => !prev)}
         name="Sort top-level tasks alphabetically before archiving"
         value={settings.sortAlphabetically}
       />
+
       <ToggleSetting
         onClick={() => {
           setSettings("addNewlinesAroundHeadings", (prev) => !prev);
@@ -61,6 +63,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         name="Add newlines around the archive heading"
         value={settings.addNewlinesAroundHeadings}
       />
+
       <ToggleSetting
         name="Archive all checked tasks"
         description="Archive tasks with symbols other than 'x' (like '[>]', '[-]', etc.)"
@@ -71,7 +74,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           })
         }
       />
+
       <TaskPatternSettings />
+
       <ToggleSetting
         name="Replace some text before archiving"
         description="You can use it to remove tags from your archived tasks. Note that this replacement is applied to all the list items in the completed task"
@@ -79,15 +84,13 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           setSettings("textReplacement", "applyReplacement", (prev) => !prev);
         }}
         value={settings.textReplacement.applyReplacement}
-      />
-      <Show when={settings.textReplacement.applyReplacement} keyed>
+      >
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings("textReplacement", "regex", value);
           }}
           name={"Regular expression"}
           value={settings.textReplacement.regex}
-          class="archiver-setting-sub-item"
         />
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
@@ -95,7 +98,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           }}
           name="Replacement"
           value={settings.textReplacement.replacement}
-          class="archiver-setting-sub-item"
         />
         <TextAreaSetting
           name="Try out your replacement"
@@ -108,9 +110,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             setSettings("textReplacement", "replacementTest", value);
           }}
           value={settings.textReplacement.replacementTest}
-          class="archiver-setting-sub-item"
         />
-      </Show>
+      </ToggleSetting>
+
       <ToggleSetting
         name="Archive to a separate file"
         description="If checked, the archiver will search for a file based on the pattern and will try to create it if needed"
@@ -118,8 +120,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           setSettings({ archiveToSeparateFile: !settings.archiveToSeparateFile });
         }}
         value={settings.archiveToSeparateFile}
-      />
-      <Show when={settings.archiveToSeparateFile} keyed>
+      >
         <TextAreaSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings({ defaultArchiveFileName: value });
@@ -129,7 +130,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             <PlaceholdersDescription placeholderResolver={props.placeholderService} />
           }
           value={settings.defaultArchiveFileName}
-          class="archiver-setting-sub-item"
         />
         <Accordion>
           <TextSetting
@@ -139,7 +139,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             name="Date format"
             description={<DateFormatDescription dateFormat={settings.dateFormat} />}
             value={settings.dateFormat}
-            class="archiver-setting-sub-item"
           />
           <TextSetting
             onInput={({ currentTarget: { value } }) => {
@@ -152,10 +151,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               />
             }
             value={settings.obsidianTasksCompletedDateFormat}
-            class="archiver-setting-sub-item"
           />
         </Accordion>
-      </Show>
+      </ToggleSetting>
 
       <ToggleSetting
         onClick={() => {
@@ -164,8 +162,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         name="Archive under headings"
         description="When disabled, no headings will get created"
         value={settings.archiveUnderHeading}
-      />
-      <Show when={settings.archiveUnderHeading} keyed>
+      >
         <DropDownSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings({ archiveHeadingDepth: Number(value) });
@@ -173,7 +170,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           name="First heading depth"
           options={["1", "2", "3", "4", "5", "6"]}
           value={String(settings.archiveHeadingDepth)}
-          class="archiver-setting-sub-item"
         />
         <For each={settings.headings}>
           {(heading, index) => <HeadingsSettings heading={heading} index={index()} />}
@@ -187,7 +183,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         />
 
         <HeadingTreeDemo placeholderService={props.placeholderService} />
-      </Show>
+      </ToggleSetting>
 
       <ToggleSetting
         onClick={() => {
@@ -195,8 +191,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         }}
         name="Archive under list items"
         value={settings.archiveUnderListItems}
-      />
-      <Show when={settings.archiveUnderListItems} keyed>
+      >
         <For each={settings.listItems}>
           {(listItem, index) => (
             <ListItemsSettings listItem={listItem} index={index()} />
@@ -214,7 +209,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         />
 
         <ListItemTreeDemo placeholderService={props.placeholderService} />
-      </Show>
+      </ToggleSetting>
 
       <ToggleSetting
         onClick={() => {
@@ -226,8 +221,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         }}
         name={"Append some metadata to task before archiving"}
         value={settings.additionalMetadataBeforeArchiving.addMetadata}
-      />
-      <Show when={settings.additionalMetadataBeforeArchiving.addMetadata} keyed>
+      >
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings("additionalMetadataBeforeArchiving", "metadata", value);
@@ -258,7 +252,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             </>
           }
           value={settings.additionalMetadataBeforeArchiving.metadata}
-          class="archiver-setting-sub-item"
         />
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
@@ -271,30 +264,27 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             />
           }
           value={settings.additionalMetadataBeforeArchiving.dateFormat}
-          class="archiver-setting-sub-item"
         />
-      </Show>
+      </ToggleSetting>
 
       <h2>Rules</h2>
 
-      <BaseSetting description="Define rules for handling tasks that match certain conditions">
-        <button
-          onClick={() =>
-            setSettings("rules", (prev) => [
-              ...prev,
-              // todo: same as getDefaultRule()
-              {
-                statuses: "",
-                defaultArchiveFileName: "",
-                dateFormat: DEFAULT_DATE_FORMAT,
-                archiveToSeparateFile: true,
-              },
-            ])
-          }
-        >
-          Add rule
-        </button>
-      </BaseSetting>
+      <ButtonSetting
+        onClick={() =>
+          setSettings("rules", (prev) => [
+            ...prev,
+            // todo: same as getDefaultRule()
+            {
+              statuses: "",
+              defaultArchiveFileName: "",
+              dateFormat: DEFAULT_DATE_FORMAT,
+              archiveToSeparateFile: true,
+            },
+          ])
+        }
+        buttonText="Add rule"
+        description="Define rules for handling tasks that match certain conditions"
+      />
       <For each={settings.rules}>
         {(rule, index) => (
           <Rule index={index} placeholderResolver={props.placeholderService} />

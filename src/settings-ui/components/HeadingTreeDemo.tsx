@@ -15,7 +15,6 @@ export function HeadingTreeDemo(props: HeadingTreeDemoProps) {
   return (
     <BaseSetting
       name="Here's what the result looks like:"
-      class="archiver-setting-sub-item"
       description={
         <>
           <For each={settings.headings}>

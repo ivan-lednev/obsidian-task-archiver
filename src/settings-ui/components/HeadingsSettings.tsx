@@ -21,10 +21,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
   const headingLevel = () => props.index + 1;
   return (
     <>
-      <BaseSetting
-        name={`Heading text (level ${headingLevel()})`}
-        class="archiver-setting-sub-item"
-      >
+      <BaseSetting name={`Heading text (level ${headingLevel()})`}>
         <input
           type="text"
           value={props.heading.text}
@@ -53,7 +50,6 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
             />
           }
           value={props.heading.dateFormat || DEFAULT_DATE_FORMAT}
-          class="archiver-setting-sub-item"
         />
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
@@ -71,7 +67,6 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
             />
           }
           value={props.heading.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
-          class="archiver-setting-sub-item"
         />
       </Accordion>
     </>

@@ -17,10 +17,7 @@ export function ListItemsSettings(props: HeadingsSettingsProps) {
   const listItemLevel = () => props.index + 1;
   return (
     <>
-      <BaseSetting
-        name={`List item text (level ${listItemLevel()})`}
-        class="archiver-setting-sub-item"
-      >
+      <BaseSetting name={`List item text (level ${listItemLevel()})`}>
         <input
           type="text"
           value={props.listItem.text}
@@ -48,7 +45,6 @@ export function ListItemsSettings(props: HeadingsSettingsProps) {
           />
         }
         value={props.listItem.dateFormat || DEFAULT_DATE_FORMAT}
-        class="archiver-setting-sub-item"
       />
     </>
   );

@@ -16,7 +16,6 @@ export function ListItemTreeDemo(props: ListItemTreeDemoProps) {
   return (
     <BaseSetting
       name="Here's what the result looks like:"
-      class="archiver-setting-sub-item"
       description={
         <For each={[...settings.listItems, { text: "[x] task" }]}>
           {(listItem, i) => {

@@ -4,6 +4,7 @@ import { DateFormatDescription } from "./DateFormatDescription";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
+import { ButtonSetting } from "./setting/ButtonSetting";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 
@@ -91,9 +92,7 @@ export function Rule(props: RuleProps) {
         value={dateFormat()}
         class="archiver-setting-sub-item"
       />
-      <BaseSetting>
-        <button onClick={deleteRule}>Delete rule</button>
-      </BaseSetting>
+      <ButtonSetting onClick={deleteRule} buttonText="Delete rule" />
     </div>
   );
 }
