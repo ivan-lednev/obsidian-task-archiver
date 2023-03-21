@@ -175,9 +175,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         </For>
 
         <ButtonSetting
-          onClick={() =>
-            setSettings("headings", (prev) => [...prev, { text: "", dateFormat: "" }])
-          }
+          onClick={() => setSettings("headings", (prev) => [...prev, { text: "" }])}
           buttonText="Add heading"
         />
 
@@ -199,10 +197,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
 
         <ButtonSetting
           onClick={() =>
-            setSettings("listItems", (prev) => [
-              ...prev,
-              { text: "[[{{date}}]]", dateFormat: "" },
-            ])
+            setSettings("listItems", (prev) => [...prev, { text: "[[{{date}}]]" }])
           }
           buttonText="Add list level"
         />
