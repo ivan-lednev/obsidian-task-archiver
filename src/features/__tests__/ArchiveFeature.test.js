@@ -474,6 +474,40 @@ describe("Adding metadata to tasks", () => {
             );
         });
     });
+
+    describe("Heading chain placeholder", () => {
+        test("Base case", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["# h1", "## h2", "- [x] foo", "# Archived"],
+                ["# h1", "## h2", "# Archived", "", `- [x] foo h1 > h2`, ""],
+                {
+                    settings: {
+                        ...settingsForTestingMetadata,
+                        additionalMetadataBeforeArchiving: {
+                            ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                            metadata: "{{headingChain}}",
+                        },
+                    },
+                }
+            );
+        });
+
+        test("Uses file name as fallback", async () => {
+            await archiveTasksAndCheckActiveFile(
+                ["- [x] foo", "# Archived"],
+                ["# Archived", "", `- [x] foo mock-file-base-name`, ""],
+                {
+                    settings: {
+                        ...settingsForTestingMetadata,
+                        additionalMetadataBeforeArchiving: {
+                            ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                            metadata: "{{headingChain}}",
+                        },
+                    },
+                }
+            );
+        });
+    });
 });
 
 describe("Sort orders", () => {

@@ -21,7 +21,8 @@ export class MetadataService {
 
         const resolvedMetadata = this.placeholderService.resolve(metadata, {
             dateFormat,
-            heading: task.parentSection.text,
+            block: task,
+            heading: task.parentSection.text, // todo: we don't need this any longer
         });
 
         task.text = `${task.text} ${resolvedMetadata}`;

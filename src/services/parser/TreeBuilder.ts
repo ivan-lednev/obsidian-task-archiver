@@ -35,8 +35,11 @@ export class TreeBuilder<L extends MarkdownNode<L>> {
         return node instanceof ListBlock || node instanceof Section;
     }
 
-    private appendChildToContext(section: L) {
-        last(this.contextStack).markdownNode.appendChild(section);
+    private appendChildToContext(child: L) {
+        const { markdownNode } = last(this.contextStack);
+        // todo: mutation
+        child.parent = markdownNode;
+        markdownNode.appendChild(child);
     }
 
     private clearStack(levels: number) {

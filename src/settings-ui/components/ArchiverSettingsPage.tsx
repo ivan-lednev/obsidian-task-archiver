@@ -238,7 +238,11 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
                 extraPlaceholders={[
                   [
                     "{{heading}}",
-                    "resolves to the closest heading above the task; when there are none, defaults to file name",
+                    "resolves to the closest heading above the task; defaults to file name",
+                  ],
+                  [
+                    "{{headingChain}}",
+                    "resolves to a chain of all the headings above the task; defaults to file name",
                   ],
                 ]}
               />

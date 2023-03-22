@@ -1,10 +1,9 @@
 import { Workspace } from "obsidian";
 
+import { isEmpty } from "lodash/fp";
+
 import { DEFAULT_DATE_FORMAT } from "../Constants";
-import {
-    FILE_EXTENSION_PATTERN,
-    OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN,
-} from "../Patterns";
+import { FILE_EXTENSION_PATTERN } from "../Patterns";
 import { Block } from "../model/Block";
 import { getTaskCompletionDate } from "../util/Util";
 
@@ -27,6 +26,8 @@ export class PlaceholderService {
 
     private static readonly HEADING_PLACEHOLDER = "{{heading}}";
 
+    private static readonly HEADING_CHAIN_PLACEHOLDER = "{{headingChain}}";
+
     private static readonly OBSIDIAN_TASKS_COMPLETED_DATE_PLACEHOLDER =
         "{{obsidianTasksCompletedDate}}";
 
@@ -38,11 +39,28 @@ export class PlaceholderService {
         return this.workspace.getActiveFile();
     }
 
+    private getActiveFileBaseName() {
+        return this.getActiveFile()?.basename || PlaceholderService.NO_FILE_OPEN;
+    }
+
     private getActiveFilePathWithoutExtension() {
         return (
             this.getActiveFile()?.path?.replace(FILE_EXTENSION_PATTERN, "") ||
             PlaceholderService.NO_FILE_OPEN
         );
+    }
+
+    private createHeadingChain(block: Block) {
+        let chain: string[] = [];
+        let parent = block.parentSection;
+        while (parent.text) {
+            chain = [parent.text.trim(), ...chain]; // todo: needless trim
+            parent = parent.parent;
+        }
+        if (isEmpty(chain)) {
+            return this.getActiveFileBaseName();
+        }
+        return chain.join(" > ");
     }
 
     resolve(
@@ -57,11 +75,11 @@ export class PlaceholderService {
         return text
             .replace(
                 PlaceholderService.ACTIVE_FILE_PLACEHOLDER,
-                this.getActiveFile()?.basename || PlaceholderService.NO_FILE_OPEN
+                this.getActiveFileBaseName()
             )
             .replace(
                 PlaceholderService.ACTIVE_FILE_PLACEHOLDER_NEW,
-                this.getActiveFile()?.basename || PlaceholderService.NO_FILE_OPEN
+                this.getActiveFileBaseName()
             )
             .replace(
                 PlaceholderService.ACTIVE_FILE_PATH_PLACEHOLDER,
@@ -70,8 +88,11 @@ export class PlaceholderService {
             .replace(
                 PlaceholderService.HEADING_PLACEHOLDER,
                 heading?.trim() || // todo: remove trim
-                    this.getActiveFile()?.basename ||
-                    PlaceholderService.NO_FILE_OPEN
+                    this.getActiveFileBaseName()
+            )
+            .replace(
+                PlaceholderService.HEADING_CHAIN_PLACEHOLDER,
+                block ? this.createHeadingChain(block) : this.getActiveFileBaseName()
             )
             .replace(
                 PlaceholderService.DATE_PLACEHOLDER,

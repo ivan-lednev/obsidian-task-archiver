@@ -1,6 +1,9 @@
 // todo: don't need generics here
 export abstract class MarkdownNode<C extends MarkdownNode<C>> {
     children: C[];
+
+    parent: C;
+
     text: string;
 
     constructor(text: string) {

@@ -330,3 +330,47 @@ test("recalculateTokenLevels", () => {
 
     expect(root.stringify(DEFAULT_INDENTATION)).toEqual(["# h1", "## h2"]);
 });
+
+test("Storing parents for headings", () => {
+    const parser = new SectionParser(new BlockParser(DEFAULT_SETTINGS));
+    const root = parser.parse(["# h1", "## h2"]);
+
+    expect(root).toMatchObject({
+        children: [
+            {
+                text: " h1",
+                children: [
+                    {
+                        text: " h2",
+                        parent: {
+                            text: " h1",
+                        },
+                    },
+                ],
+            },
+        ],
+    });
+});
+
+test("Storing parents for lists", () => {
+    const parser = new SectionParser(new BlockParser(DEFAULT_SETTINGS));
+    const root = parser.parse(["- l1", "\t- l2"]);
+
+    expect(root).toMatchObject({
+        blockContent: {
+            children: [
+                {
+                    text: "- l1",
+                    children: [
+                        {
+                            text: "- l2",
+                            parent: {
+                                text: "- l1",
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+    });
+});
