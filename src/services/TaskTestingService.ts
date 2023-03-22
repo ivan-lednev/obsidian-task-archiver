@@ -4,6 +4,8 @@ import {
     DEFAULT_TASK_PATTERN,
 } from "../Patterns";
 import { Settings } from "../Settings";
+import { Block } from "../model/Block";
+import { findBlockRecursively } from "../util/Util";
 
 export class TaskTestingService {
     private compiledPattern: RegExp;
@@ -31,12 +33,23 @@ export class TaskTestingService {
         );
     }
 
-    doesTaskNeedArchiving(text: string) {
-        if (!this.isCheckedTask(text)) {
+    doesTaskNeedArchiving(task: Block) {
+        if (!this.isCheckedTask(task.text)) {
             return false;
         }
 
-        if (this.isCompletedTask(text)) {
+        if (this.settings.archiveOnlyIfSubtasksAreDone) {
+            const incompleteNestedTask = findBlockRecursively(
+                task,
+                (block) => !DEFAULT_COMPLETED_TASK_PATTERN.test(block.text)
+            );
+
+            if (incompleteNestedTask) {
+                return false;
+            }
+        }
+
+        if (this.isCompletedTask(task.text)) {
             return true;
         }
 
@@ -44,7 +57,7 @@ export class TaskTestingService {
             return true;
         }
 
-        return this.isTaskHandledByRule(text);
+        return this.isTaskHandledByRule(task.text);
     }
 
     private isTaskHandledByRule(text: string) {

@@ -943,3 +943,40 @@ describe("obsidian-tasks dates", () => {
         );
     });
 });
+
+describe("Archive only if subtasks are done", () => {
+    test("Skips tasks with incomplete subtasks during shallow archiving", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "\t- [ ] bar", "# Archived", ""],
+            ["- [x] foo", "\t- [ ] bar", "# Archived", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveOnlyIfSubtasksAreDone: true,
+                },
+            }
+        );
+    });
+
+    test("Skips tasks with incomplete subtasks during deep archiving", async () => {
+        await archiveTasksRecursivelyAndCheckActiveFile(
+            ["- [ ] foo", "\t- [x] bar", "\t\t- [ ] baz", "# Archived", ""],
+            ["- [ ] foo", "\t- [x] bar", "\t\t- [ ] baz", "# Archived", ""],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveOnlyIfSubtasksAreDone: true,
+            }
+        );
+    });
+
+    test("Archives nested completed tasks during deep archiving", async () => {
+        await archiveTasksRecursivelyAndCheckActiveFile(
+            ["- [ ] foo", "\t- [x] bar", "\t\t- [ ] baz", "# Archived", ""],
+            ["- [ ] foo", "\t- [x] bar", "\t\t- [ ] baz", "# Archived", ""],
+            {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveOnlyIfSubtasksAreDone: true,
+            }
+        );
+    });
+});

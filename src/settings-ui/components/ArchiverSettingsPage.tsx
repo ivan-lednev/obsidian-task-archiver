@@ -74,6 +74,16 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         }
       />
 
+      <ToggleSetting
+        name="Archive a task only if its subtasks are done"
+        value={settings.archiveOnlyIfSubtasksAreDone}
+        onClick={() =>
+          setSettings({
+            archiveOnlyIfSubtasksAreDone: !settings.archiveOnlyIfSubtasksAreDone,
+          })
+        }
+      />
+
       <TaskPatternSettings />
 
       <ToggleSetting

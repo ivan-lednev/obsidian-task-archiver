@@ -61,7 +61,7 @@ export class ArchiveFeature {
     ) {
         this.taskFilter = {
             blockFilter: (block: Block) =>
-                this.taskTestingService.doesTaskNeedArchiving(block.text),
+                this.taskTestingService.doesTaskNeedArchiving(block),
             sectionFilter: (section: Section) =>
                 !this.isTopArchiveHeading(section.text),
         };

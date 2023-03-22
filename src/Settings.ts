@@ -78,6 +78,7 @@ export interface Settings {
     archiveUnderListItems: boolean;
     listItems: TreeLevelConfig[];
     rules: Rule[];
+    archiveOnlyIfSubtasksAreDone: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -112,6 +113,7 @@ export const DEFAULT_SETTINGS: Settings = {
     },
     useAdditionalTaskPattern: false,
     archiveUnderListItems: false,
+    archiveOnlyIfSubtasksAreDone: false,
 };
 
 export const DEFAULT_SETTINGS_FOR_TESTS: Settings = {
