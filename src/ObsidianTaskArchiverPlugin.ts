@@ -119,7 +119,6 @@ export default class ObsidianTaskArchiver extends Plugin {
         if (updated.useWeeks) {
             updated.archiveUnderListItems = true;
             updated.listItems = [
-                ...updated.listItems,
                 {
                     text: "[[{{date}}]]",
                     dateFormat: updated.weeklyNoteFormat || DEFAULT_WEEK_FORMAT,
@@ -133,7 +132,6 @@ export default class ObsidianTaskArchiver extends Plugin {
         if (updated.useDays) {
             updated.archiveUnderListItems = true;
             updated.listItems = [
-                ...updated.listItems,
                 {
                     text: "[[{{date}}]]",
                     dateFormat: updated.dailyNoteFormat || DEFAULT_DATE_FORMAT,
