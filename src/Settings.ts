@@ -84,9 +84,9 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
     addNewlinesAroundHeadings: true,
     additionalMetadataBeforeArchiving: {
-        addMetadata: false,
+        addMetadata: true,
         dateFormat: DEFAULT_DATE_FORMAT,
-        metadata: "(this was archived)",
+        metadata: "🔒 [[{{date}}]] 🕸️ {{headingChain}}",
     },
     additionalTaskPattern: "",
     archiveAllCheckedTaskTypes: false,
@@ -96,7 +96,7 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveUnderHeading: true,
     dateFormat: DEFAULT_DATE_FORMAT,
     defaultArchiveFileName: "{{sourceFileName}} (archive)",
-    headings: [],
+    headings: [{ text: "Archived" }],
     listItems: [],
     indentationSettings: {
         tabSize: 4,
