@@ -1,4 +1,4 @@
-import { DEFAULT_DATE_FORMAT } from "./Constants";
+import { DEFAULT_DATE_FORMAT, placeholders } from "./Constants";
 
 export interface IndentationSettings {
     useTab: boolean;
@@ -86,7 +86,7 @@ export const DEFAULT_SETTINGS: Settings = {
     additionalMetadataBeforeArchiving: {
         addMetadata: true,
         dateFormat: DEFAULT_DATE_FORMAT,
-        metadata: "🔒 [[{{date}}]] 🕸️ {{headingChain}}",
+        metadata: `🔒 [[${placeholders.DATE}]] 🕸️ ${placeholders.HEADING_CHAIN}`,
     },
     additionalTaskPattern: "",
     archiveAllCheckedTaskTypes: false,
@@ -95,7 +95,7 @@ export const DEFAULT_SETTINGS: Settings = {
     obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
     archiveUnderHeading: true,
     dateFormat: DEFAULT_DATE_FORMAT,
-    defaultArchiveFileName: "{{sourceFileName}} (archive)",
+    defaultArchiveFileName: `${placeholders.ACTIVE_FILE_NEW} (archive)`,
     headings: [{ text: "Archived" }],
     listItems: [],
     indentationSettings: {
@@ -118,6 +118,10 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const DEFAULT_SETTINGS_FOR_TESTS: Settings = {
     ...DEFAULT_SETTINGS,
+    additionalMetadataBeforeArchiving: {
+        ...DEFAULT_SETTINGS.additionalMetadataBeforeArchiving,
+        addMetadata: false,
+    },
     defaultArchiveFileName: "folder/sub-folder/mock-file-base-name",
     headings: [{ text: "Archived" }],
 };

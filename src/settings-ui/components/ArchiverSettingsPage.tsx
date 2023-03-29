@@ -17,7 +17,7 @@ import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 import { ToggleSetting } from "./setting/ToggleSetting";
 
-import { DEFAULT_DATE_FORMAT, NON_BREAKING_SPACE } from "../../Constants";
+import { DEFAULT_DATE_FORMAT, NON_BREAKING_SPACE, placeholders } from "../../Constants";
 import { TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
@@ -207,7 +207,10 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
 
         <ButtonSetting
           onClick={() =>
-            setSettings("listItems", (prev) => [...prev, { text: "[[{{date}}]]" }])
+            setSettings("listItems", (prev) => [
+              ...prev,
+              { text: `[[${placeholders.DATE}]]` },
+            ])
           }
           buttonText="Add list level"
         />
@@ -237,11 +240,11 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
                 placeholderResolver={props.placeholderService}
                 extraPlaceholders={[
                   [
-                    "{{heading}}",
+                    placeholders.HEADING,
                     "resolves to the closest heading above the task; defaults to file name",
                   ],
                   [
-                    "{{headingChain}}",
+                    placeholders.HEADING_CHAIN,
                     "resolves to a chain of all the headings above the task; defaults to file name",
                   ],
                 ]}

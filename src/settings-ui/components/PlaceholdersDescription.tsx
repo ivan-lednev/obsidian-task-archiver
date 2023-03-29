@@ -1,6 +1,6 @@
 import { For, mergeProps } from "solid-js";
 
-import { DEFAULT_DATE_FORMAT } from "../../Constants";
+import { DEFAULT_DATE_FORMAT, placeholders } from "../../Constants";
 import { DEFAULT_SETTINGS } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
@@ -12,9 +12,9 @@ interface PlaceholdersDescriptionProps {
 export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
   const mergedProps = mergeProps({ extraPlaceholders: [] }, props);
   const sourceFileName = () =>
-    mergedProps.placeholderResolver.resolve("{{sourceFileName}}");
+    mergedProps.placeholderResolver.resolve(placeholders.ACTIVE_FILE_NEW);
   const sourceFilePath = () =>
-    mergedProps.placeholderResolver.resolve("{{sourceFilePath}}");
+    mergedProps.placeholderResolver.resolve(placeholders.ACTIVE_FILE_PATH);
 
   return (
     <>
@@ -22,21 +22,21 @@ export function PlaceholdersDescription(props: PlaceholdersDescriptionProps) {
       <table>
         <For
           each={[
-            ["{{date}}", "resolves to the current date in any format"],
+            [placeholders.DATE, "resolves to the current date in any format"],
             [
-              "{{sourceFileName}}",
+              placeholders.ACTIVE_FILE_NEW,
               <>
                 for the currently open file it resolves to <b>{sourceFileName()}</b>
               </>,
             ],
             [
-              "{{sourceFilePath}}",
+              placeholders.ACTIVE_FILE_PATH,
               <>
                 for the currently open file it resolves to <b>{sourceFilePath()}</b>
               </>,
             ],
             [
-              "{{obsidianTasksCompletedDate}}",
+              placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
               "obsidian-tasks completed date (✅ 2023-03-20); if the task doesn't have one, defaults to today",
             ],
             ...mergedProps.extraPlaceholders,

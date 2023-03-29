@@ -2,7 +2,7 @@ import { Workspace } from "obsidian";
 
 import { isEmpty } from "lodash/fp";
 
-import { DEFAULT_DATE_FORMAT } from "../Constants";
+import { DEFAULT_DATE_FORMAT, placeholders } from "../Constants";
 import { FILE_EXTENSION_PATTERN } from "../Patterns";
 import { Block } from "../model/Block";
 import { getTaskCompletionDate } from "../util/Util";
@@ -15,22 +15,6 @@ interface PlaceholderContext {
 }
 
 export class PlaceholderService {
-    /** @deprecated */
-    private static readonly ACTIVE_FILE_PLACEHOLDER = "%";
-
-    private static readonly ACTIVE_FILE_PLACEHOLDER_NEW = "{{sourceFileName}}";
-
-    private static readonly ACTIVE_FILE_PATH_PLACEHOLDER = "{{sourceFilePath}}";
-
-    private static readonly DATE_PLACEHOLDER = "{{date}}";
-
-    private static readonly HEADING_PLACEHOLDER = "{{heading}}";
-
-    private static readonly HEADING_CHAIN_PLACEHOLDER = "{{headingChain}}";
-
-    private static readonly OBSIDIAN_TASKS_COMPLETED_DATE_PLACEHOLDER =
-        "{{obsidianTasksCompletedDate}}";
-
     private static readonly NO_FILE_OPEN = "No file open";
 
     constructor(private readonly workspace: Workspace) {}
@@ -73,33 +57,24 @@ export class PlaceholderService {
         }: PlaceholderContext = {}
     ) {
         return text
+            .replace(placeholders.ACTIVE_FILE, this.getActiveFileBaseName())
+            .replace(placeholders.ACTIVE_FILE_NEW, this.getActiveFileBaseName())
             .replace(
-                PlaceholderService.ACTIVE_FILE_PLACEHOLDER,
-                this.getActiveFileBaseName()
-            )
-            .replace(
-                PlaceholderService.ACTIVE_FILE_PLACEHOLDER_NEW,
-                this.getActiveFileBaseName()
-            )
-            .replace(
-                PlaceholderService.ACTIVE_FILE_PATH_PLACEHOLDER,
+                placeholders.ACTIVE_FILE_PATH,
                 this.getActiveFilePathWithoutExtension()
             )
             .replace(
-                PlaceholderService.HEADING_PLACEHOLDER,
+                placeholders.HEADING,
                 heading?.trim() || // todo: remove trim
                     this.getActiveFileBaseName()
             )
             .replace(
-                PlaceholderService.HEADING_CHAIN_PLACEHOLDER,
+                placeholders.HEADING_CHAIN,
                 block ? this.createHeadingChain(block) : this.getActiveFileBaseName()
             )
+            .replace(placeholders.DATE, window.moment().format(dateFormat))
             .replace(
-                PlaceholderService.DATE_PLACEHOLDER,
-                window.moment().format(dateFormat)
-            )
-            .replace(
-                PlaceholderService.OBSIDIAN_TASKS_COMPLETED_DATE_PLACEHOLDER,
+                placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
                 window
                     .moment(getTaskCompletionDate(block?.text))
                     .format(obsidianTasksCompletedDateFormat)

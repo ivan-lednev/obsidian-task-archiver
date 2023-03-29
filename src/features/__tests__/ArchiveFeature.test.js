@@ -10,6 +10,7 @@ import {
 } from "./test-util/ArchiveFeatureUtil";
 import { createTFile } from "./test-util/TestUtil";
 
+import { placeholders } from "../../Constants";
 import { DEFAULT_SETTINGS_FOR_TESTS, TaskSortOrder } from "../../Settings";
 
 const DAY = "2021-01-01";
@@ -391,8 +392,7 @@ describe("Archive list item under cursor", () => {
 });
 
 describe("Adding metadata to tasks", () => {
-    const metadata =
-        "(completed: {{date}}; source: {{sourceFileName}}; source path: {{sourceFilePath}})";
+    const metadata = `(completed: ${placeholders.DATE}; source: ${placeholders.ACTIVE_FILE_NEW}; source path: ${placeholders.ACTIVE_FILE_PATH})`;
     const metadataWithResolvedPlaceholders =
         "(completed: 2021-01-01; source: mock-file-base-name; source path: folder/sub-folder/mock-file-base-name)";
     const settingsForTestingMetadata = {
@@ -451,7 +451,7 @@ describe("Adding metadata to tasks", () => {
                         ...settingsForTestingMetadata,
                         additionalMetadataBeforeArchiving: {
                             ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
-                            metadata: "{{heading}}",
+                            metadata: placeholders.HEADING,
                         },
                     },
                 }
@@ -467,7 +467,7 @@ describe("Adding metadata to tasks", () => {
                         ...settingsForTestingMetadata,
                         additionalMetadataBeforeArchiving: {
                             ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
-                            metadata: "{{heading}}",
+                            metadata: placeholders.HEADING,
                         },
                     },
                 }
@@ -485,7 +485,7 @@ describe("Adding metadata to tasks", () => {
                         ...settingsForTestingMetadata,
                         additionalMetadataBeforeArchiving: {
                             ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
-                            metadata: "{{headingChain}}",
+                            metadata: placeholders.HEADING_CHAIN,
                         },
                     },
                 }
@@ -501,7 +501,7 @@ describe("Adding metadata to tasks", () => {
                         ...settingsForTestingMetadata,
                         additionalMetadataBeforeArchiving: {
                             ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
-                            metadata: "{{headingChain}}",
+                            metadata: placeholders.HEADING_CHAIN,
                         },
                     },
                 }
@@ -607,7 +607,7 @@ describe("Rules", () => {
                     {
                         statuses: ">",
                         archiveToSeparateFile: true,
-                        defaultArchiveFileName: "{{date}}-deferred",
+                        defaultArchiveFileName: `${placeholders.DATE}-deferred`,
                         dateFormat: "YYYY",
                     },
                 ],
@@ -655,7 +655,11 @@ describe("Building a heading chain", () => {
                 settings: {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     addNewlinesAroundHeadings: false,
-                    headings: [{ text: "{{sourceFileName}} {{date}}" }],
+                    headings: [
+                        {
+                            text: `${placeholders.ACTIVE_FILE_NEW} ${placeholders.DATE}`,
+                        },
+                    ],
                 },
             }
         );
@@ -669,7 +673,7 @@ describe("Building a heading chain", () => {
                 settings: {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     addNewlinesAroundHeadings: false,
-                    headings: [{ text: "{{date}}", dateFormat: "YYYY" }],
+                    headings: [{ text: placeholders.DATE, dateFormat: "YYYY" }],
                 },
             }
         );
@@ -747,8 +751,8 @@ describe("Building a list item chain", () => {
                     headings: [],
                     archiveUnderListItems: true,
                     listItems: [
-                        { text: "{{sourceFileName}}" },
-                        { text: "{{date}}", dateFormat: "YYYY" },
+                        { text: placeholders.ACTIVE_FILE_NEW },
+                        { text: placeholders.DATE, dateFormat: "YYYY" },
                     ],
                 },
             }
@@ -840,7 +844,7 @@ describe("obsidian-tasks dates", () => {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     headings: [
                         {
-                            text: "{{obsidianTasksCompletedDate}}",
+                            text: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
                             // obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
                         },
                     ],
@@ -857,7 +861,7 @@ describe("obsidian-tasks dates", () => {
                 settings: {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     archiveUnderListItems: true,
-                    listItems: [{ text: "{{obsidianTasksCompletedDate}}" }],
+                    listItems: [{ text: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE }],
                     headings: [],
                 },
             }
@@ -872,7 +876,7 @@ describe("obsidian-tasks dates", () => {
                 ...DEFAULT_SETTINGS_FOR_TESTS,
                 archiveUnderHeading: false,
                 archiveToSeparateFile: true,
-                defaultArchiveFileName: "{{obsidianTasksCompletedDate}}",
+                defaultArchiveFileName: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
             },
             vaultFiles: [fileWithDate],
         });
@@ -889,7 +893,7 @@ describe("obsidian-tasks dates", () => {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     headings: [
                         {
-                            text: "{{obsidianTasksCompletedDate}}",
+                            text: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
                             obsidianTasksCompletedDateFormat: "YYYY",
                         },
                     ],
@@ -907,7 +911,7 @@ describe("obsidian-tasks dates", () => {
                 archiveUnderHeading: false,
                 archiveToSeparateFile: true,
                 obsidianTasksCompletedDateFormat: "YYYY",
-                defaultArchiveFileName: "{{obsidianTasksCompletedDate}}",
+                defaultArchiveFileName: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
             },
             vaultFiles: [fileWithDate],
         });
@@ -934,7 +938,7 @@ describe("obsidian-tasks dates", () => {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     headings: [
                         {
-                            text: "{{obsidianTasksCompletedDate}}",
+                            text: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
                         },
                     ],
                 },
@@ -969,7 +973,7 @@ describe("obsidian-tasks dates", () => {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     headings: [
                         {
-                            text: "{{obsidianTasksCompletedDate}}",
+                            text: placeholders.OBSIDIAN_TASKS_COMPLETED_DATE,
                         },
                     ],
                 },

@@ -3,7 +3,7 @@ import { MarkdownView, Notice, Plugin } from "obsidian";
 import _ from "lodash";
 
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
-import { DEFAULT_DATE_FORMAT, DEFAULT_WEEK_FORMAT } from "./Constants";
+import { DEFAULT_DATE_FORMAT, DEFAULT_WEEK_FORMAT, placeholders } from "./Constants";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { ArchiveFeature } from "./features/ArchiveFeature";
 import { ListToHeadingFeature } from "./features/ListToHeadingFeature";
@@ -120,7 +120,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             updated.archiveUnderListItems = true;
             updated.listItems = [
                 {
-                    text: "[[{{date}}]]",
+                    text: `[[${placeholders.DATE}]]`,
                     dateFormat: updated.weeklyNoteFormat || DEFAULT_WEEK_FORMAT,
                 },
             ];
@@ -133,7 +133,7 @@ export default class ObsidianTaskArchiver extends Plugin {
             updated.archiveUnderListItems = true;
             updated.listItems = [
                 {
-                    text: "[[{{date}}]]",
+                    text: `[[${placeholders.DATE}]]`,
                     dateFormat: updated.dailyNoteFormat || DEFAULT_DATE_FORMAT,
                 },
             ];
