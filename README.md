@@ -249,7 +249,8 @@ Or you can create a single archive file with links to sources in headings:
 
 ### Rules
 
-Rules allow you to treat tasks with different statuses differently (`[x]`, `[>]`, `[-]`) by sending them to different files.
+Rules allow you to treat tasks with different statuses differently (`[x]`, `[>]`, `[-]`) by sending them to different files:
+![](rule-demo.png)
 
 Potentially rules can specify any custom workflow for any set of tasks that match certain conditions. If you'd like to see some additional functionality here, feel free to create a feature request!
 
