@@ -1,6 +1,21 @@
 This plugin is a toolbox for working with completed tasks in your markdown files. It brings some
 of [org-mode's](https://orgmode.org/) features to Obsidian.
 
+- [Contribution](#contribution)
+- [Commands ](#commands-)
+- [Settings](#settings)
+    - [Placeholders](#placeholders)
+    - [Archive file path](#archive-file-path)
+    - [Replacing text before archiving](#replacing-text-before-archiving)
+    - [Append stuff before archiving](#append-stuff-before-archiving)
+    - [Additional patterns to detect completed tasks](#additional-patterns-to-detect-completed-tasks)
+    - [Heading \& list hierarchies](#heading--list-hierarchies)
+    - [Rules](#rules)
+- [Usage](#usage)
+- [Acknowledgements](#acknowledgements)
+    - [Contributors](#contributors)
+- [Development](#development)
+
 ## Contribution
 
 If you noticed a bug or thought of some way to improve the plugin, feel free to create an issue: https://github.com/ivan-lednev/obsidian-task-archiver/issues.
