@@ -1,7 +1,3 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/K3K4FBU43)
-
----
-
 This plugin is a toolbox for working with completed tasks in your markdown files. It brings some
 of [org-mode's](https://orgmode.org/) features to Obsidian.
 
@@ -10,6 +6,10 @@ of [org-mode's](https://orgmode.org/) features to Obsidian.
 If you noticed a bug or thought of some way to improve the plugin, feel free to create an issue: https://github.com/ivan-lednev/obsidian-task-archiver/issues.
 
 Pull-requests are also welcome! If you want to contribute but don't know where to start, you can create an issue or write me an email: <bishop1860@gmail.com>.
+
+You can also support me by buying me a coffee:
+
+<a href="https://www.buymeacoffee.com/machineelf" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ## Commands <a id="commands"></a>
 
