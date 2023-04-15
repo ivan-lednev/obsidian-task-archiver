@@ -81,7 +81,7 @@ export function Rule(props: RuleProps) {
           updateRule({ pathPatterns: value });
         }}
         name="and the file matches one of patterns"
-        value={pathPatterns()}
+        value={pathPatterns() || ""}
         description="Add a pattern per line. No patterns means all files will match"
         placeholder="path/to/project\n.*tasks"
         inputClass="archiver-rule-paths"
