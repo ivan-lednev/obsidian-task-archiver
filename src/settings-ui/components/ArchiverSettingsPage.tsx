@@ -282,7 +282,14 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
 
       <ButtonSetting
         onClick={() =>
-          setSettings("rules", (prev) => [...prev, createDefaultRule(settings)])
+          setSettings("rules", (prev) => [
+            ...prev,
+            {
+              ...createDefaultRule(settings),
+              archiveToSeparateFile: true,
+              defaultArchiveFileName: "",
+            },
+          ])
         }
         buttonText="Add rule"
         description="Define rules for handling tasks that match certain conditions"
