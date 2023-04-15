@@ -539,34 +539,11 @@ describe("Sort orders", () => {
 });
 
 describe("Rules", () => {
-    test("A single task gets archived to a different file", async () => {
-        const deferredArchive = createTFile({ path: "deferred.md" });
+    describe("Statuses", () => {
+        test("A single task gets archived to a different file", async () => {
+            const deferredArchive = createTFile({ path: "deferred.md" });
 
-        const { mockActiveFile } = await archiveTasks(["- [>] foo", "- [ ] bar"], {
-            settings: {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                rules: [
-                    {
-                        statuses: ">",
-                        defaultArchiveFileName: "deferred",
-                        archiveToSeparateFile: true,
-                    },
-                ],
-            },
-            vaultFiles: [deferredArchive],
-        });
-
-        expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
-        expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
-    });
-
-    test("Different files", async () => {
-        const deferredArchive = createTFile({ path: "deferred.md" });
-        const cancelledArchive = createTFile({ path: "cancelled.md" });
-
-        await archiveTasks(
-            ["- [>] foo", "- [-] cancelled", "- [-] another one cancelled"],
-            {
+            const { mockActiveFile } = await archiveTasks(["- [>] foo", "- [ ] bar"], {
                 settings: {
                     ...DEFAULT_SETTINGS_FOR_TESTS,
                     rules: [
@@ -575,47 +552,150 @@ describe("Rules", () => {
                             defaultArchiveFileName: "deferred",
                             archiveToSeparateFile: true,
                         },
+                    ],
+                },
+                vaultFiles: [deferredArchive],
+            });
+
+            expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
+            expect(deferredArchive.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [>] foo",
+                "",
+            ]);
+        });
+
+        test("Different files for different statuses", async () => {
+            const deferredArchive = createTFile({ path: "deferred.md" });
+            const cancelledArchive = createTFile({ path: "cancelled.md" });
+
+            await archiveTasks(
+                ["- [>] foo", "- [-] cancelled", "- [-] another one cancelled"],
+                {
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        rules: [
+                            {
+                                statuses: ">",
+                                defaultArchiveFileName: "deferred",
+                                archiveToSeparateFile: true,
+                            },
+                            {
+                                statuses: "-",
+                                defaultArchiveFileName: "cancelled",
+                                archiveToSeparateFile: true,
+                            },
+                        ],
+                    },
+                    vaultFiles: [deferredArchive, cancelledArchive],
+                }
+            );
+
+            expect(deferredArchive.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [>] foo",
+                "",
+            ]);
+            expect(cancelledArchive.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [-] cancelled",
+                "- [-] another one cancelled",
+                "",
+            ]);
+        });
+
+        test("Custom date format in destination file name", async () => {
+            const deferredArchive = createTFile({ path: "2021-deferred.md" });
+
+            await archiveTasks(["- [>] foo", "- [ ] bar"], {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    rules: [
                         {
-                            statuses: "-",
-                            defaultArchiveFileName: "cancelled",
+                            statuses: ">",
+                            archiveToSeparateFile: true,
+                            defaultArchiveFileName: `${placeholders.DATE}-deferred`,
+                            dateFormat: "YYYY",
+                        },
+                    ],
+                },
+                vaultFiles: [deferredArchive],
+            });
+
+            expect(deferredArchive.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [>] foo",
+                "",
+            ]);
+        });
+    });
+
+    describe("Path patterns", () => {
+        test("Active file matches pattern", async () => {
+            const deferredArchive = createTFile({ path: "deferred.md" });
+
+            const { mockActiveFile } = await archiveTasks(["- [x] foo", "- [ ] bar"], {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    rules: [
+                        {
+                            pathPatterns: "folder/.*mock-file-base-name",
+                            defaultArchiveFileName: "deferred",
                             archiveToSeparateFile: true,
                         },
                     ],
                 },
-                vaultFiles: [deferredArchive, cancelledArchive],
-            }
-        );
+                vaultFiles: [deferredArchive],
+            });
 
-        expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
-        expect(cancelledArchive.state).toEqual([
-            "",
-            "# Archived",
-            "",
-            "- [-] cancelled",
-            "- [-] another one cancelled",
-            "",
-        ]);
+            expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
+            expect(deferredArchive.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [x] foo",
+                "",
+            ]);
+        });
     });
 
-    test("Custom date format in file name", async () => {
-        const deferredArchive = createTFile({ path: "2021-deferred.md" });
+    describe("Combining different conditions", () => {
+        test("A task matches only one condition", async () => {
+            const deferredArchive = createTFile({ path: "deferred.md" });
 
-        await archiveTasks(["- [>] foo", "- [ ] bar"], {
-            settings: {
-                ...DEFAULT_SETTINGS_FOR_TESTS,
-                rules: [
-                    {
-                        statuses: ">",
-                        archiveToSeparateFile: true,
-                        defaultArchiveFileName: `${placeholders.DATE}-deferred`,
-                        dateFormat: "YYYY",
-                    },
-                ],
-            },
-            vaultFiles: [deferredArchive],
+            const { mockActiveFile } = await archiveTasks(["- [x] foo", "- [ ] bar"], {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    rules: [
+                        {
+                            pathPatterns: "folder/.*mock-file-base-name",
+                            statuses: ">",
+                            defaultArchiveFileName: "deferred",
+                            archiveToSeparateFile: true,
+                        },
+                    ],
+                },
+                vaultFiles: [deferredArchive],
+            });
+
+            expect(mockActiveFile.state).toEqual([
+                "- [ ] bar",
+                "",
+                "# Archived",
+                "",
+                "- [x] foo",
+                "",
+            ]);
+            expect(deferredArchive.state).toEqual([]);
         });
-
-        expect(deferredArchive.state).toEqual(["", "# Archived", "", "- [>] foo", ""]);
     });
 });
 

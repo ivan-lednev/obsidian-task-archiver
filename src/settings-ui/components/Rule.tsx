@@ -9,7 +9,7 @@ import { ButtonSetting } from "./setting/ButtonSetting";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 
-import { DEFAULT_DATE_FORMAT } from "../../Constants";
+import { placeholders } from "../../Constants";
 import { Rule as RuleType } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
@@ -28,6 +28,7 @@ export function Rule(props: RuleProps) {
   const dateFormat = () => ruleSettings().dateFormat;
   const archivePath = () => ruleSettings().defaultArchiveFileName;
   const dedupedStatuses = () => dedupe(ruleSettings().statuses);
+  const pathPatterns = () => ruleSettings().pathPatterns;
 
   const updateRule = (newValues: Partial<RuleType>) =>
     setSettings("rules", (rule, i) => i === props.index(), newValues);
@@ -49,6 +50,11 @@ export function Rule(props: RuleProps) {
     </>
   );
 
+  const statusesDescription = () =>
+    dedupedStatuses().length === 0
+      ? "Add some statuses, like '>', '-', '?'. Right now all the statuses will match"
+      : renderStatusExamples();
+
   return (
     <div class="archiver-rule-container">
       <h2>When</h2>
@@ -58,19 +64,27 @@ export function Rule(props: RuleProps) {
           const dedupedValue = dedupe(event.currentTarget.value);
 
           if (dedupedValue === dedupedStatuses()) {
+            // eslint-disable-next-line no-param-reassign
             event.currentTarget.value = dedupedValue;
           } else {
             updateRule({ statuses: dedupedValue });
           }
         }}
-        name={"A task has one of statuses"}
-        description={
-          dedupedStatuses().length === 0
-            ? "Add some statuses, like '>', '-', '?'"
-            : renderStatusExamples()
-        }
+        name="a task has one of statuses"
+        description={statusesDescription()}
         placeholder={"-?>"}
         value={dedupedStatuses()}
+      />
+
+      <TextAreaSetting
+        onInput={({ currentTarget: { value } }) => {
+          updateRule({ pathPatterns: value });
+        }}
+        name="and the file matches one of patterns"
+        value={pathPatterns()}
+        description="Add a pattern per line. No patterns means all files will match"
+        placeholder="path/to/project\n.*tasks"
+        inputClass="archiver-rule-paths"
       />
 
       <h2>Then</h2>
@@ -80,11 +94,12 @@ export function Rule(props: RuleProps) {
         onInput={({ currentTarget: { value } }) =>
           updateRule({ defaultArchiveFileName: value })
         }
-        name="File name"
+        name="Destination file path"
         description={
           <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
         }
         value={archivePath()}
+        placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
         class="archiver-setting-sub-item"
       />
       <PlaceholderAccordion>

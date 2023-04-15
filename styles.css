@@ -35,3 +35,8 @@ textarea {
 .archiver-active {
     display: block;
 }
+
+.archiver-rule-paths {
+    width: 300px;
+    height: 100px;
+}

@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For } from "solid-js";
 
 import { DateFormatDescription } from "./DateFormatDescription";
 import { HeadingTreeDemo } from "./HeadingTreeDemo";
@@ -10,16 +10,16 @@ import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { Rule } from "./Rule";
 import { TaskPatternSettings } from "./TaskPatternSettings";
 import { useSettingsContext } from "./context/SettingsProvider";
-import { BaseSetting } from "./setting/BaseSetting";
 import { ButtonSetting } from "./setting/ButtonSetting";
 import { DropDownSetting } from "./setting/DropDownSetting";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 import { ToggleSetting } from "./setting/ToggleSetting";
 
-import { DEFAULT_DATE_FORMAT, NON_BREAKING_SPACE, placeholders } from "../../Constants";
+import { placeholders } from "../../Constants";
 import { TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
+import { createDefaultRule } from "../../util/Util";
 
 interface ArchiverSettingsPageProps {
   placeholderService: PlaceholderService;
@@ -282,17 +282,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
 
       <ButtonSetting
         onClick={() =>
-          setSettings("rules", (prev) => [
-            ...prev,
-            // todo: same as getDefaultRule()
-            {
-              statuses: "",
-              defaultArchiveFileName: "",
-              dateFormat: DEFAULT_DATE_FORMAT,
-              obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
-              archiveToSeparateFile: true,
-            },
-          ])
+          setSettings("rules", (prev) => [...prev, createDefaultRule(settings)])
         }
         buttonText="Add rule"
         description="Define rules for handling tasks that match certain conditions"

@@ -6,6 +6,8 @@ import { SettingProps } from "./SettingProps";
 
 interface TextAreaSettingProps extends SettingProps<string> {
   onInput: JSX.EventHandler<HTMLTextAreaElement, InputEvent>;
+  placeholder?: string;
+  inputClass?: string;
 }
 
 export function TextAreaSetting(props: TextAreaSettingProps) {
@@ -15,7 +17,13 @@ export function TextAreaSetting(props: TextAreaSettingProps) {
       description={props.description}
       class={classNames("mod-text", props.class)}
     >
-      <textarea spellcheck={false} value={props.value} onInput={props.onInput} />
+      <textarea
+        spellcheck={false}
+        value={props.value}
+        onInput={props.onInput}
+        placeholder={props.placeholder}
+        class={props.inputClass}
+      />
     </BaseSetting>
   );
 }

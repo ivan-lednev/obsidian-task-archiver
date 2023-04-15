@@ -46,6 +46,7 @@ describe("ArchiverSettingsPage", () => {
       expect.objectContaining({
         rules: [
           {
+            pathPatterns: "",
             statuses: "",
             defaultArchiveFileName: "",
             dateFormat: DEFAULT_DATE_FORMAT,
