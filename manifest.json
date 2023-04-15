@@ -6,5 +6,6 @@
     "description": "Move completed tasks to an archive with a date tree",
     "author": "Ivan Lednev",
     "authorUrl": "https://github.com/ivan-lednev",
-    "isDesktopOnly": false
+    "isDesktopOnly": false,
+    "fundingUrl": "https://www.buymeacoffee.com/machineelf"
 }
