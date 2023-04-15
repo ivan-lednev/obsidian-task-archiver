@@ -14,7 +14,7 @@ export class MockVault {
     getAbstractFileByPath(path) {
         const found = this.files.find((file) => file.path === path);
         if (!found) {
-            throw new Error("There is no file in the vault");
+            throw new Error(`There is no file in the test vault: '${path}'`);
         }
         return found;
     }

@@ -3,7 +3,7 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { dropRight, flow, groupBy, isEmpty, map, orderBy, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { Rule, Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
+import { Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
@@ -24,6 +24,11 @@ import {
     detectListItemUnderCursor,
 } from "../util/CodeMirrorUtil";
 import {
+    doesRuleMatchPath,
+    doesRuleMatchTaskStatus,
+    isRuleActionValid,
+} from "../util/RuleUtil";
+import {
     addNewlinesToSection,
     buildIndentation,
     createDefaultRule,
@@ -33,30 +38,6 @@ import {
     getTaskCompletionDate,
     shallowExtractBlocks,
 } from "../util/Util";
-
-function getTaskStatus(task: Block) {
-    const [, taskStatus] = task.text.match(/\[(.)]/);
-    return taskStatus;
-}
-
-function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
-    if (isEmpty(rule.statuses)) {
-        return true;
-    }
-
-    return rule.statuses.includes(getTaskStatus(task));
-}
-
-function doesRuleMatchPath(rule: Rule, path: string) {
-    if (isEmpty(rule.pathPatterns)) {
-        return true;
-    }
-
-    return rule.pathPatterns
-        .split("\n")
-        .map((pattern) => new RegExp(pattern))
-        .some((pattern) => pattern.test(path));
-}
 
 function completeTask(text: string) {
     return text.replace("[ ]", "[x]");
@@ -156,7 +137,8 @@ export class ArchiveFeature {
             this.settings.rules.find(
                 (rule) =>
                     doesRuleMatchPath(rule, this.workspace.getActiveFile().path) &&
-                    doesRuleMatchTaskStatus(rule, task)
+                    doesRuleMatchTaskStatus(rule, task) &&
+                    isRuleActionValid(rule)
             ) || createDefaultRule(this.settings)
         );
     }

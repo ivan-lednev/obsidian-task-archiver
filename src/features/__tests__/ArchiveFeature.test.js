@@ -539,6 +539,25 @@ describe("Sort orders", () => {
 });
 
 describe("Rules", () => {
+    test("Does not get applied if the destination path is empty", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] task", "# Archived"],
+            ["# Archived", "", "- [x] task", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    rules: [
+                        {
+                            statuses: "x",
+                            defaultArchiveFileName: "",
+                            archiveToSeparateFile: true,
+                        },
+                    ],
+                },
+            }
+        );
+    });
+
     describe("Statuses", () => {
         test("A single task gets archived to a different file", async () => {
             const deferredArchive = createTFile({ path: "deferred.md" });
