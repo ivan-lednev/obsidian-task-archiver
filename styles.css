@@ -1,4 +1,4 @@
-textarea {
+.archiver-settings textarea {
     resize: none;
 }
 
@@ -39,4 +39,26 @@ textarea {
 .archiver-rule-paths {
     width: 300px;
     height: 100px;
+}
+
+.archiver-accordion {
+    border: 2px solid var(--background-modifier-border);
+}
+
+.archiver-accordion.callout {
+    background-color: unset;
+}
+
+.archiver-accordion .callout-content {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.archiver-accordion .callout-title {
+    color: unset;
+}
+
+.archiver-setting-group {
+    border-left: 3px solid var(--color-accent);
+    padding-left: 1em;
 }
