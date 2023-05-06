@@ -1,4 +1,4 @@
-import { JSX, createContext, createEffect, useContext } from "solid-js";
+import { JSX, createContext, createEffect, on, useContext } from "solid-js";
 import { SetStoreFunction, createStore } from "solid-js/store";
 
 import { Settings } from "../../../Settings";
@@ -13,11 +13,14 @@ interface SettingsProviderProps {
 
 export function SettingsProvider(props: SettingsProviderProps) {
   const [settings, setSettings] = createStore(props.initialSettings);
-  createEffect(async () => {
-    // todo: do we need unwrapping?
-    // plugin.settings = unwrap(settings);
-    await props.setSettings(settings);
-  });
+  createEffect(
+    on(
+      () => settings,
+      async () => {
+        await props.setSettings(settings);
+      }
+    )
+  );
 
   return (
     <SettingsContext.Provider value={[settings, setSettings]}>

@@ -20,7 +20,7 @@ export function TextAreaSetting(props: TextAreaSettingProps) {
       <textarea
         spellcheck={false}
         value={props.value}
-        onInput={props.onInput}
+        onInput={(event) => props.onInput(event)}
         placeholder={props.placeholder}
         class={props.inputClass}
       />

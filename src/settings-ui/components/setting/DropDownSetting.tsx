@@ -11,7 +11,7 @@ export interface DropDownSettingProps extends SettingProps<string> {
 export function DropDownSetting(props: DropDownSettingProps) {
   return (
     <BaseSetting name={props.name} description={props.description} class={props.class}>
-      <select class="dropdown" onInput={props.onInput}>
+      <select class="dropdown" onInput={(event) => props.onInput(event)}>
         <For each={props.options}>
           {(value) => (
             <option value={value} selected={props.value === value}>
