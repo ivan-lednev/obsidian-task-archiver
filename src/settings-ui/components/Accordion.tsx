@@ -2,12 +2,13 @@ import { JSX, Show, createSignal } from "solid-js";
 
 export interface AccordionProps {
   title?: string;
+  initialFolded?: boolean;
   children?: JSX.Element;
 }
 
 // todo: clean up once esbuild is used
 export function Accordion(props: AccordionProps) {
-  const [folded, setFolded] = createSignal(true);
+  const [folded, setFolded] = createSignal(props.initialFolded ?? true);
 
   return (
     <div class="callout is-collapsible archiver-accordion">

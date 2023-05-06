@@ -1,9 +1,8 @@
-import { Accessor } from "solid-js";
-
+import { Accordion } from "./Accordion";
 import { DateFormatDescription } from "./DateFormatDescription";
-import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
+import { SettingGroup } from "./setting/SettingGroup";
 import { TextSetting } from "./setting/TextSetting";
 
 import { DEFAULT_DATE_FORMAT } from "../../Constants";
@@ -19,8 +18,9 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
 
   const headingLevel = () => props.index + 1;
   return (
-    <>
-      <BaseSetting name={`Heading text (level ${headingLevel()})`}>
+    <SettingGroup>
+      <h2>Level {headingLevel()}</h2>
+      <BaseSetting name="Heading text">
         <input
           type="text"
           value={props.heading.text}
@@ -36,7 +36,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           Delete
         </button>
       </BaseSetting>
-      <PlaceholderAccordion>
+      <Accordion title="Configure variables">
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings("headings", props.index, { dateFormat: value });
@@ -67,7 +67,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           }
           value={props.heading.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
         />
-      </PlaceholderAccordion>
-    </>
+      </Accordion>
+    </SettingGroup>
   );
 }

@@ -2,6 +2,10 @@
     resize: none;
 }
 
+.archiver-settings .setting-item:only-child {
+    padding: 0;
+}
+
 .archiver-setting-sub-item {
     padding: 0.75em 0 0.75em 2em;
 }
@@ -24,6 +28,10 @@
 
 .archiver-accordion {
     width: 100%;
+}
+
+.archiver-accordion:last-child {
+    margin-bottom: 0;
 }
 
 .archiver-panel {
@@ -59,6 +67,21 @@
 }
 
 .archiver-setting-group {
-    border-left: 3px solid var(--color-accent);
+    border-top: 1px solid var(--background-modifier-border);
+    border-left: 4px solid var(--color-accent-2);
     padding-left: 1em;
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
+
+    border-bottom-left-radius: 4px;
+    border-top-left-radius: 4px;
+}
+
+.archiver-setting-group:last-child {
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.archiver-setting-group:has(+ .archiver-setting-group) {
+    margin-bottom: 0.75em;
+    border-bottom: 1px solid var(--background-modifier-border);
 }

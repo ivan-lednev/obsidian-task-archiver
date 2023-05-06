@@ -1,7 +1,8 @@
+import { Accordion } from "./Accordion";
 import { DateFormatDescription } from "./DateFormatDescription";
-import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
+import { SettingGroup } from "./setting/SettingGroup";
 import { TextSetting } from "./setting/TextSetting";
 
 import { DEFAULT_DATE_FORMAT } from "../../Constants";
@@ -17,8 +18,9 @@ export function ListItemsSettings(props: HeadingsSettingsProps) {
 
   const listItemLevel = () => props.index + 1;
   return (
-    <>
-      <BaseSetting name={`List item text (level ${listItemLevel()})`}>
+    <SettingGroup>
+      <h2>Level {listItemLevel()}</h2>
+      <BaseSetting name="List item text">
         <input
           type="text"
           value={props.listItem.text}
@@ -34,7 +36,7 @@ export function ListItemsSettings(props: HeadingsSettingsProps) {
           Delete
         </button>
       </BaseSetting>
-      <PlaceholderAccordion>
+      <Accordion title="Configure variables">
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings("listItems", props.index, { dateFormat: value });
@@ -65,7 +67,7 @@ export function ListItemsSettings(props: HeadingsSettingsProps) {
           }
           value={props.listItem.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
         />
-      </PlaceholderAccordion>
-    </>
+      </Accordion>
+    </SettingGroup>
   );
 }
