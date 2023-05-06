@@ -21,6 +21,7 @@ export class ArchiverSettingTab extends PluginSettingTab {
 
   display(): void {
     this.containerEl.empty();
+    this.containerEl.addClass("archiver-settings");
     this.dispose?.();
 
     this.dispose = render(
