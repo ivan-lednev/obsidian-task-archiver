@@ -1,4 +1,4 @@
-import { Accordion } from "./Accordion";
+import { Cog } from "./Cog";
 import { DateFormatDescription } from "./DateFormatDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
@@ -18,8 +18,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
 
   const headingLevel = () => props.index + 1;
   return (
-    <SettingGroup>
-      <h2>Level {headingLevel()}</h2>
+    <SettingGroup header={`Level ${headingLevel()}`} collapsible initialFolded={false}>
       <BaseSetting name="Heading text">
         <input
           type="text"
@@ -36,7 +35,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           Delete
         </button>
       </BaseSetting>
-      <Accordion title="Configure variables">
+      <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
         <TextSetting
           onInput={({ currentTarget: { value } }) => {
             setSettings("headings", props.index, { dateFormat: value });
@@ -67,7 +66,7 @@ export function HeadingsSettings(props: HeadingsSettingsProps) {
           }
           value={props.heading.obsidianTasksCompletedDateFormat || DEFAULT_DATE_FORMAT}
         />
-      </Accordion>
+      </SettingGroup>
     </SettingGroup>
   );
 }

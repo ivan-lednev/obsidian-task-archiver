@@ -15,11 +15,12 @@
 }
 
 .archiver-rule-container {
+    margin-top: 0.75em;
+    padding-right: 10px;
+    padding-left: 10px;
+
     border: 2px solid var(--interactive-accent);
     border-radius: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-top: 0.75em;
 }
 
 .archiver-status-examples {
@@ -28,6 +29,7 @@
 
 .archiver-accordion {
     width: 100%;
+    border: 2px solid var(--background-modifier-border);
 }
 
 .archiver-accordion:last-child {
@@ -49,10 +51,6 @@
     height: 100px;
 }
 
-.archiver-accordion {
-    border: 2px solid var(--background-modifier-border);
-}
-
 .archiver-accordion.callout {
     background-color: unset;
 }
@@ -67,14 +65,45 @@
 }
 
 .archiver-setting-group {
-    border-top: 1px solid var(--background-modifier-border);
-    border-left: 4px solid var(--color-accent-2);
-    padding-left: 1em;
-    padding-top: 0.75em;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    /* padding-top: 0.75em; */
     padding-bottom: 0.75em;
 
-    border-bottom-left-radius: 4px;
+    border-top: 1px solid var(--background-modifier-border);
+    border-left: 4px solid var(--color-accent-2);
     border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.archiver-setting-group > * {
+    padding-left: 1em;
+}
+
+.archiver-setting-group > *:first-child {
+    padding-top: 0.75em;
+}
+
+.archiver-setting-group > .header {
+    all: unset;
+
+    display: flex;
+    gap: 0.25em;
+    align-items: center;
+
+    padding: 0.75em;
+}
+
+.archiver-setting-group > .header:hover {
+    background-color: var(--background-modifier-hover);
+    transition: background-color 0.15s ease-in-out;
+}
+
+.archiver-setting-group > .header .callout-fold {
+    display: flex;
+    align-items: center;
 }
 
 .archiver-setting-group:last-child {

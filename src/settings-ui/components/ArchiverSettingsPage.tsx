@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import { Accordion } from "./Accordion";
+import { Cog } from "./Cog";
 import { DateFormatDescription } from "./DateFormatDescription";
 import { HeadingTreeDemo } from "./HeadingTreeDemo";
 import { HeadingsSettings } from "./HeadingsSettings";
@@ -136,37 +136,37 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           value={settings.archiveToSeparateFile}
         />
         <Show when={settings.archiveToSeparateFile} keyed>
-          <SettingGroup>
-            <TextAreaSetting
+          <TextAreaSetting
+            onInput={({ currentTarget: { value } }) => {
+              setSettings({ defaultArchiveFileName: value });
+            }}
+            name="File name"
+            value={settings.defaultArchiveFileName}
+          />
+
+          <PlaceholdersDescription placeholderResolver={props.placeholderService} />
+
+          <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
+            <TextSetting
               onInput={({ currentTarget: { value } }) => {
-                setSettings({ defaultArchiveFileName: value });
+                setSettings({ dateFormat: value });
               }}
-              name="File name"
-              value={settings.defaultArchiveFileName}
+              name="Date format"
+              description={<DateFormatDescription dateFormat={settings.dateFormat} />}
+              value={settings.dateFormat}
             />
-            <PlaceholdersDescription placeholderResolver={props.placeholderService} />
-            <Accordion title="Configure variables">
-              <TextSetting
-                onInput={({ currentTarget: { value } }) => {
-                  setSettings({ dateFormat: value });
-                }}
-                name="Date format"
-                description={<DateFormatDescription dateFormat={settings.dateFormat} />}
-                value={settings.dateFormat}
-              />
-              <TextSetting
-                onInput={({ currentTarget: { value } }) => {
-                  setSettings({ obsidianTasksCompletedDateFormat: value });
-                }}
-                name="obsidian-tasks completed date format"
-                description={
-                  <DateFormatDescription
-                    dateFormat={settings.obsidianTasksCompletedDateFormat}
-                  />
-                }
-                value={settings.obsidianTasksCompletedDateFormat}
-              />
-            </Accordion>
+            <TextSetting
+              onInput={({ currentTarget: { value } }) => {
+                setSettings({ obsidianTasksCompletedDateFormat: value });
+              }}
+              name="obsidian-tasks completed date format"
+              description={
+                <DateFormatDescription
+                  dateFormat={settings.obsidianTasksCompletedDateFormat}
+                />
+              }
+              value={settings.obsidianTasksCompletedDateFormat}
+            />
           </SettingGroup>
         </Show>
       </SettingGroup>
@@ -189,14 +189,17 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             options={["1", "2", "3", "4", "5", "6"]}
             value={String(settings.archiveHeadingDepth)}
           />
-          <For each={settings.headings}>
-            {(heading, index) => <HeadingsSettings heading={heading} index={index()} />}
-          </For>
 
           <ButtonSetting
             onClick={() => setSettings("headings", (prev) => [...prev, { text: "" }])}
             buttonText="Add heading"
           />
+
+          <For each={settings.headings}>
+            {(heading, index) => <HeadingsSettings heading={heading} index={index()} />}
+          </For>
+
+          <PlaceholdersDescription placeholderResolver={props.placeholderService} />
 
           <HeadingTreeDemo placeholderService={props.placeholderService} />
         </Show>
@@ -212,12 +215,6 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
         />
 
         <Show when={settings.archiveUnderListItems} keyed>
-          <For each={settings.listItems}>
-            {(listItem, index) => (
-              <ListItemsSettings listItem={listItem} index={index()} />
-            )}
-          </For>
-
           <ButtonSetting
             onClick={() =>
               setSettings("listItems", (prev) => [
@@ -227,6 +224,14 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
             }
             buttonText="Add list level"
           />
+
+          <For each={settings.listItems}>
+            {(listItem, index) => (
+              <ListItemsSettings listItem={listItem} index={index()} />
+            )}
+          </For>
+
+          <PlaceholdersDescription placeholderResolver={props.placeholderService} />
 
           <ListItemTreeDemo placeholderService={props.placeholderService} />
         </Show>
@@ -241,9 +246,9 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               (prev) => !prev
             );
           }}
-          name={"Append some metadata to task before archiving"}
+          name="Append some metadata to task before archiving"
           value={settings.additionalMetadataBeforeArchiving.addMetadata}
-        ></ToggleSetting>
+        />
 
         <Show when={settings.additionalMetadataBeforeArchiving.addMetadata} keyed>
           <TextSetting
@@ -280,7 +285,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               ],
             ]}
           />
-          <Accordion title="Configure variables">
+          <SettingGroup header="Configure variables" collapsible headerIcon={<Cog />}>
             <TextSetting
               onInput={({ currentTarget: { value } }) => {
                 setSettings("additionalMetadataBeforeArchiving", "dateFormat", value);
@@ -293,7 +298,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               }
               value={settings.additionalMetadataBeforeArchiving.dateFormat}
             />
-          </Accordion>
+          </SettingGroup>
         </Show>
       </SettingGroup>
 

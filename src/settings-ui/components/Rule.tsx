@@ -1,11 +1,12 @@
 import { Accessor, For } from "solid-js";
 
+import { Cog } from "./Cog";
 import { DateFormatDescription } from "./DateFormatDescription";
-import { PlaceholderAccordion } from "./PlaceholderAccordion";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { BaseSetting } from "./setting/BaseSetting";
 import { ButtonSetting } from "./setting/ButtonSetting";
+import { SettingGroup } from "./setting/SettingGroup";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 
@@ -56,62 +57,64 @@ export function Rule(props: RuleProps) {
       : renderStatusExamples();
 
   return (
-    <div class="archiver-rule-container">
-      <h2>When</h2>
-
-      <TextSetting
-        onInput={(event) => {
-          const dedupedValue = dedupe(event.currentTarget.value);
-
-          if (dedupedValue === dedupedStatuses()) {
-            // eslint-disable-next-line no-param-reassign
-            event.currentTarget.value = dedupedValue;
-          } else {
-            updateRule({ statuses: dedupedValue });
-          }
-        }}
-        name="a task has one of statuses"
-        description={statusesDescription()}
-        placeholder={"-?>"}
-        value={dedupedStatuses()}
-      />
-
-      <TextAreaSetting
-        onInput={({ currentTarget: { value } }) => {
-          updateRule({ pathPatterns: value });
-        }}
-        name="and the file matches one of patterns"
-        value={pathPatterns() || ""}
-        description="Add a pattern per line. No patterns means all files will match"
-        placeholder="path/to/project\n.*tasks"
-        inputClass="archiver-rule-paths"
-      />
-
-      <h2>Then</h2>
-
-      <BaseSetting name="Move it to another file" />
-      <TextAreaSetting
-        onInput={({ currentTarget: { value } }) =>
-          updateRule({ defaultArchiveFileName: value })
-        }
-        name="Destination file path"
-        description={
-          <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
-        }
-        value={archivePath()}
-        placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
-        class="archiver-setting-sub-item"
-      />
-      <PlaceholderAccordion>
+    <SettingGroup
+      header={`Rule ${props.index() + 1}`}
+      collapsible
+      initialFolded={false}
+    >
+      <SettingGroup header="When">
         <TextSetting
-          onInput={({ currentTarget: { value } }) => updateRule({ dateFormat: value })}
-          name="Date format"
-          description={<DateFormatDescription dateFormat={dateFormat()} />}
-          value={dateFormat()}
-          class="archiver-setting-sub-item"
+          onInput={(event) => {
+            const dedupedValue = dedupe(event.currentTarget.value);
+
+            if (dedupedValue === dedupedStatuses()) {
+              // eslint-disable-next-line no-param-reassign
+              event.currentTarget.value = dedupedValue;
+            } else {
+              updateRule({ statuses: dedupedValue });
+            }
+          }}
+          name="A task has one of statuses"
+          description={statusesDescription()}
+          placeholder="-?>"
+          value={dedupedStatuses()}
         />
-      </PlaceholderAccordion>
+
+        <TextAreaSetting
+          onInput={({ currentTarget: { value } }) => {
+            updateRule({ pathPatterns: value });
+          }}
+          name="And the file matches one of patterns"
+          value={pathPatterns() || ""}
+          description="Add a pattern per line. No patterns means all files will match"
+          placeholder="path/to/project\n.*tasks"
+          inputClass="archiver-rule-paths"
+        />
+      </SettingGroup>
+
+      <SettingGroup header="Then">
+        <BaseSetting name="Move it to another file" />
+        <TextAreaSetting
+          onInput={({ currentTarget: { value } }) =>
+            updateRule({ defaultArchiveFileName: value })
+          }
+          name="Destination file path"
+          value={archivePath()}
+          placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
+        />
+        <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
+        <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
+          <TextSetting
+            onInput={({ currentTarget: { value } }) =>
+              updateRule({ dateFormat: value })
+            }
+            name="Date format"
+            description={<DateFormatDescription dateFormat={dateFormat()} />}
+            value={dateFormat()}
+          />
+        </SettingGroup>
+      </SettingGroup>
       <ButtonSetting onClick={deleteRule} buttonText="Delete rule" />
-    </div>
+    </SettingGroup>
   );
 }
