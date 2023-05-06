@@ -1,7 +1,5 @@
 import { MarkdownView, Notice, Plugin } from "obsidian";
 
-import _ from "lodash";
-
 import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { DEFAULT_DATE_FORMAT, DEFAULT_WEEK_FORMAT, placeholders } from "./Constants";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
@@ -28,6 +26,44 @@ async function withNotice(cb: () => Promise<string>) {
     }
 }
 
+function replaceLegacySettings(settings: Settings) {
+    const updated = { ...settings };
+
+    if (updated.archiveHeading) {
+        updated.headings = [{ text: updated.archiveHeading }];
+        delete updated.archiveHeading;
+    }
+
+    if (updated.useWeeks) {
+        updated.archiveUnderListItems = true;
+        updated.listItems = [
+            {
+                text: `[[${placeholders.DATE}]]`,
+                dateFormat: updated.weeklyNoteFormat || DEFAULT_WEEK_FORMAT,
+            },
+        ];
+
+        delete updated.useWeeks;
+        delete updated.weeklyNoteFormat;
+    }
+
+    if (updated.useDays) {
+        updated.archiveUnderListItems = true;
+        updated.listItems = [
+            {
+                text: `[[${placeholders.DATE}]]`,
+                dateFormat: updated.dailyNoteFormat || DEFAULT_DATE_FORMAT,
+            },
+        ];
+
+        delete updated.useDays;
+        delete updated.dailyNoteFormat;
+    }
+
+    return updated;
+}
+
+// eslint-disable-next-line import/no-default-export
 export default class ObsidianTaskArchiver extends Plugin {
     settings: Settings;
     private archiveFeature: ArchiveFeature;
@@ -66,8 +102,8 @@ export default class ObsidianTaskArchiver extends Plugin {
         this.addCommand({
             id: "archive-heading-under-cursor",
             name: "Archive heading under cursor",
-            editorCallback: (editor) => {
-                this.archiveFeature.archiveHeadingUnderCursor(editor);
+            editorCallback: async (editor) => {
+                await this.archiveFeature.archiveHeadingUnderCursor(editor);
             },
         });
         this.addCommand({
@@ -96,7 +132,7 @@ export default class ObsidianTaskArchiver extends Plugin {
 
     async loadSettings() {
         const userData: Settings = await this.loadData();
-        const updatedUserData = this.replaceOldSettings(userData);
+        const updatedUserData = replaceLegacySettings(userData);
 
         this.settings = {
             ...DEFAULT_SETTINGS,
@@ -108,47 +144,10 @@ export default class ObsidianTaskArchiver extends Plugin {
         };
     }
 
-    private replaceOldSettings(settings: Settings) {
-        const updated = { ...settings };
-
-        if (updated.archiveHeading) {
-            updated.headings = [{ text: updated.archiveHeading }];
-            delete updated.archiveHeading;
-        }
-
-        if (updated.useWeeks) {
-            updated.archiveUnderListItems = true;
-            updated.listItems = [
-                {
-                    text: `[[${placeholders.DATE}]]`,
-                    dateFormat: updated.weeklyNoteFormat || DEFAULT_WEEK_FORMAT,
-                },
-            ];
-
-            delete updated.useWeeks;
-            delete updated.weeklyNoteFormat;
-        }
-
-        if (updated.useDays) {
-            updated.archiveUnderListItems = true;
-            updated.listItems = [
-                {
-                    text: `[[${placeholders.DATE}]]`,
-                    dateFormat: updated.dailyNoteFormat || DEFAULT_DATE_FORMAT,
-                },
-            ];
-
-            delete updated.useDays;
-            delete updated.dailyNoteFormat;
-        }
-
-        return updated;
-    }
-
-    async saveSettings(newSettings: Settings) {
+    saveSettings = async (newSettings: Settings) => {
         await this.saveData(newSettings);
         this.initializeDependencies();
-    }
+    };
 
     private initializeDependencies() {
         const parser = new SectionParser(
