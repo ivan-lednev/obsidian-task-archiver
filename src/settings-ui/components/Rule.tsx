@@ -4,7 +4,6 @@ import { Cog } from "./Cog";
 import { DateFormatDescription } from "./DateFormatDescription";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
-import { BaseSetting } from "./setting/BaseSetting";
 import { ButtonSetting } from "./setting/ButtonSetting";
 import { SettingGroup } from "./setting/SettingGroup";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
@@ -92,13 +91,12 @@ export function Rule(props: RuleProps) {
         />
       </SettingGroup>
 
-      <SettingGroup header="Then">
-        <BaseSetting name="Move it to another file" />
+      <SettingGroup>
         <TextAreaSetting
           onInput={({ currentTarget: { value } }) =>
             updateRule({ defaultArchiveFileName: value })
           }
-          name="Destination file path"
+          name="Then move it to file"
           value={archivePath()}
           placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
         />
