@@ -1116,4 +1116,17 @@ describe("Archive only if subtasks are done", () => {
             }
         );
     });
+
+    test("Archives completed task if it has sub-items with bullets", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "\t- bar", "\t- [x] baz", "# Archived", ""],
+            ["# Archived", "", "- [x] foo", "\t- bar", "\t- [x] baz", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveOnlyIfSubtasksAreDone: true,
+                },
+            }
+        );
+    });
 });

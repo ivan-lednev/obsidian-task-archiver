@@ -1,6 +1,7 @@
 import {
     CHECKED_TASK_PATTERN,
     DEFAULT_COMPLETED_TASK_PATTERN,
+    DEFAULT_INCOMPLETE_TASK_PATTERN,
     DEFAULT_TASK_PATTERN,
 } from "../Patterns";
 import { Settings } from "../Settings";
@@ -39,9 +40,8 @@ export class TaskTestingService {
         }
 
         if (this.settings.archiveOnlyIfSubtasksAreDone) {
-            const incompleteNestedTask = findBlockRecursively(
-                task,
-                (block) => !DEFAULT_COMPLETED_TASK_PATTERN.test(block.text)
+            const incompleteNestedTask = findBlockRecursively(task, (block) =>
+                DEFAULT_INCOMPLETE_TASK_PATTERN.test(block.text)
             );
 
             if (incompleteNestedTask) {
