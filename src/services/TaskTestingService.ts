@@ -35,13 +35,15 @@ export class TaskTestingService {
     }
 
     doesTaskNeedArchiving(task: Block) {
-        if (!this.isCheckedTask(task.text)) {
+        if (!this.isTask(task.text)) {
             return false;
         }
 
         if (this.settings.archiveOnlyIfSubtasksAreDone) {
-            const incompleteNestedTask = findBlockRecursively(task, (block) =>
-                DEFAULT_INCOMPLETE_TASK_PATTERN.test(block.text)
+            const incompleteNestedTask = findBlockRecursively(
+                task,
+                (block) =>
+                    block !== task && DEFAULT_INCOMPLETE_TASK_PATTERN.test(block.text)
             );
 
             if (incompleteNestedTask) {
@@ -49,15 +51,19 @@ export class TaskTestingService {
             }
         }
 
+        if (this.isTaskHandledByRule(task.text)) {
+            return true;
+        }
+
+        if (!this.isCheckedTask(task.text)) {
+            return false;
+        }
+
         if (this.isCompletedTask(task.text)) {
             return true;
         }
 
-        if (this.settings.archiveAllCheckedTaskTypes) {
-            return true;
-        }
-
-        return this.isTaskHandledByRule(task.text);
+        return this.settings.archiveAllCheckedTaskTypes;
     }
 
     private isTaskHandledByRule(text: string) {

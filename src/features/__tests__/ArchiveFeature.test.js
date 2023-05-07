@@ -558,6 +558,45 @@ describe("Rules", () => {
         );
     });
 
+    test("Can handle unchecked tasks", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [ ] task", "# Archived"],
+            ["# Archived", "", "- [ ] task", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    rules: [
+                        {
+                            statuses: " ",
+                            defaultArchiveFileName: "",
+                            archiveToSeparateFile: false,
+                        },
+                    ],
+                },
+            }
+        );
+    });
+
+    test("Can handle unchecked tasks when checking for incomplete subtasks is on", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [ ] task", "# Archived"],
+            ["# Archived", "", "- [ ] task", ""],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveOnlyIfSubtasksAreDone: true,
+                    rules: [
+                        {
+                            statuses: " ",
+                            defaultArchiveFileName: "",
+                            archiveToSeparateFile: false,
+                        },
+                    ],
+                },
+            }
+        );
+    });
+
     describe("Statuses", () => {
         test("A single task gets archived to a different file", async () => {
             const deferredArchive = createTFile({ path: "deferred.md" });
