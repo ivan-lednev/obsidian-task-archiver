@@ -88,17 +88,19 @@ export function Rule(props: RuleProps) {
           description="Add a pattern per line. No patterns means all files will match"
           placeholder="path/to/project\n.*tasks"
           inputClass="archiver-rule-paths"
+          class="wide-input"
         />
       </SettingGroup>
 
       <SettingGroup>
-        <TextAreaSetting
+        <TextSetting
           onInput={({ currentTarget: { value } }) =>
             updateRule({ defaultArchiveFileName: value })
           }
           name="Then move it to file"
           value={archivePath()}
           placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
+          class="wide-input"
         />
         <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
         <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>

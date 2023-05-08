@@ -271,6 +271,7 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
               </>
             }
             value={settings.additionalMetadataBeforeArchiving.metadata}
+            class="wide-input"
           />
           <PlaceholdersDescription
             placeholderResolver={props.placeholderService}
