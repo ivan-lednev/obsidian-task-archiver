@@ -1,15 +1,15 @@
 {
     "name": "obsidian-task-archiver",
-    "version": "0.23.2",
+    "version": "0.24.1",
     "description": "Obsidian Task Archiver",
     "main": "main.js",
     "scripts": {
         "dev": "rollup --config rollup.config.mjs --watch",
-        "compile": "rollup --config rollup.config.mjs --environment BUILD:production",
-        "test": "jest --collectCoverage",
-        "lint": "eslint --fix src && prettier src --check",
-        "fixFormatting": "prettier src --write",
-        "build": "npm run fixFormatting && npm run compile && npm run test && npm run lint",
+        "build": "rollup --config rollup.config.mjs --environment BUILD:production",
+        "test": "jest",
+        "test:coverage": "jest --collectCoverage",
+        "format": "eslint --fix src && prettier --write src",
+        "lint": "tsc --noEmit && eslint src && prettier --check src",
         "prepare": "husky install"
     },
     "keywords": [],
