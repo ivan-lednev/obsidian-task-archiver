@@ -6,6 +6,7 @@ import { TreeBuilder } from "./TreeBuilder";
 import { HEADING_PATTERN } from "../../Patterns";
 import { Block } from "../../model/Block";
 import { Section } from "../../model/Section";
+import { splitFrontMatter } from "../../util/SplitFrontMatter";
 
 interface RawSection {
     text: string;
@@ -38,9 +39,14 @@ export class SectionParser {
     constructor(private readonly blockParser: BlockParser) {}
 
     parse(lines: string[]) {
-        const [root, ...flatChildren] = buildRawSectionsFromLines(lines)
+        const [frontMatterLines, documentLines] = splitFrontMatter(lines);
+
+        const flatSectionsWithUnparsedChildren =
+            buildRawSectionsFromLines(documentLines);
+        const [root, ...flatChildren] = flatSectionsWithUnparsedChildren
             .map((rawSection) => {
                 const blockContent = this.blockParser.parse(rawSection.lines);
+
                 const section = new Section(
                     rawSection.text,
                     rawSection.tokenLevel,
@@ -58,6 +64,7 @@ export class SectionParser {
             }));
 
         new TreeBuilder().buildTree(root, flatChildren);
+        root.markdownNode.frontMatter = frontMatterLines;
         return root.markdownNode;
     }
 

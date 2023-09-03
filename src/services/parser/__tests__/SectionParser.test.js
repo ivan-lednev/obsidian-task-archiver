@@ -237,6 +237,24 @@ describe("Stringification", () => {
         const stringified = parsed.stringify(buildIndentation(settings));
         expect(stringified).toEqual(lines);
     });
+
+    test("Round-tripping does not mess up code blocks", () => {
+        const lines = ["```", "  hello", "    world", "```"];
+
+        const settings = { useTab: false, tabSize: 4 };
+        const parsed = new SectionParser(new BlockParser(settings)).parse(lines);
+        const stringified = parsed.stringify(buildIndentation(settings));
+        expect(stringified).toEqual(lines);
+    });
+
+    test("Round-tripping does not mess up front matter", () => {
+        const lines = ["---", "hello:", "  - world", "  - second", "---"];
+
+        const settings = { useTab: false, tabSize: 4 };
+        const parsed = new SectionParser(new BlockParser(settings)).parse(lines);
+        const stringified = parsed.stringify(buildIndentation(settings));
+        expect(stringified).toEqual(lines);
+    });
 });
 
 describe("Extraction", () => {
@@ -291,17 +309,18 @@ describe("Insertion", () => {
         expect(stringified).toEqual(["- list", "- text", "more text"]);
     });
 
-    test("Automatically adds indentation to a text block after a list item", () => {
-        const lines = ["- list"];
+    test("Re-parent list item with text contents", () => {
+        const parser = new SectionParser(new BlockParser(DEFAULT_SETTINGS));
 
-        const parsed = new SectionParser(new BlockParser(DEFAULT_SETTINGS)).parse(
-            lines
-        );
-        parsed.blockContent.children[0].appendChild(new TextBlock("indented text"));
-        expect(parsed.stringify(DEFAULT_INDENTATION)).toEqual([
-            "- list",
-            "  indented text",
-        ]);
+        const parent = parser.parse(["- li1"]);
+        const li1 = parent.blockContent.children[0];
+
+        const li2 = parser.parse(["- li2", "  text"]).blockContent.children[0];
+
+        li1.appendChild(li2);
+
+        const stringified = parent.stringify(DEFAULT_INDENTATION);
+        expect(stringified).toEqual(["- li1", "\t- li2", "\t  text"]);
     });
 });
 
