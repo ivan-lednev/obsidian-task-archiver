@@ -4,7 +4,6 @@ import { ActiveFile, DiskFile, EditorFile } from "./ActiveFile";
 import { DEFAULT_DATE_FORMAT, DEFAULT_WEEK_FORMAT, placeholders } from "./Constants";
 import { DEFAULT_SETTINGS, Settings } from "./Settings";
 import { ArchiveFeature } from "./features/ArchiveFeature";
-import { ListToHeadingFeature } from "./features/ListToHeadingFeature";
 import { TaskListSortFeature } from "./features/TaskListSortFeature";
 import { ListItemService } from "./services/ListItemService";
 import { MetadataService } from "./services/MetadataService";
@@ -68,7 +67,6 @@ export default class ObsidianTaskArchiver extends Plugin {
     settings: Settings;
     private archiveFeature: ArchiveFeature;
     private taskListSortFeature: TaskListSortFeature;
-    private listToHeadingFeature: ListToHeadingFeature;
 
     async onload() {
         await this.loadSettings();
@@ -111,13 +109,6 @@ export default class ObsidianTaskArchiver extends Plugin {
             name: "Sort tasks in list under cursor",
             editorCallback: (editor) => {
                 this.taskListSortFeature.sortListUnderCursor(editor);
-            },
-        });
-        this.addCommand({
-            id: "turn-list-items-into-headings",
-            name: "Turn list items at this level into headings",
-            editorCallback: (editor) => {
-                this.listToHeadingFeature.turnListItemsIntoHeadings(editor);
             },
         });
 
@@ -175,7 +166,6 @@ export default class ObsidianTaskArchiver extends Plugin {
             taskTestingService,
             this.settings
         );
-        this.listToHeadingFeature = new ListToHeadingFeature(parser, this.settings);
 
         return { placeholderService };
     }
