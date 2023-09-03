@@ -298,6 +298,25 @@ describe("Separate files", () => {
         expect(mockArchiveFile.state).toEqual(["", "- [x] foo", ""]);
     });
 
+    test("Respects custom {{date}} format", async () => {
+        const fileWithCustomDateInName = createTFile({ path: "2020-01-01-Sun.md" });
+
+        const { mockActiveFile, mockArchiveFile } = await archiveTasks(
+            ["- [x] foo", "- [ ] bar"],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveToSeparateFile: true,
+                    dateFormat: "YYYY-MM-DD-ddd",
+                },
+                vaultFiles: [fileWithCustomDateInName],
+            }
+        );
+
+        expect(mockActiveFile.state).toEqual(["- [ ] bar"]);
+        expect(mockArchiveFile.state).toEqual(["", "# Archived", "", "- [x] foo", ""]);
+    });
+
     test("Still archives under a heading when not archiving to a separate file and archiving to root is enabled", async () => {
         await archiveTasksAndCheckActiveFile(
             ["- [x] foo"],

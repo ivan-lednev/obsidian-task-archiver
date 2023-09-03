@@ -168,7 +168,7 @@ export function createDefaultRule(settings: Settings) {
     return {
         archiveToSeparateFile: settings.archiveToSeparateFile,
         defaultArchiveFileName: settings.defaultArchiveFileName,
-        dateFormat: settings.additionalMetadataBeforeArchiving.dateFormat,
+        dateFormat: settings.dateFormat,
         obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
         statuses: "", // todo: this belongs to a separate object
         pathPatterns: "", // todo: this belongs to a separate object
