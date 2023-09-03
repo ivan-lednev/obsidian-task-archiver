@@ -1,17 +1,31 @@
 import { TreeBuilder } from "./TreeBuilder";
 
-import { DEFAULT_DATE_FORMAT } from "../../Constants";
-import {
-    LIST_MARKER_PATTERN,
-    OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN,
-} from "../../Patterns";
+import { LIST_MARKER_PATTERN } from "../../Patterns";
 import { IndentationSettings } from "../../Settings";
 import { Block } from "../../model/Block";
 import { ListBlock } from "../../model/ListBlock";
 import { RootBlock } from "../../model/RootBlock";
 import { TextBlock } from "../../model/TextBlock";
-import { BlockWithRule } from "../../types/Types";
 import { splitOnIndentation } from "../../util/Util";
+
+function removeIndentationFromListItems(rootBlock: Block) {
+    function recursive(block: Block, parentIndentation: string) {
+        for (const child of block.children) {
+            if (child instanceof ListBlock) {
+                const [indentation, withoutIndentation] = splitOnIndentation(
+                    child.text
+                );
+
+                child.text = withoutIndentation;
+                recursive(child, indentation);
+            } else {
+                child.text = child.text.substring(parentIndentation.length);
+            }
+        }
+    }
+
+    recursive(rootBlock, "");
+}
 
 export class BlockParser {
     constructor(private readonly settings: IndentationSettings) {}
@@ -26,6 +40,8 @@ export class BlockParser {
         };
 
         new TreeBuilder().buildTree(rootFlatBlock, flatBlocks);
+        removeIndentationFromListItems(rootBlock);
+
         return rootBlock;
     }
 
@@ -45,8 +61,8 @@ export class BlockParser {
         const [, text] = splitOnIndentation(line);
         const level = this.getIndentationLevel(line);
         const markdownNode = text.match(LIST_MARKER_PATTERN)
-            ? new ListBlock(text)
-            : new TextBlock(text);
+            ? new ListBlock(line)
+            : new TextBlock(line);
         return {
             level,
             markdownNode,
