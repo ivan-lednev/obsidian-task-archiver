@@ -183,31 +183,6 @@ Turns into:
 </details>
 
 <details>
-<summary>Turn list items at this level into headings</summary>
-
-Grab the list under cursor and turn every list item at and above the level of the item under cursor into a heading.
-
-This:
-
-```markdown
--   li 1
-    -   li 2 | <- cursor
-        -   li 3
-```
-
-Turns into:
-
-```markdown
-# li 1
-
-## li 2
-
--   li 3
-```
-
-</details>
-
-<details>
 <summary>Toggle task under cursor done and archive it</summary>
 
 When the cursor is on a task, this command completes the task and archives it at once.
