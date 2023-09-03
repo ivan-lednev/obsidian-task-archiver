@@ -247,6 +247,15 @@ describe("Stringification", () => {
         expect(stringified).toEqual(lines);
     });
 
+    test("Round-tripping does not mess up code blocks in lists", () => {
+        const lines = ["- 1", "  ```", "  hello", "    world", "  ```"];
+
+        const settings = { useTab: false, tabSize: 4 };
+        const parsed = new SectionParser(new BlockParser(settings)).parse(lines);
+        const stringified = parsed.stringify(buildIndentation(settings));
+        expect(stringified).toEqual(lines);
+    });
+
     test("Round-tripping does not mess up front matter", () => {
         const lines = ["---", "hello:", "  - world", "  - second", "---"];
 
