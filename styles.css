@@ -65,7 +65,7 @@
 }
 
 .archiver-rule-paths {
-    height: calc(var(--input-height) * 3);
+    height: calc(var(--input-height) * 2);
 }
 
 .archiver-setting-group {

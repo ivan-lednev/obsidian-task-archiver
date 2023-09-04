@@ -812,8 +812,6 @@ describe("Rules", () => {
                 "",
             ]);
         });
-
-        test.todo("Task text matches pattern");
     });
 
     describe("Combining different conditions", () => {

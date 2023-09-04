@@ -83,10 +83,22 @@ export function Rule(props: RuleProps) {
           onInput={({ currentTarget: { value } }) => {
             updateRule({ pathPatterns: value });
           }}
-          name="And the file matches one of patterns"
+          name="And the file path matches one of patterns"
           value={pathPatterns() || ""}
           description="Add a pattern per line. No patterns means all files will match"
           placeholder="path/to/project\n.*tasks"
+          inputClass="archiver-rule-paths"
+          class="wide-input"
+        />
+
+        <TextAreaSetting
+          onInput={({ currentTarget: { value } }) => {
+            updateRule({ textPatterns: value });
+          }}
+          name="And the task text matches one of patterns"
+          value={ruleSettings().textPatterns || ""}
+          description="Add a pattern per line. No patterns means all tasks will match"
+          placeholder="every .+"
           inputClass="archiver-rule-paths"
           class="wide-input"
         />
