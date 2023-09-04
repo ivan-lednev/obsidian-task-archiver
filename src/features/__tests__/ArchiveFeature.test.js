@@ -11,12 +11,23 @@ import {
 import { createTFile } from "./test-util/TestUtil";
 
 import { placeholders } from "../../Constants";
-import { DEFAULT_SETTINGS_FOR_TESTS, TaskSortOrder } from "../../Settings";
+import {
+    ArchiveFileType,
+    DEFAULT_SETTINGS_FOR_TESTS,
+    TaskSortOrder,
+} from "../../Settings";
 
 const DAY = "2021-01-01";
 const TIME = "2021-01-01T00:01";
 
 Date.now = () => new Date(TIME).getTime();
+
+jest.mock("../../util/DailyNotes", () => ({
+    // eslint-disable-next-line lodash-fp/prefer-constant
+    getDailyNotePath() {
+        return "daily/2020-01-01.md";
+    },
+}));
 
 describe("Moving top-level tasks to the archive", () => {
     test("No-op when there are no completed tasks", async () => {
@@ -329,6 +340,21 @@ describe("Separate files", () => {
                 },
             }
         );
+    });
+
+    test("Daily note", async () => {
+        const dailyNote = createTFile({ path: "daily/2020-01-01.md" });
+
+        await archiveTasks(["- [x] foo", "- [ ] bar"], {
+            settings: {
+                ...DEFAULT_SETTINGS_FOR_TESTS,
+                archiveToSeparateFile: true,
+                separateFileType: ArchiveFileType.DAILY,
+            },
+            vaultFiles: [dailyNote],
+        });
+
+        expect(dailyNote.state).toEqual(["", "# Archived", "", "- [x] foo", ""]);
     });
 });
 

@@ -47,7 +47,7 @@
         "install": "^0.13.0",
         "jest": "^27.0.6",
         "lint-staged": "^13.1.2",
-        "moment": "^2.29.1",
+        "moment": "^2.29.4",
         "obsidian": "^0.12.0",
         "prettier": "^2.5.1",
         "rollup": "^2.79.1",
@@ -63,6 +63,7 @@
         "babel-preset-solid": "^1.6.10",
         "classnames": "^2.3.2",
         "lodash": "^4.17.21",
+        "obsidian-daily-notes-interface": "^0.9.4",
         "solid-js": "^1.6.11"
     },
     "lint-staged": {

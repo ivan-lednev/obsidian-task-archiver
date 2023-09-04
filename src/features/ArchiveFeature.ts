@@ -3,7 +3,7 @@ import { Editor, TFile, Vault, Workspace } from "obsidian";
 import { dropRight, flow, groupBy, isEmpty, map, orderBy, toPairs } from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
+import { ArchiveFileType, Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
@@ -16,6 +16,7 @@ import { SectionParser } from "../services/parser/SectionParser";
 import {
     BlockExtractor,
     BlockWithRule,
+    TaskWithResolvedDestination,
     TreeEditorCallback,
     TreeFilter,
 } from "../types/Types";
@@ -23,6 +24,7 @@ import {
     detectHeadingUnderCursor,
     detectListItemUnderCursor,
 } from "../util/CodeMirrorUtil";
+import { getDailyNotePath } from "../util/DailyNotes";
 import {
     doesRuleMatchPath,
     doesRuleMatchTaskStatus,
@@ -36,6 +38,7 @@ import {
     extractBlocksRecursively,
     findSectionRecursively,
     getTaskCompletionDate,
+    removeExtension,
     shallowExtractBlocks,
 } from "../util/Util";
 
@@ -143,10 +146,18 @@ export class ArchiveFeature {
         );
     }
 
-    private addDestinationToTask = ({ task, rule }: BlockWithRule) => {
-        const archivePath = rule.archiveToSeparateFile
-            ? rule.defaultArchiveFileName
-            : "current-file";
+    private addDestinationToTask = async ({ task, rule }: BlockWithRule) => {
+        let archivePath = "current-file";
+
+        if (rule.archiveToSeparateFile) {
+            if (rule.separateFileType === ArchiveFileType.DAILY) {
+                const fullPath = await getDailyNotePath();
+
+                archivePath = removeExtension(fullPath);
+            } else {
+                archivePath = rule.defaultArchiveFileName;
+            }
+        }
 
         const resolvedPath = this.placeholderService.resolve(archivePath, {
             dateFormat: rule.dateFormat,
@@ -179,7 +190,7 @@ export class ArchiveFeature {
     }
 
     private async archiveTasks(tasks: Block[], activeFile: ActiveFile) {
-        await flow(
+        const tasksWithDestinations: Array<TaskWithResolvedDestination> = await flow(
             orderBy(({ text }) => getTaskCompletionDate(text), this.getSortOrder()),
             map(
                 flow(
@@ -192,7 +203,11 @@ export class ArchiveFeature {
                     this.addDestinationToTask
                 )
             ),
-            groupBy((task) => task.resolvedPath),
+            (promises) => Promise.all(promises)
+        )(tasks);
+
+        await flow(
+            groupBy((task: TaskWithResolvedDestination) => task.resolvedPath),
             toPairs,
             map(async ([resolvedPath, tasksForPath]) => {
                 const archiveFile =
@@ -216,7 +231,7 @@ export class ArchiveFeature {
                 });
             }),
             (promises) => Promise.all(promises)
-        )(tasks);
+        )(tasksWithDestinations);
     }
 
     private async getArchiveFile(activeFile: ActiveFile) {

@@ -18,11 +18,17 @@ export interface AdditionalMetadataSettings {
     metadata: string;
 }
 
+export enum ArchiveFileType {
+    DAILY = "Daily note",
+    CUSTOM = "Custom note",
+}
+
 export type Rule = Pick<
     Settings,
     | "defaultArchiveFileName"
     | "dateFormat"
     | "archiveToSeparateFile"
+    | "separateFileType"
     | "obsidianTasksCompletedDateFormat"
 > & { statuses?: string; pathPatterns?: string };
 
@@ -65,6 +71,7 @@ export interface Settings {
     additionalTaskPattern: string;
     addNewlinesAroundHeadings: boolean;
     archiveToSeparateFile: boolean;
+    separateFileType: ArchiveFileType;
     // todo: this is related only to separate file names. These settings should be grouped together
     obsidianTasksCompletedDateFormat: string;
     archiveUnderHeading: boolean;
@@ -92,6 +99,7 @@ export const DEFAULT_SETTINGS: Settings = {
     archiveAllCheckedTaskTypes: false,
     archiveHeadingDepth: 1,
     archiveToSeparateFile: false,
+    separateFileType: ArchiveFileType.CUSTOM,
     obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
     archiveUnderHeading: true,
     dateFormat: DEFAULT_DATE_FORMAT,

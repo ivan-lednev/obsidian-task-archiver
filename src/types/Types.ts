@@ -27,3 +27,10 @@ export interface BlockWithRule {
     task: Block;
     rule?: Rule;
 }
+
+export interface TaskWithResolvedDestination {
+    task: Block;
+    resolvedPath: string;
+    resolvedHeadings: string[];
+    resolvedListItems: string[];
+}

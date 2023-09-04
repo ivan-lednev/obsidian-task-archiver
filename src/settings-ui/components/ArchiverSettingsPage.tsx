@@ -18,7 +18,7 @@ import { TextSetting } from "./setting/TextSetting";
 import { ToggleSetting } from "./setting/ToggleSetting";
 
 import { placeholders } from "../../Constants";
-import { TaskSortOrder } from "../../Settings";
+import { ArchiveFileType, TaskSortOrder } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 import { createDefaultRule } from "../../util/Util";
 
@@ -136,38 +136,50 @@ export function ArchiverSettingsPage(props: ArchiverSettingsPageProps) {
           value={settings.archiveToSeparateFile}
         />
         <Show when={settings.archiveToSeparateFile} keyed>
-          <TextAreaSetting
+          <DropDownSetting
+            name="What kind of file to use?"
+            description={`If you pick "Daily note", your daily note template is going to be used when creating it`}
+            options={[ArchiveFileType.CUSTOM, ArchiveFileType.DAILY]}
+            value={settings.separateFileType}
             onInput={({ currentTarget: { value } }) => {
-              setSettings({ defaultArchiveFileName: value });
+              setSettings({ separateFileType: value as ArchiveFileType });
             }}
-            name="File name"
-            value={settings.defaultArchiveFileName}
           />
 
-          <PlaceholdersDescription placeholderResolver={props.placeholderService} />
+          <Show when={settings.separateFileType === ArchiveFileType.CUSTOM}>
+            <TextAreaSetting
+              onInput={({ currentTarget: { value } }) => {
+                setSettings({ defaultArchiveFileName: value });
+              }}
+              name="File name"
+              value={settings.defaultArchiveFileName}
+            />
 
-          <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
-            <TextSetting
-              onInput={({ currentTarget: { value } }) => {
-                setSettings({ dateFormat: value });
-              }}
-              name="Date format"
-              description={<DateFormatDescription dateFormat={settings.dateFormat} />}
-              value={settings.dateFormat}
-            />
-            <TextSetting
-              onInput={({ currentTarget: { value } }) => {
-                setSettings({ obsidianTasksCompletedDateFormat: value });
-              }}
-              name="obsidian-tasks completed date format"
-              description={
-                <DateFormatDescription
-                  dateFormat={settings.obsidianTasksCompletedDateFormat}
-                />
-              }
-              value={settings.obsidianTasksCompletedDateFormat}
-            />
-          </SettingGroup>
+            <PlaceholdersDescription placeholderResolver={props.placeholderService} />
+
+            <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
+              <TextSetting
+                onInput={({ currentTarget: { value } }) => {
+                  setSettings({ dateFormat: value });
+                }}
+                name="Date format"
+                description={<DateFormatDescription dateFormat={settings.dateFormat} />}
+                value={settings.dateFormat}
+              />
+              <TextSetting
+                onInput={({ currentTarget: { value } }) => {
+                  setSettings({ obsidianTasksCompletedDateFormat: value });
+                }}
+                name="obsidian-tasks completed date format"
+                description={
+                  <DateFormatDescription
+                    dateFormat={settings.obsidianTasksCompletedDateFormat}
+                  />
+                }
+                value={settings.obsidianTasksCompletedDateFormat}
+              />
+            </SettingGroup>
+          </Show>
         </Show>
       </SettingGroup>
 

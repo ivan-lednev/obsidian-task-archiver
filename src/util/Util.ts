@@ -169,8 +169,13 @@ export function createDefaultRule(settings: Settings) {
         archiveToSeparateFile: settings.archiveToSeparateFile,
         defaultArchiveFileName: settings.defaultArchiveFileName,
         dateFormat: settings.dateFormat,
+        separateFileType: settings.separateFileType,
         obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
         statuses: "", // todo: this belongs to a separate object
         pathPatterns: "", // todo: this belongs to a separate object
     };
+}
+
+export function removeExtension(path: string) {
+    return path.replace(/\.[a-z]+$/, "");
 }

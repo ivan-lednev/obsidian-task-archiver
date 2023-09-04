@@ -2,7 +2,7 @@ import { render, screen } from "@solidjs/testing-library";
 import user from "@testing-library/user-event";
 
 import { DEFAULT_DATE_FORMAT } from "../../../Constants";
-import { DEFAULT_SETTINGS_FOR_TESTS } from "../../../Settings";
+import { ArchiveFileType, DEFAULT_SETTINGS_FOR_TESTS } from "../../../Settings";
 import { PlaceholderService } from "../../../services/PlaceholderService";
 import { ArchiverSettingsPage } from "../ArchiverSettingsPage";
 import { SettingsProvider } from "../context/SettingsProvider";
@@ -38,9 +38,7 @@ describe("ArchiverSettingsPage", () => {
   test("Default rules get saved", async () => {
     const { setSettingsMock } = renderSettingsPage();
 
-    const addRule = screen.getByText("Add rule");
-
-    await user.click(addRule);
+    await user.click(screen.getByText("Add rule"));
 
     expect(setSettingsMock).toBeCalledWith(
       expect.objectContaining({
@@ -52,6 +50,7 @@ describe("ArchiverSettingsPage", () => {
             dateFormat: DEFAULT_DATE_FORMAT,
             obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
             archiveToSeparateFile: true,
+            separateFileType: ArchiveFileType.CUSTOM,
           },
         ],
       })
