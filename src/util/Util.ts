@@ -6,7 +6,7 @@ import {
     INDENTATION_PATTERN,
     OBSIDIAN_TASKS_COMPLETED_DATE_PATTERN,
 } from "../Patterns";
-import { IndentationSettings, Settings } from "../Settings";
+import { IndentationSettings, RuleAction, Settings } from "../Settings";
 import { Block } from "../model/Block";
 import { Section } from "../model/Section";
 import { TextBlock } from "../model/TextBlock";
@@ -171,6 +171,7 @@ export function createDefaultRule(settings: Settings) {
         dateFormat: settings.dateFormat,
         separateFileType: settings.separateFileType,
         obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
+        ruleAction: RuleAction.MOVE_TO_FILE,
         statuses: "", // todo: this belongs to a separate object
         pathPatterns: "", // todo: this belongs to a separate object
     };

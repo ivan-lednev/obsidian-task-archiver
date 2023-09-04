@@ -2,7 +2,11 @@ import { render, screen } from "@solidjs/testing-library";
 import user from "@testing-library/user-event";
 
 import { DEFAULT_DATE_FORMAT } from "../../../Constants";
-import { ArchiveFileType, DEFAULT_SETTINGS_FOR_TESTS } from "../../../Settings";
+import {
+  ArchiveFileType,
+  DEFAULT_SETTINGS_FOR_TESTS,
+  RuleAction,
+} from "../../../Settings";
 import { PlaceholderService } from "../../../services/PlaceholderService";
 import { ArchiverSettingsPage } from "../ArchiverSettingsPage";
 import { SettingsProvider } from "../context/SettingsProvider";
@@ -49,6 +53,7 @@ describe("ArchiverSettingsPage", () => {
             defaultArchiveFileName: "",
             dateFormat: DEFAULT_DATE_FORMAT,
             obsidianTasksCompletedDateFormat: DEFAULT_DATE_FORMAT,
+            ruleAction: RuleAction.MOVE_TO_FILE,
             archiveToSeparateFile: true,
             separateFileType: ArchiveFileType.CUSTOM,
           },

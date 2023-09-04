@@ -1,16 +1,17 @@
-import { Accessor, For } from "solid-js";
+import { Accessor, For, Show } from "solid-js";
 
 import { Cog } from "./Cog";
 import { DateFormatDescription } from "./DateFormatDescription";
 import { PlaceholdersDescription } from "./PlaceholdersDescription";
 import { useSettingsContext } from "./context/SettingsProvider";
 import { ButtonSetting } from "./setting/ButtonSetting";
+import { DropDownSetting } from "./setting/DropDownSetting";
 import { SettingGroup } from "./setting/SettingGroup";
 import { TextAreaSetting } from "./setting/TextAreaSetting";
 import { TextSetting } from "./setting/TextSetting";
 
 import { placeholders } from "../../Constants";
-import { Rule as RuleType } from "../../Settings";
+import { RuleAction, Rule as RuleType } from "../../Settings";
 import { PlaceholderService } from "../../services/PlaceholderService";
 
 interface RuleProps {
@@ -105,26 +106,35 @@ export function Rule(props: RuleProps) {
       </SettingGroup>
 
       <SettingGroup>
-        <TextSetting
-          onInput={({ currentTarget: { value } }) =>
-            updateRule({ defaultArchiveFileName: value })
-          }
-          name="Then move it to file"
-          value={archivePath()}
-          placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
-          class="wide-input"
+        <DropDownSetting
+          name="Then"
+          onInput={({ currentTarget: { value } }) => {
+            updateRule({ ruleAction: value as RuleAction });
+          }}
+          options={[RuleAction.MOVE_TO_FILE, RuleAction.DELETE]}
         />
-        <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
-        <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
+        <Show when={ruleSettings().ruleAction !== RuleAction.DELETE}>
           <TextSetting
             onInput={({ currentTarget: { value } }) =>
-              updateRule({ dateFormat: value })
+              updateRule({ defaultArchiveFileName: value })
             }
-            name="Date format"
-            description={<DateFormatDescription dateFormat={dateFormat()} />}
-            value={dateFormat()}
+            name="File path"
+            value={archivePath()}
+            placeholder={`path/to/${placeholders.ACTIVE_FILE_NEW} archive`}
+            class="wide-input"
           />
-        </SettingGroup>
+          <PlaceholdersDescription placeholderResolver={props.placeholderResolver} />
+          <SettingGroup headerIcon={<Cog />} header="Configure variables" collapsible>
+            <TextSetting
+              onInput={({ currentTarget: { value } }) =>
+                updateRule({ dateFormat: value })
+              }
+              name="Date format"
+              description={<DateFormatDescription dateFormat={dateFormat()} />}
+              value={dateFormat()}
+            />
+          </SettingGroup>
+        </Show>
       </SettingGroup>
       <ButtonSetting onClick={deleteRule} buttonText="Delete rule" />
     </SettingGroup>

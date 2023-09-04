@@ -23,6 +23,11 @@ export enum ArchiveFileType {
     CUSTOM = "Custom note",
 }
 
+export enum RuleAction {
+    DELETE = "Delete it",
+    MOVE_TO_FILE = "Move it to file",
+}
+
 export type Rule = Pick<
     Settings,
     | "defaultArchiveFileName"
@@ -30,7 +35,12 @@ export type Rule = Pick<
     | "archiveToSeparateFile"
     | "separateFileType"
     | "obsidianTasksCompletedDateFormat"
-> & { statuses?: string; pathPatterns?: string; textPatterns?: string };
+> & {
+    statuses?: string;
+    pathPatterns?: string;
+    textPatterns?: string;
+    ruleAction?: RuleAction;
+};
 
 export enum TaskSortOrder {
     NEWEST_FIRST = "Newest first",
