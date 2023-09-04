@@ -1,6 +1,6 @@
 {
     "name": "obsidian-task-archiver",
-    "version": "0.24.1",
+    "version": "1.0.0",
     "description": "Obsidian Task Archiver",
     "main": "main.js",
     "scripts": {
