@@ -1,6 +1,6 @@
 import { isEmpty } from "lodash/fp";
 
-import { Rule } from "../Settings";
+import { Rule, RuleAction } from "../Settings";
 import { Block } from "../model/Block";
 
 function getTaskStatus(task: Block) {
@@ -28,5 +28,8 @@ export function doesStringOfPatternsMatchText(patterns: string, text: string) {
 }
 
 export function isRuleActionValid(rule: Rule) {
-    return rule.defaultArchiveFileName.trim().length > 0;
+    return (
+        rule.defaultArchiveFileName.trim().length > 0 ||
+        rule.ruleAction === RuleAction.DELETE
+    );
 }

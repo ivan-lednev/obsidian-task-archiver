@@ -14,6 +14,7 @@ import { placeholders } from "../../Constants";
 import {
     ArchiveFileType,
     DEFAULT_SETTINGS_FOR_TESTS,
+    RuleAction,
     TaskSortOrder,
 } from "../../Settings";
 
@@ -640,6 +641,35 @@ describe("Rules", () => {
                 },
             }
         );
+    });
+
+    test("Can delete tasks", async () => {
+        const { mockActiveFile, mockArchiveFile } = await archiveTasks(
+            ["- [x] completed", "- [x] delete me", "- [ ] incomplete"],
+            {
+                settings: {
+                    ...DEFAULT_SETTINGS_FOR_TESTS,
+                    archiveToSeparateFile: true,
+                    rules: [
+                        {
+                            textPatterns: "delete me",
+                            defaultArchiveFileName: "",
+                            ruleAction: RuleAction.DELETE,
+                            archiveToSeparateFile: true,
+                        },
+                    ],
+                },
+            }
+        );
+
+        expect(mockArchiveFile.state).toEqual([
+            "",
+            "# Archived",
+            "",
+            "- [x] completed",
+            "",
+        ]);
+        expect(mockActiveFile.state).toEqual(["- [ ] incomplete"]);
     });
 
     describe("Statuses", () => {

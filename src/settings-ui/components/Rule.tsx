@@ -108,6 +108,7 @@ export function Rule(props: RuleProps) {
       <SettingGroup>
         <DropDownSetting
           name="Then"
+          value={ruleSettings().ruleAction}
           onInput={({ currentTarget: { value } }) => {
             updateRule({ ruleAction: value as RuleAction });
           }}

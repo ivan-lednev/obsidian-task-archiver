@@ -1,9 +1,24 @@
 import { Editor, TFile, Vault, Workspace } from "obsidian";
 
-import { dropRight, flow, groupBy, isEmpty, map, orderBy, toPairs } from "lodash/fp";
+import {
+    dropRight,
+    filter,
+    flow,
+    groupBy,
+    isEmpty,
+    map,
+    orderBy,
+    toPairs,
+} from "lodash/fp";
 
 import { ActiveFile, DiskFile, EditorFile } from "../ActiveFile";
-import { ArchiveFileType, Settings, TaskSortOrder, TreeLevelConfig } from "../Settings";
+import {
+    ArchiveFileType,
+    RuleAction,
+    Settings,
+    TaskSortOrder,
+    TreeLevelConfig,
+} from "../Settings";
 import { Block } from "../model/Block";
 import { RootBlock } from "../model/RootBlock";
 import { Section } from "../model/Section";
@@ -181,6 +196,7 @@ export class ArchiveFeature {
 
         return {
             task,
+            rule,
             resolvedPath,
             resolvedHeadings: resolveWithTask(this.settings.headings),
             resolvedListItems: resolveWithTask(this.settings.listItems),
@@ -210,6 +226,11 @@ export class ArchiveFeature {
             (promises) => Promise.all(promises)
         )(tasks);
 
+        const withoutTasksToDelete = tasksWithDestinations.filter(
+            (task: TaskWithResolvedDestination) =>
+                task.rule.ruleAction !== RuleAction.DELETE
+        );
+
         await flow(
             groupBy((task: TaskWithResolvedDestination) => task.resolvedPath),
             toPairs,
@@ -235,7 +256,7 @@ export class ArchiveFeature {
                 });
             }),
             (promises) => Promise.all(promises)
-        )(tasksWithDestinations);
+        )(withoutTasksToDelete);
     }
 
     private async getArchiveFile(activeFile: ActiveFile) {
