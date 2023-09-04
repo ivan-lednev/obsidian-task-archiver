@@ -9,7 +9,8 @@
         "test": "jest",
         "test:coverage": "jest --collectCoverage",
         "format": "eslint --fix src && prettier --write src",
-        "lint": "tsc --noEmit && eslint src && prettier --check src",
+        "typescript": "tsc --noEmit",
+        "lint": "npm run typescript && eslint src && prettier --check src",
         "prepare": "husky install"
     },
     "keywords": [],

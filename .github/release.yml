@@ -17,8 +17,8 @@ jobs:
             - name: Install dependencies
               run: npm install
 
-            - name: Lint
-              run: npm run lint
+            - name: TypeScript
+              run: npm run typescript
 
             - name: Test
               run: npm run test
