@@ -16,15 +16,15 @@ export function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
     return rule.statuses.includes(getTaskStatus(task));
 }
 
-export function doesRuleMatchPath(rule: Rule, path: string) {
-    if (isEmpty(rule.pathPatterns)) {
+export function doesStringOfPatternsMatchText(patterns: string, text: string) {
+    if (isEmpty(patterns)) {
         return true;
     }
 
-    return rule.pathPatterns
+    return patterns
         .split("\n")
         .map((pattern) => new RegExp(pattern))
-        .some((pattern) => pattern.test(path));
+        .some((pattern) => pattern.test(text));
 }
 
 export function isRuleActionValid(rule: Rule) {

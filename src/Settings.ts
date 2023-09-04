@@ -30,7 +30,7 @@ export type Rule = Pick<
     | "archiveToSeparateFile"
     | "separateFileType"
     | "obsidianTasksCompletedDateFormat"
-> & { statuses?: string; pathPatterns?: string };
+> & { statuses?: string; pathPatterns?: string; textPatterns?: string };
 
 export enum TaskSortOrder {
     NEWEST_FIRST = "Newest first",

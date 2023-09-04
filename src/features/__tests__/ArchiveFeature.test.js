@@ -770,6 +770,52 @@ describe("Rules", () => {
         });
     });
 
+    describe("Text content patterns", () => {
+        test("Task text contains text", async () => {
+            const recurring = createTFile({ path: "recurring.md" });
+            const nonRecurring = createTFile({ path: "non-recurring.md" });
+
+            await archiveTasks(
+                ["- [x] foo 🔁 every day", "- [x] bar (non-recurring)"],
+                {
+                    settings: {
+                        ...DEFAULT_SETTINGS_FOR_TESTS,
+                        rules: [
+                            {
+                                textPatterns: "🔁",
+                                defaultArchiveFileName: "recurring",
+                                archiveToSeparateFile: true,
+                            },
+                            {
+                                textPatterns: "non-recurring",
+                                defaultArchiveFileName: "non-recurring",
+                                archiveToSeparateFile: true,
+                            },
+                        ],
+                    },
+                    vaultFiles: [recurring, nonRecurring],
+                }
+            );
+
+            expect(nonRecurring.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [x] bar (non-recurring)",
+                "",
+            ]);
+            expect(recurring.state).toEqual([
+                "",
+                "# Archived",
+                "",
+                "- [x] foo 🔁 every day",
+                "",
+            ]);
+        });
+
+        test.todo("Task text matches pattern");
+    });
+
     describe("Combining different conditions", () => {
         test("A task matches only one condition", async () => {
             const deferredArchive = createTFile({ path: "deferred.md" });
