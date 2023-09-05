@@ -249,7 +249,7 @@ describe("Archived block transformation", () => {
             [
                 "- [x] foo #task",
                 "\t- other block #other-tag",
-                "\t  some text #other-tag",
+                "\t  some text #other-tag #second-tag",
             ],
             [
                 "",
@@ -257,7 +257,7 @@ describe("Archived block transformation", () => {
                 "",
                 "- [x] foo @task",
                 "\t- other block @other-tag",
-                "\t  some text @other-tag",
+                "\t  some text @other-tag @second-tag",
                 "",
             ],
             {
