@@ -4,6 +4,7 @@ import { isEmpty } from "lodash/fp";
 
 import { Rule, RuleAction } from "../Settings";
 import { Block } from "../model/Block";
+import { DEFAULT_INCOMPLETE_TASK_PATTERN } from "../Patterns";
 
 function getTaskStatus(task: Block) {
     const [, taskStatus] = task.text.match(/\[(.)]/);
@@ -11,11 +12,11 @@ function getTaskStatus(task: Block) {
 }
 
 export function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
-    if (isEmpty(rule.statuses)) {
-        return true;
+    if (rule.statuses) {
+        return rule.statuses.includes(getTaskStatus(task));
     }
 
-    return rule.statuses.includes(getTaskStatus(task));
+    return !DEFAULT_INCOMPLETE_TASK_PATTERN.test(task.text);
 }
 
 export function doesStringOfPatternsMatchText(patterns: string, text: string) {
