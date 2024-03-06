@@ -1,3 +1,5 @@
+import { Workspace } from "obsidian";
+
 import { isEmpty } from "lodash/fp";
 
 import { Rule, RuleAction } from "../Settings";
@@ -32,4 +34,10 @@ export function isRuleActionValid(rule: Rule) {
         rule.defaultArchiveFileName.trim().length > 0 ||
         rule.ruleAction === RuleAction.DELETE
     );
+}
+
+export function doesRuleMatch(rule: Rule, task: Block, workspace: Workspace) {
+    return doesRuleMatchTaskStatus(rule, task) &&
+        doesStringOfPatternsMatchText(rule.pathPatterns, workspace.getActiveFile().path) &&
+        doesStringOfPatternsMatchText(rule.textPatterns, task.text);
 }
