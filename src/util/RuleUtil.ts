@@ -11,7 +11,7 @@ function getTaskStatus(task: Block) {
     return taskStatus;
 }
 
-export function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
+function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
     if (rule.statuses) {
         return rule.statuses.includes(getTaskStatus(task));
     }
@@ -19,7 +19,7 @@ export function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
     return !DEFAULT_INCOMPLETE_TASK_PATTERN.test(task.text);
 }
 
-export function doesStringOfPatternsMatchText(patterns: string, text: string) {
+function doesStringOfPatternsMatchText(patterns: string, text: string) {
     if (isEmpty(patterns)) {
         return true;
     }
