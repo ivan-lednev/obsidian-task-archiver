@@ -53,7 +53,7 @@ export class TestDependencies {
         this.sectionParser = new SectionParser(
             new BlockParser(settings.indentationSettings)
         );
-        this.taskTestingService = new TaskTestingService(settings);
+        this.taskTestingService = new TaskTestingService(this.mockWorkspace, settings);
         this.placeholderService = new PlaceholderService(this.mockWorkspace);
         this.listItemService = new ListItemService(this.placeholderService, settings);
         this.textReplacementService = new TextReplacementService(settings);
