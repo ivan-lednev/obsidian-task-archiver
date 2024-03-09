@@ -458,6 +458,24 @@ describe("Adding metadata to tasks", () => {
         );
     });
 
+    // todo: fix the bug that breaks this test
+    test.skip("Date format is configurable", async () => {
+        await archiveTasksAndCheckActiveFile(
+            ["- [x] foo", "# Archived"],
+            ["# Archived", "", `- [x] foo 2021-01-01-1`, ""],
+            {
+                settings: {
+                    ...settingsForTestingMetadata,
+                    additionalMetadataBeforeArchiving: {
+                        ...settingsForTestingMetadata.additionalMetadataBeforeArchiving,
+                        dateFormat: "YYYY-MM-DD-E",
+                        metadata: placeholders.DATE,
+                    },
+                },
+            }
+        );
+    });
+
     test("Metadata gets appended only to top-level tasks", async () => {
         await archiveTasksAndCheckActiveFile(
             ["- [x] foo", "\t- [x] bar", "# Archived"],
