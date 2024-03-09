@@ -1,22 +1,25 @@
+import { Workspace } from "obsidian";
+
 import { isEmpty } from "lodash/fp";
 
 import { Rule, RuleAction } from "../Settings";
 import { Block } from "../model/Block";
+import { DEFAULT_INCOMPLETE_TASK_PATTERN } from "../Patterns";
 
 function getTaskStatus(task: Block) {
     const [, taskStatus] = task.text.match(/\[(.)]/);
     return taskStatus;
 }
 
-export function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
-    if (isEmpty(rule.statuses)) {
-        return true;
+function doesRuleMatchTaskStatus(rule: Rule, task: Block) {
+    if (rule.statuses) {
+        return rule.statuses.includes(getTaskStatus(task));
     }
 
-    return rule.statuses.includes(getTaskStatus(task));
+    return !DEFAULT_INCOMPLETE_TASK_PATTERN.test(task.text);
 }
 
-export function doesStringOfPatternsMatchText(patterns: string, text: string) {
+function doesStringOfPatternsMatchText(patterns: string, text: string) {
     if (isEmpty(patterns)) {
         return true;
     }
@@ -32,4 +35,10 @@ export function isRuleActionValid(rule: Rule) {
         rule.defaultArchiveFileName.trim().length > 0 ||
         rule.ruleAction === RuleAction.DELETE
     );
+}
+
+export function doesRuleMatch(rule: Rule, task: Block, workspace: Workspace) {
+    return doesRuleMatchTaskStatus(rule, task) &&
+        doesStringOfPatternsMatchText(rule.pathPatterns, workspace.getActiveFile().path) &&
+        doesStringOfPatternsMatchText(rule.textPatterns, task.text);
 }

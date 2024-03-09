@@ -41,8 +41,7 @@ import {
 } from "../util/CodeMirrorUtil";
 import { getDailyNotePath } from "../util/DailyNotes";
 import {
-    doesRuleMatchTaskStatus,
-    doesStringOfPatternsMatchText,
+    doesRuleMatch,
     isRuleActionValid,
 } from "../util/RuleUtil";
 import {
@@ -153,14 +152,7 @@ export class ArchiveFeature {
     private findRuleForTask(task: Block) {
         return (
             this.settings.rules.find(
-                (rule) =>
-                    doesStringOfPatternsMatchText(
-                        rule.pathPatterns,
-                        this.workspace.getActiveFile().path
-                    ) &&
-                    doesStringOfPatternsMatchText(rule.textPatterns, task.text) &&
-                    doesRuleMatchTaskStatus(rule, task) &&
-                    isRuleActionValid(rule)
+                (rule) => doesRuleMatch(rule, task, this.workspace) && isRuleActionValid(rule)
             ) || createDefaultRule(this.settings)
         );
     }

@@ -144,7 +144,7 @@ export default class ObsidianTaskArchiver extends Plugin {
         const parser = new SectionParser(
             new BlockParser(this.settings.indentationSettings)
         );
-        const taskTestingService = new TaskTestingService(this.settings);
+        const taskTestingService = new TaskTestingService(this.app.workspace, this.settings);
         const placeholderService = new PlaceholderService(this.app.workspace);
         const listItemService = new ListItemService(placeholderService, this.settings);
         const textReplacementService = new TextReplacementService(this.settings);
